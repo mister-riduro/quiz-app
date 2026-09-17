@@ -1,0 +1,88 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Duolingo Design Tokens */
+    --duo-green: #58CC02;
+    --duo-green-border: #46A302;
+    --duo-green-light: #D7FFB8;
+
+    --duo-blue: #1CB0F6;
+    --duo-blue-border: #1899D6;
+    --duo-blue-light: #DDF4FF;
+
+    --duo-orange: #FF9600;
+    --duo-orange-border: #D97F00;
+    --duo-orange-light: #FFE8CC;
+
+    --duo-red: #FF4B4B;
+    --duo-red-border: #EA2B2B;
+    --duo-red-light: #FFDFE0;
+
+    --duo-yellow: #FFC800;
+    --duo-yellow-border: #D4A500;
+    --duo-yellow-light: #FFF5CC;
+
+    --duo-gray: #E5E5E5;
+    --duo-gray-border: #CECECE;
+    --duo-gray-light: #F7F7F7;
+
+    --duo-dark: #4B4B4B;
+    --duo-bg: #F7F9FA;
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+
+  html {
+    font-family: 'Nunito', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    background-color: var(--duo-bg);
+    color: var(--duo-dark);
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+}
+
+@layer utilities {
+  /* Tactile 3D Physical Button Press Simulation (Duolingo Style) */
+  .btn-3d-press {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    border-bottom-width: 4px;
+    border-style: solid;
+    user-select: none;
+    transition: transform 0.08s ease-in-out, border-bottom-width 0.08s ease-in-out, filter 0.1s ease;
+  }
+
+  .btn-3d-press:hover:not(:disabled) {
+    filter: brightness(1.04);
+  }
+
+  .btn-3d-press:active:not(:disabled) {
+    transform: translateY(2px);
+    border-bottom-width: 2px;
+  }
+
+  .btn-3d-press:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+    filter: grayscale(0.8);
+    transform: none !important;
+  }
+}
+
