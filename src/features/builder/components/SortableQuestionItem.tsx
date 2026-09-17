@@ -26,7 +26,6 @@ export const SortableQuestionItem = React.memo<SortableQuestionItemProps>(
     onRemove,
     canRemove,
     timerMode = "global",
-    globalSeconds = 30,
   }) => {
     const {
       attributes,
@@ -52,23 +51,18 @@ export const SortableQuestionItem = React.memo<SortableQuestionItemProps>(
       pluginTitle = plugin.title;
     }
 
-    const effectiveSeconds =
-      timerMode === "per_question"
-        ? (question.timeLimitSeconds ?? 30)
-        : (globalSeconds ?? 30);
-
     return (
       <div
         ref={setNodeRef}
         style={style}
         onClick={onSelect}
         className={cn(
-          "group relative flex items-center gap-2 p-3 rounded-2xl border-2 transition-all cursor-pointer select-none bg-white",
-          // Default border
-          "border-duo-gray border-b-4 border-b-duo-gray-border hover:border-slate-300",
-          // Active Question State
+          "group relative flex items-center gap-2 p-2.5 rounded-xl border-2 transition-all cursor-pointer select-none bg-white",
+          // Default State
+          "border-slate-200 hover:border-slate-300 hover:shadow-sm",
+          // Active State
           isActive &&
-            "border-duo-blue border-b-duo-blue-border bg-duo-blue-light/15 ring-2 ring-duo-blue/30",
+            "border-duo-blue bg-blue-50/20 shadow-sm ring-2 ring-duo-blue/30",
           // Dragging State
           isDragging &&
             "opacity-70 shadow-xl scale-105 border-duo-orange border-b-duo-orange-border",
@@ -107,9 +101,16 @@ export const SortableQuestionItem = React.memo<SortableQuestionItemProps>(
               <span className="block text-[11px] font-black uppercase text-slate-400 truncate">
                 {pluginTitle}
               </span>
-              <span className="text-[10px] font-extrabold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-md shrink-0">
-                {effectiveSeconds > 0 ? `${effectiveSeconds}s` : "∞"}
-              </span>
+              {timerMode === "per_question" && (
+                <span
+                  className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md shrink-0 bg-slate-100 text-slate-500"
+                  title={`Durasi Soal: ${question.timeLimitSeconds ?? 30} Detik`}
+                >
+                  {(question.timeLimitSeconds ?? 30) > 0
+                    ? `${question.timeLimitSeconds ?? 30}s`
+                    : "∞"}
+                </span>
+              )}
             </div>
             <p className="text-xs font-bold text-duo-dark truncate">
               {question.titlePrompt || "Pertanyaan baru"}

@@ -1,17 +1,9 @@
-import React, { useState } from 'react';
-import { DuoCard } from '@/components/ui/DuoCard';
-import { TactileButton } from '@/components/ui/TactileButton';
-import { useAuthStore } from '@/stores/authStore';
-import { useSoundEffect } from '@/hooks/useSoundEffect';
-import {
-  Sparkles,
-  Mail,
-  Lock,
-  Eye,
-  EyeOff,
-  AlertCircle,
-  LogIn,
-} from 'lucide-react';
+import React, { useState } from "react";
+import { DuoCard } from "@/components/ui/DuoCard";
+import { TactileButton } from "@/components/ui/TactileButton";
+import { useAuthStore } from "@/stores/authStore";
+import { useSoundEffect } from "@/hooks/useSoundEffect";
+import { Sparkles, Mail, Lock, Eye, EyeOff, AlertCircle } from "lucide-react";
 
 export interface LoginPageProps {
   onSuccess?: () => void;
@@ -22,8 +14,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({
   onSuccess,
   onNavigateToRegister,
 }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   const { signIn, isLoading, error, clearError } = useAuthStore();
@@ -50,14 +42,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({
   return (
     <div className="w-full max-w-md mx-auto p-4 sm:p-6 flex flex-col items-center">
       {/* Centered Bouncy Card */}
-      <DuoCard elevated className="w-full flex flex-col gap-6 p-6 sm:p-8 text-center">
+      <DuoCard
+        elevated
+        className="w-full flex flex-col gap-6 p-6 sm:p-8 text-center"
+      >
         {/* Brand Icon Badge */}
         <div className="flex flex-col items-center">
-          <div className="w-16 h-16 rounded-3xl bg-duo-green-light border-2 border-duo-green text-duo-green-border flex items-center justify-center mb-3 shadow-sm">
-            <LogIn className="w-8 h-8 text-duo-green" />
-          </div>
           <h2 className="text-2xl sm:text-3xl font-black text-duo-dark tracking-tight">
-            Masuk ke Studio Guru
+            Halo, Ketemu Lagi
           </h2>
           <p className="text-xs sm:text-sm font-semibold text-[#777777] mt-1.5">
             Kelola bank soal interaktif dan mulai sesi kuis kelas
@@ -105,7 +97,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                 <Lock className="w-5 h-5" />
               </div>
               <input
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 required
                 disabled={isLoading}
                 value={password}
@@ -117,9 +109,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-duo-dark"
-                aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
+                aria-label={
+                  showPassword
+                    ? "Sembunyikan kata sandi"
+                    : "Tampilkan kata sandi"
+                }
               >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
               </button>
             </div>
           </div>
@@ -161,4 +161,3 @@ export const LoginPage: React.FC<LoginPageProps> = ({
 };
 
 export default LoginPage;
-

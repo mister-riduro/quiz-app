@@ -3,6 +3,7 @@ import { DuoCard } from "@/components/ui/DuoCard";
 import { TactileButton } from "@/components/ui/TactileButton";
 import { Badge } from "@/components/ui/Badge";
 import { Quiz } from "@/types/quiz";
+import { StoredQuiz } from "@/stores/quizStore";
 import { useSoundEffect } from "@/hooks/useSoundEffect";
 import { getMeshGradientStyle } from "@/utils";
 import {
@@ -15,15 +16,18 @@ import {
   HelpCircle,
   Eye,
   EyeOff,
+  User,
 } from "lucide-react";
 
 export interface QuizCardProps {
-  quiz: Quiz;
+  quiz: StoredQuiz | Quiz;
   onHost: (quiz: Quiz) => void;
-  onEdit: (quiz: Quiz) => void;
+  onEdit?: (quiz: Quiz) => void;
   onDuplicate?: (quiz: Quiz) => void;
   onDelete?: (quiz: Quiz) => void;
   onTogglePublish?: (quiz: Quiz) => void;
+  isCommunity?: boolean;
+  onClone?: (quiz: StoredQuiz) => void;
 }
 
 export const QuizCard: React.FC<QuizCardProps> = ({
@@ -33,6 +37,8 @@ export const QuizCard: React.FC<QuizCardProps> = ({
   onDuplicate,
   onDelete,
   onTogglePublish,
+  isCommunity = false,
+  onClone,
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -103,11 +109,20 @@ export const QuizCard: React.FC<QuizCardProps> = ({
         </div>
 
         {/* Content Details */}
-        <div className="flex items-center gap-2 text-xs font-bold text-[#777777] mb-1.5">
+        <div className="flex items-center gap-2 text-xs font-bold text-[#777777] mb-1.5 flex-wrap">
           <span className="flex items-center gap-1">
             <HelpCircle className="w-3.5 h-3.5 text-duo-blue" />
             {quiz.questionsCount ?? 0} Butir Soal
           </span>
+          {isCommunity && (quiz as StoredQuiz).teacherProfile?.full_name && (
+            <span className="flex items-center gap-1 text-slate-500 font-semibold truncate">
+              • <User className="w-3 h-3 text-duo-green shrink-0" />
+              {(quiz as StoredQuiz).teacherProfile?.full_name}
+              {(quiz as StoredQuiz).teacherProfile?.school_name
+                ? ` (${(quiz as StoredQuiz).teacherProfile?.school_name})`
+                : ""}
+            </span>
+          )}
         </div>
 
         <h3
@@ -123,121 +138,157 @@ export const QuizCard: React.FC<QuizCardProps> = ({
       </div>
 
       {/* Action Buttons Section */}
-      <div className="pt-3 border-t border-slate-100 flex items-center gap-2">
-        {/* Massive Host / Play Button */}
-        <TactileButton
-          variant="blue"
-          size="md"
-          icon={<Play className="w-4 h-4 fill-current" />}
-          onClick={() => {
-            playTap();
-            onHost(quiz);
-          }}
-          className="flex-1 py-3 text-sm tracking-wider shadow-sm font-black"
-        >
-          Host / Mainkan
-        </TactileButton>
-
-        {/* Edit Button */}
-        <TactileButton
-          variant="outline"
-          size="md"
-          aria-label="Edit Kuis"
-          onClick={() => {
-            playTap();
-            onEdit(quiz);
-          }}
-          className="px-3.5 py-3 border-2 border-duo-gray text-[#4B4B4B]"
-        >
-          <Edit3 className="w-4 h-4" />
-        </TactileButton>
-
-        {/* 3-Dots Dropdown Menu */}
-        <div className="relative" ref={menuRef}>
+      {isCommunity ? (
+        <div className="pt-3 border-t border-slate-100 flex items-center gap-2">
+          {/* Mainkan di Kelas Button */}
           <TactileButton
-            variant="outline"
+            variant="blue"
             size="md"
-            aria-label="Menu Opsi Kuis"
-            onClick={toggleMenu}
-            className="px-3.5 py-3 border-2 border-duo-gray text-[#4B4B4B]"
+            icon={<Play className="w-4 h-4 fill-current" />}
+            onClick={() => {
+              playTap();
+              onHost(quiz);
+            }}
+            className="flex-1 py-3 text-sm tracking-wider shadow-sm font-black"
           >
-            <MoreVertical className="w-4 h-4" />
+            Mainkan di Kelas
           </TactileButton>
 
-          {isMenuOpen && (
-            <div className="absolute right-0 bottom-full mb-2 w-48 bg-white rounded-2xl border-2 border-slate-200 border-b-4 border-b-slate-300 shadow-xl z-30 py-1.5 flex flex-col animate-in fade-in zoom-in-95 duration-100">
-              <button
-                type="button"
-                onClick={() => {
-                  playTap();
-                  setIsMenuOpen(false);
-                  onEdit(quiz);
-                }}
-                className="w-full px-4 py-2.5 text-left text-xs font-bold text-duo-dark hover:bg-slate-100 flex items-center gap-2.5 transition-colors"
-              >
-                <Edit3 className="w-4 h-4 text-duo-blue" />
-                Ubah Nama & Soal
-              </button>
+          {/* Clone to My Quizzes */}
+          {onClone && (
+            <TactileButton
+              variant="green"
+              size="md"
+              icon={<Copy className="w-4 h-4" />}
+              onClick={() => {
+                playPop();
+                onClone(quiz as StoredQuiz);
+              }}
+              className="px-3.5 py-3 text-xs tracking-wide font-black shrink-0"
+            >
+              Salin ke Kuis Saya
+            </TactileButton>
+          )}
+        </div>
+      ) : (
+        <div className="pt-3 border-t border-slate-100 flex items-center gap-2">
+          {/* Massive Host / Play Button */}
+          <TactileButton
+            variant="blue"
+            size="md"
+            icon={<Play className="w-4 h-4 fill-current" />}
+            onClick={() => {
+              playTap();
+              onHost(quiz);
+            }}
+            className="flex-1 py-3 text-sm tracking-wider shadow-sm font-black"
+          >
+            Host / Mainkan
+          </TactileButton>
 
-              {onDuplicate && (
+          {/* Edit Button */}
+          {onEdit && (
+            <TactileButton
+              variant="outline"
+              size="md"
+              aria-label="Edit Kuis"
+              onClick={() => {
+                playTap();
+                onEdit(quiz);
+              }}
+              className="px-3.5 py-3 border-2 border-duo-gray text-[#4B4B4B]"
+            >
+              <Edit3 className="w-4 h-4" />
+            </TactileButton>
+          )}
+
+          {/* 3-Dots Dropdown Menu */}
+          <div className="relative" ref={menuRef}>
+            <TactileButton
+              variant="outline"
+              size="md"
+              aria-label="Menu Opsi Kuis"
+              onClick={toggleMenu}
+              className="px-3.5 py-3 border-2 border-duo-gray text-[#4B4B4B]"
+            >
+              <MoreVertical className="w-4 h-4" />
+            </TactileButton>
+
+            {isMenuOpen && (
+              <div className="absolute right-0 bottom-full mb-2 w-48 bg-white rounded-2xl border-2 border-slate-200 border-b-4 border-b-slate-300 shadow-xl z-30 py-1.5 flex flex-col animate-in fade-in zoom-in-95 duration-100">
                 <button
                   type="button"
                   onClick={() => {
                     playTap();
                     setIsMenuOpen(false);
-                    onDuplicate(quiz);
+                    onEdit?.(quiz);
                   }}
                   className="w-full px-4 py-2.5 text-left text-xs font-bold text-duo-dark hover:bg-slate-100 flex items-center gap-2.5 transition-colors"
                 >
-                  <Copy className="w-4 h-4 text-duo-orange" />
-                  Gandakan Kuis
+                  <Edit3 className="w-4 h-4 text-duo-blue" />
+                  Ubah Nama & Soal
                 </button>
-              )}
 
-              {onTogglePublish && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    playTap();
-                    setIsMenuOpen(false);
-                    onTogglePublish(quiz);
-                  }}
-                  className="w-full px-4 py-2.5 text-left text-xs font-bold text-duo-dark hover:bg-slate-100 flex items-center gap-2.5 transition-colors"
-                >
-                  {quiz.isPublished ? (
-                    <>
-                      <EyeOff className="w-4 h-4 text-slate-400" />
-                      Tarik ke Draft
-                    </>
-                  ) : (
-                    <>
-                      <Eye className="w-4 h-4 text-duo-green" />
-                      Publikasikan Kuis
-                    </>
-                  )}
-                </button>
-              )}
-
-              {onDelete && (
-                <div className="pt-1 mt-1 border-t border-slate-100">
+                {onDuplicate && (
                   <button
                     type="button"
                     onClick={() => {
                       playTap();
                       setIsMenuOpen(false);
-                      onDelete(quiz);
+                      onDuplicate(quiz);
                     }}
-                    className="w-full px-4 py-2.5 text-left text-xs font-bold text-duo-red hover:bg-duo-red-light flex items-center gap-2.5 transition-colors"
+                    className="w-full px-4 py-2.5 text-left text-xs font-bold text-duo-dark hover:bg-slate-100 flex items-center gap-2.5 transition-colors"
                   >
-                    <Trash2 className="w-4 h-4 text-duo-red" />
-                    Hapus Kuis
+                    <Copy className="w-4 h-4 text-duo-orange" />
+                    Gandakan Kuis
                   </button>
-                </div>
-              )}
-            </div>
-          )}
+                )}
+
+                {onTogglePublish && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      playTap();
+                      setIsMenuOpen(false);
+                      onTogglePublish(quiz);
+                    }}
+                    className="w-full px-4 py-2.5 text-left text-xs font-bold text-duo-dark hover:bg-slate-100 flex items-center gap-2.5 transition-colors"
+                  >
+                    {quiz.isPublished ? (
+                      <>
+                        <EyeOff className="w-4 h-4 text-slate-400" />
+                        Tarik ke Draft
+                      </>
+                    ) : (
+                      <>
+                        <Eye className="w-4 h-4 text-duo-green" />
+                        Publikasikan Kuis
+                      </>
+                    )}
+                  </button>
+                )}
+
+                {onDelete && (
+                  <div className="pt-1 mt-1 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        playTap();
+                        setIsMenuOpen(false);
+                        onDelete(quiz);
+                      }}
+                      className="w-full px-4 py-2.5 text-left text-xs font-bold text-duo-red hover:bg-duo-red-light flex items-center gap-2.5 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4 text-duo-red" />
+                      Hapus Kuis
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </DuoCard>
   );
 };

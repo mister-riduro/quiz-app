@@ -90,35 +90,72 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
     return pluginRegistry.getAllPlugins()[0];
   }, [activeQuestion]);
 
-  // Calculate effective time limit for active question based on quiz.timerMode
-  const effectiveTimeLimit = useMemo(() => {
-    if (quiz?.timerMode === "per_question") {
-      return activeQuestion?.timeLimitSeconds ?? 30;
+  const isGlobalTimer = (quiz?.timerMode || "global") === "global";
+  const globalTotalSeconds = quiz?.globalTimeLimitSeconds ?? 7200;
+  const currentQuestionSeconds = activeQuestion?.timeLimitSeconds ?? 30;
+
+  // Active time limit based on mode
+  const effectiveTimeLimit = isGlobalTimer
+    ? globalTotalSeconds
+    : currentQuestionSeconds;
+
+  // Global countdown timer state (runs continuously across all questions)
+  const [globalTimeLeft, setGlobalTimeLeft] =
+    useState<number>(globalTotalSeconds);
+
+  // Per-question countdown timer state (resets on question change)
+  const [questionTimeLeft, setQuestionTimeLeft] = useState<number>(
+    currentQuestionSeconds,
+  );
+
+  // Active time left to display
+  const timeLeft = isGlobalTimer ? globalTimeLeft : questionTimeLeft;
+
+  // Reset per-question timer when question index changes
+  useEffect(() => {
+    if (!isGlobalTimer) {
+      setQuestionTimeLeft(activeQuestion?.timeLimitSeconds ?? 30);
     }
-    // Mode global (default)
-    return (
-      quiz?.globalTimeLimitSeconds ?? activeQuestion?.timeLimitSeconds ?? 30
-    );
-  }, [
-    quiz?.timerMode,
-    quiz?.globalTimeLimitSeconds,
-    activeQuestion?.timeLimitSeconds,
-  ]);
+  }, [currentIndex, isGlobalTimer, activeQuestion?.timeLimitSeconds]);
 
-  // Live countdown timer state for active question
-  const [timeLeft, setTimeLeft] = useState<number>(effectiveTimeLimit);
-
-  // Reset timer on question change
+  // Global timer countdown effect (continuous across the entire quiz)
   useEffect(() => {
-    setTimeLeft(effectiveTimeLimit);
-  }, [currentIndex, effectiveTimeLimit]);
-
-  // Countdown interval effect
-  useEffect(() => {
-    if (effectiveTimeLimit <= 0 || feedbackState.isOpen || isCompleted) return;
+    if (!isGlobalTimer || globalTotalSeconds <= 0 || isCompleted) return;
 
     const timer = setInterval(() => {
-      setTimeLeft((prev) => {
+      setGlobalTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          playWrong();
+          setIsCompleted(true);
+          setFeedbackState({
+            isOpen: true,
+            isCorrect: false,
+            title: "Waktu Kuis Habis! ⏰",
+            message: `Batas waktu keseluruhan kuis (${Math.round(globalTotalSeconds / 60)} menit) telah berakhir.`,
+            solutionExplanation: "Sesi kuis tatap muka telah selesai.",
+          });
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [isGlobalTimer, globalTotalSeconds, isCompleted, playWrong]);
+
+  // Per-question timer countdown effect (resets per question)
+  useEffect(() => {
+    if (
+      isGlobalTimer ||
+      currentQuestionSeconds <= 0 ||
+      feedbackState.isOpen ||
+      isCompleted
+    )
+      return;
+
+    const timer = setInterval(() => {
+      setQuestionTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
           playWrong();
@@ -136,7 +173,32 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [effectiveTimeLimit, feedbackState.isOpen, isCompleted, playWrong]);
+  }, [
+    isGlobalTimer,
+    currentQuestionSeconds,
+    feedbackState.isOpen,
+    isCompleted,
+    playWrong,
+  ]);
+
+  const formatTimerBadge = (seconds: number, isGlobal: boolean) => {
+    if (seconds <= 0) return "Tanpa Batas";
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+
+    if (isGlobal) {
+      if (hrs > 0) {
+        return `Global: ${hrs}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+      }
+      return `Global: ${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+    }
+
+    if (mins > 0) {
+      return `${mins}:${secs.toString().padStart(2, "0")}`;
+    }
+    return `${secs}s`;
+  };
 
   // Sync fullscreen state
   useEffect(() => {
@@ -420,19 +482,21 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
               {activeQuestion?.points || 100} Poin
             </span>
 
-            {/* Live Question Timer Badge */}
+            {/* Live Question / Global Timer Badge */}
             <span
               className={cn(
-                "text-xs font-black uppercase px-2.5 py-0.5 rounded-lg flex items-center gap-1 border transition-all",
+                "text-xs font-black uppercase px-2.5 py-0.5 rounded-lg flex items-center gap-1.5 border transition-all",
                 effectiveTimeLimit <= 0
                   ? "bg-slate-100 text-slate-600 border-slate-200"
-                  : timeLeft <= 5
+                  : timeLeft <= 10
                     ? "bg-red-100 text-duo-red border-red-300 animate-pulse font-black shadow-xs"
-                    : "bg-duo-blue/10 text-duo-blue border-duo-blue/20",
+                    : isGlobalTimer
+                      ? "bg-blue-50 text-duo-blue border-blue-200"
+                      : "bg-emerald-50 text-duo-green border-emerald-200",
               )}
             >
               <Clock className="w-3.5 h-3.5" />
-              {effectiveTimeLimit <= 0 ? "Tanpa Batas" : `${timeLeft}s`}
+              {formatTimerBadge(timeLeft, isGlobalTimer)}
             </span>
           </div>
 

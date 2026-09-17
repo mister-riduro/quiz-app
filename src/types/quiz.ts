@@ -1,6 +1,7 @@
 export type QuestionType =
   | "crossword"
   | "wordsearch"
+  | "spell_the_word"
   | "spell_word"
   | "anagram"
   | "true_false"

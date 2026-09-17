@@ -7,14 +7,14 @@ export type Json =
   | Json[];
 
 export type QuestionTypeEnum =
-  | 'crossword'
-  | 'wordsearch'
-  | 'spell_the_word'
-  | 'anagram'
-  | 'true_false'
-  | 'labelled_diagram'
-  | 'unjumble'
-  | 'hangman';
+  | "crossword"
+  | "wordsearch"
+  | "spell_the_word"
+  | "anagram"
+  | "true_false"
+  | "labelled_diagram"
+  | "unjumble"
+  | "hangman";
 
 export interface DatabaseProfile {
   id: string;
@@ -116,16 +116,19 @@ export interface Database {
         Row: DatabaseProfile;
         Insert: DatabaseProfileInsert;
         Update: DatabaseProfileUpdate;
+        Relationships: [];
       };
       quizzes: {
         Row: DatabaseQuiz;
         Insert: DatabaseQuizInsert;
         Update: DatabaseQuizUpdate;
+        Relationships: [];
       };
       questions: {
         Row: DatabaseQuestion;
         Insert: DatabaseQuestionInsert;
         Update: DatabaseQuestionUpdate;
+        Relationships: [];
       };
     };
     Views: Record<string, never>;
@@ -133,5 +136,6 @@ export interface Database {
     Enums: {
       question_type_enum: QuestionTypeEnum;
     };
+    CompositeTypes: Record<string, never>;
   };
 }

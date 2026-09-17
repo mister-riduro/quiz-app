@@ -4,6 +4,9 @@ import { QuestionTypeEnum } from "@/types/database";
 import { pluginRegistry } from "@/plugins/core/registry";
 import { arrayMove } from "@dnd-kit/sortable";
 import { useQuizStore, StoredQuiz } from "./quizStore";
+import { useAuthStore } from "./authStore";
+import { generateUUID } from "@/utils/uuid";
+import { isValidUUID } from "@/lib/quizService";
 
 export interface BuilderQuestion {
   id: string;
@@ -23,12 +26,14 @@ export interface BuilderState {
   activeQuestionIndex: number;
   isDirty: boolean;
   isSaving: boolean;
+  defaultQuestionTimeLimitSeconds: number;
 
   // Actions
   setQuizTitle: (title: string) => void;
   setQuizMetadata: (data: Partial<Quiz>) => void;
   setTimerMode: (mode: "global" | "per_question") => void;
   setGlobalTimeLimit: (seconds: number) => void;
+  setBulkQuestionsTimeLimit: (seconds: number) => void;
   togglePublish: () => void;
   addQuestion: (type?: QuestionTypeEnum) => void;
   updateQuestion: (index: number, data: Partial<BuilderQuestion>) => void;
@@ -47,12 +52,13 @@ const DEFAULT_QUIZ: Partial<Quiz> = {
   category: "Umum",
   isPublished: false,
   timerMode: "global",
-  globalTimeLimitSeconds: 30,
+  globalTimeLimitSeconds: 7200, // Default 120 Menit
 };
 
 const createInitialQuestion = (
   orderIndex: number = 0,
   type: QuestionTypeEnum = "true_false",
+  timeLimitSeconds: number = 30,
 ): BuilderQuestion => {
   let defaultContent: any = {};
   if (pluginRegistry.hasPlugin(type)) {
@@ -60,23 +66,24 @@ const createInitialQuestion = (
   }
 
   return {
-    id: `q-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+    id: generateUUID(),
     type,
     orderIndex,
     titlePrompt: "Tuliskan pertanyaan kuis di sini...",
     mediaUrl: "",
     content: defaultContent,
     points: 100,
-    timeLimitSeconds: 30,
+    timeLimitSeconds,
   };
 };
 
 export const useBuilderStore = create<BuilderState>((set, get) => ({
-  currentQuiz: { ...DEFAULT_QUIZ, id: `quiz-${Date.now()}` },
-  questions: [createInitialQuestion(0, "true_false")],
+  currentQuiz: { ...DEFAULT_QUIZ, id: generateUUID() },
+  questions: [createInitialQuestion(0, "true_false", 30)],
   activeQuestionIndex: 0,
   isDirty: false,
   isSaving: false,
+  defaultQuestionTimeLimitSeconds: 30,
 
   setQuizTitle: (title: string) =>
     set((state) => ({
@@ -102,6 +109,16 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
       isDirty: true,
     })),
 
+  setBulkQuestionsTimeLimit: (seconds: number) =>
+    set((state) => ({
+      questions: state.questions.map((q) => ({
+        ...q,
+        timeLimitSeconds: seconds,
+      })),
+      defaultQuestionTimeLimitSeconds: seconds,
+      isDirty: true,
+    })),
+
   togglePublish: () =>
     set((state) => ({
       currentQuiz: {
@@ -113,7 +130,11 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
 
   addQuestion: (type: QuestionTypeEnum = "true_false") =>
     set((state) => {
-      const newQuestion = createInitialQuestion(state.questions.length, type);
+      const newQuestion = createInitialQuestion(
+        state.questions.length,
+        type,
+        state.defaultQuestionTimeLimitSeconds,
+      );
       const newQuestions = [...state.questions, newQuestion];
       return {
         questions: newQuestions,
@@ -198,11 +219,18 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
     // Brief natural tactile pause
     await new Promise((resolve) => setTimeout(resolve, 300));
     const state = get();
-    const quizId = state.currentQuiz.id || `quiz-${Date.now()}`;
+    const currentUserId = useAuthStore.getState().user?.id;
+    const quizId = isValidUUID(state.currentQuiz.id)
+      ? state.currentQuiz.id!
+      : generateUUID();
 
     const storedQuiz: StoredQuiz = {
       id: quizId,
-      teacherId: state.currentQuiz.teacherId || "teacher-me",
+      teacherId:
+        state.currentQuiz.teacherId &&
+        state.currentQuiz.teacherId !== "teacher-me"
+          ? state.currentQuiz.teacherId
+          : currentUserId || "teacher-me",
       title: state.currentQuiz.title?.trim() || "Kuis Tanpa Judul",
       description: state.currentQuiz.description || "",
       category: state.currentQuiz.category || "Umum",
@@ -212,14 +240,20 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
       createdAt: state.currentQuiz.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       timerMode: state.currentQuiz.timerMode || "global",
-      globalTimeLimitSeconds: state.currentQuiz.globalTimeLimitSeconds ?? 30,
-      questions: state.questions,
+      globalTimeLimitSeconds: state.currentQuiz.globalTimeLimitSeconds ?? 7200,
+      questions: state.questions.map((q, idx) => ({
+        ...q,
+        id: isValidUUID(q.id) ? q.id : generateUUID(),
+        quizId,
+        orderIndex: idx,
+      })),
     };
 
-    useQuizStore.getState().saveQuiz(storedQuiz);
+    const savedId = await useQuizStore.getState().saveQuiz(storedQuiz);
 
     set({
-      currentQuiz: { ...state.currentQuiz, id: quizId },
+      currentQuiz: { ...state.currentQuiz, id: savedId },
+      questions: storedQuiz.questions,
       isSaving: false,
       isDirty: false,
     });
@@ -230,25 +264,34 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
     set({
       currentQuiz: {
         ...DEFAULT_QUIZ,
-        id: `quiz-${Date.now()}`,
+        id: generateUUID(),
         ...initialData,
       },
-      questions: [createInitialQuestion(0, "true_false")],
+      questions: [createInitialQuestion(0, "true_false", 30)],
       activeQuestionIndex: 0,
       isDirty: false,
       isSaving: false,
+      defaultQuestionTimeLimitSeconds: 30,
     }),
 
   loadQuiz: (quiz: Partial<Quiz>, questions?: BuilderQuestion[]) =>
     set({
-      currentQuiz: { ...quiz },
+      currentQuiz: {
+        ...quiz,
+        timerMode: quiz.timerMode || "global",
+        globalTimeLimitSeconds: quiz.globalTimeLimitSeconds ?? 7200,
+      },
       questions:
         questions && questions.length > 0
           ? questions
-          : [createInitialQuestion(0, "true_false")],
+          : [createInitialQuestion(0, "true_false", 30)],
       activeQuestionIndex: 0,
       isDirty: false,
       isSaving: false,
+      defaultQuestionTimeLimitSeconds:
+        questions && questions.length > 0
+          ? (questions[0]?.timeLimitSeconds ?? 30)
+          : 30,
     }),
 }));
 

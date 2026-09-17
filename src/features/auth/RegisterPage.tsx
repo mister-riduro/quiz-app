@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { DuoCard } from '@/components/ui/DuoCard';
-import { TactileButton } from '@/components/ui/TactileButton';
-import { useAuthStore } from '@/stores/authStore';
-import { useSoundEffect } from '@/hooks/useSoundEffect';
+import React, { useState } from "react";
+import { DuoCard } from "@/components/ui/DuoCard";
+import { TactileButton } from "@/components/ui/TactileButton";
+import { useAuthStore } from "@/stores/authStore";
+import { useSoundEffect } from "@/hooks/useSoundEffect";
 import {
   Sparkles,
   User,
@@ -12,8 +12,7 @@ import {
   Eye,
   EyeOff,
   AlertCircle,
-  UserPlus,
-} from 'lucide-react';
+} from "lucide-react";
 
 export interface RegisterPageProps {
   onSuccess?: () => void;
@@ -24,10 +23,10 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
   onSuccess,
   onNavigateToLogin,
 }) => {
-  const [fullName, setFullName] = useState('');
-  const [schoolName, setSchoolName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState("");
+  const [schoolName, setSchoolName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
 
@@ -41,13 +40,13 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
     setValidationError(null);
 
     if (!fullName.trim()) {
-      setValidationError('Silakan isi nama lengkap pengajar.');
+      setValidationError("Silakan isi nama lengkap pengajar.");
       playWrong();
       return;
     }
 
     if (password.length < 6) {
-      setValidationError('Kata sandi harus terdiri dari minimal 6 karakter.');
+      setValidationError("Kata sandi harus terdiri dari minimal 6 karakter.");
       playWrong();
       return;
     }
@@ -56,7 +55,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
       email.trim(),
       password,
       fullName.trim(),
-      schoolName.trim()
+      schoolName.trim(),
     );
 
     if (success) {
@@ -72,12 +71,12 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
   return (
     <div className="w-full max-w-md mx-auto p-4 sm:p-6 flex flex-col items-center">
       {/* Centered Bouncy Card */}
-      <DuoCard elevated className="w-full flex flex-col gap-6 p-6 sm:p-8 text-center">
+      <DuoCard
+        elevated
+        className="w-full flex flex-col gap-6 p-6 sm:p-8 text-center"
+      >
         {/* Header Badge */}
         <div className="flex flex-col items-center">
-          <div className="w-16 h-16 rounded-3xl bg-duo-blue-light border-2 border-duo-blue text-duo-blue-border flex items-center justify-center mb-3 shadow-sm">
-            <UserPlus className="w-8 h-8 text-duo-blue" />
-          </div>
           <h2 className="text-2xl sm:text-3xl font-black text-duo-dark tracking-tight">
             Daftar Akun Guru
           </h2>
@@ -168,7 +167,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
                 <Lock className="w-5 h-5" />
               </div>
               <input
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 required
                 disabled={isLoading}
                 value={password}
@@ -180,9 +179,17 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-duo-dark"
-                aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
+                aria-label={
+                  showPassword
+                    ? "Sembunyikan kata sandi"
+                    : "Tampilkan kata sandi"
+                }
               >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
               </button>
             </div>
           </div>
@@ -224,4 +231,3 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
 };
 
 export default RegisterPage;
-

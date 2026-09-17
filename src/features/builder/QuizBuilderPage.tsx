@@ -39,6 +39,7 @@ import {
   CheckCircle2,
   ChevronDown,
   Check,
+  Lock,
 } from "lucide-react";
 
 export interface QuizBuilderPageProps {
@@ -59,6 +60,7 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
     setQuizTitle,
     setTimerMode,
     setGlobalTimeLimit,
+    setBulkQuestionsTimeLimit,
     togglePublish,
     addQuestion,
     updateQuestion,
@@ -76,6 +78,17 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
   const addDropdownRef = useRef<HTMLDivElement>(null);
   const typeDropdownRef = useRef<HTMLDivElement>(null);
   const { playTap, playPop, playCorrect, playVictory } = useSoundEffect();
+
+  // Detect whether all questions share the exact same time limit for bulk detection
+  const allSameTime =
+    questions.length > 0 &&
+    questions.every(
+      (q) =>
+        (q.timeLimitSeconds ?? 30) === (questions[0]?.timeLimitSeconds ?? 30),
+    );
+  const currentBulkValue = allSameTime
+    ? String(questions[0]?.timeLimitSeconds ?? 30)
+    : "custom";
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -263,8 +276,178 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
       <div className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* LEFT SIDEBAR: Question Thumbnail List with @dnd-kit reordering */}
         <aside className="lg:col-span-4 xl:col-span-3 flex flex-col gap-4">
+          {/* TOP CARD: Pengaturan Waktu Kuis (Waktu Global vs Per Soal Bulk) */}
           <DuoCard elevated className="p-4 flex flex-col gap-3">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+            <div className="flex flex-col gap-2.5 pb-2 border-b border-slate-100">
+              <h3 className="text-xs font-black uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
+                <Clock className="w-4 h-4 text-duo-blue" />
+                Pengaturan Waktu
+              </h3>
+
+              {/* Mode Toggle Switcher */}
+              <div className="w-full grid grid-cols-2 p-0.5 bg-slate-100 rounded-xl border border-slate-200 text-[11px] font-black text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    playTap();
+                    setTimerMode("global");
+                  }}
+                  className={cn(
+                    "px-2.5 py-1 rounded-lg transition-all cursor-pointer",
+                    (currentQuiz.timerMode || "global") === "global"
+                      ? "bg-white text-duo-blue shadow-xs font-black"
+                      : "text-slate-500 hover:text-duo-dark font-bold",
+                  )}
+                >
+                  Global
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    playTap();
+                    setTimerMode("per_question");
+                  }}
+                  className={cn(
+                    "px-2.5 py-1 rounded-lg transition-all cursor-pointer",
+                    currentQuiz.timerMode === "per_question"
+                      ? "bg-white text-duo-blue shadow-xs font-black"
+                      : "text-slate-500 hover:text-duo-dark font-bold",
+                  )}
+                >
+                  Per Soal
+                </button>
+              </div>
+            </div>
+
+            {/* Condition 1: Global Timer Mode (Enabled) */}
+            {(currentQuiz.timerMode || "global") === "global" ? (
+              <div className="flex flex-col gap-2">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[11px] font-black uppercase text-slate-500">
+                      Batas Waktu Total Kuis
+                    </label>
+                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-blue-50 text-duo-blue border border-blue-200">
+                      {Math.round(
+                        (currentQuiz.globalTimeLimitSeconds ?? 7200) / 60,
+                      )}{" "}
+                      Menit
+                    </span>
+                  </div>
+                  <select
+                    value={currentQuiz.globalTimeLimitSeconds ?? 7200}
+                    onChange={(e) => {
+                      playPop();
+                      setGlobalTimeLimit(parseInt(e.target.value) || 0);
+                    }}
+                    className="w-full px-3 py-2 bg-white border-2 border-duo-blue/40 rounded-xl font-bold text-xs sm:text-sm text-duo-dark focus:outline-none focus:border-duo-blue cursor-pointer"
+                  >
+                    <option value={900}>15 Menit</option>
+                    <option value={1800}>30 Menit</option>
+                    <option value={2700}>45 Menit</option>
+                    <option value={3600}>60 Menit (1 Jam)</option>
+                    <option value={5400}>90 Menit (1.5 Jam)</option>
+                    <option value={7200}>120 Menit (2 Jam)</option>
+                    <option value={10800}>180 Menit (3 Jam)</option>
+                    <option value={0}>Tanpa Batas Waktu (∞)</option>
+                    {![0, 900, 1800, 2700, 3600, 5400, 7200, 10800].includes(
+                      currentQuiz.globalTimeLimitSeconds ?? 7200,
+                    ) && (
+                      <option value={currentQuiz.globalTimeLimitSeconds}>
+                        {Math.round(
+                          (currentQuiz.globalTimeLimitSeconds ?? 7200) / 60,
+                        )}{" "}
+                        Menit (Kustom)
+                      </option>
+                    )}
+                  </select>
+                </div>
+
+                {/* <div className="p-2.5 bg-blue-50/70 border border-blue-200/70 rounded-xl text-[11px] font-bold text-duo-blue leading-relaxed flex items-start gap-1.5">
+                  <span className="text-sm">⏱️</span>
+                  <span>
+                    Keseluruhan kuis harus diselesaikan dalam{" "}
+                    <strong>
+                      {Math.round(
+                        (currentQuiz.globalTimeLimitSeconds ?? 7200) / 60,
+                      )}{" "}
+                      menit
+                    </strong>
+                    . Durasi per butir soal dinonaktifkan.
+                  </span>
+                </div> */}
+              </div>
+            ) : (
+              /* Condition 2: Per Question Mode (Bulk Time Setting) */
+              <div className="flex flex-col gap-2">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[11px] font-black uppercase text-slate-500">
+                      Waktu Serentak Semua Soal
+                    </label>
+                    <span
+                      className={cn(
+                        "text-[10px] font-black uppercase px-2 py-0.5 rounded-md border",
+                        allSameTime
+                          ? "bg-duo-green/10 text-duo-green border-duo-green/20"
+                          : "bg-amber-50 text-amber-600 border-amber-200",
+                      )}
+                    >
+                      {allSameTime ? "Seragam" : "Kustom"}
+                    </span>
+                  </div>
+
+                  <select
+                    value={currentBulkValue}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val !== "custom") {
+                        playPop();
+                        setBulkQuestionsTimeLimit(parseInt(val, 10) || 0);
+                      }
+                    }}
+                    className={cn(
+                      "w-full px-3 py-2 bg-white border-2 rounded-xl font-bold text-xs sm:text-sm text-duo-dark focus:outline-none cursor-pointer transition-colors",
+                      allSameTime
+                        ? "border-duo-green/50 focus:border-duo-green"
+                        : "border-amber-300 focus:border-amber-400",
+                    )}
+                  >
+                    {!allSameTime && (
+                      <option value="custom">Kustom (Durasi Bervariasi)</option>
+                    )}
+                    <option value="15">15 Detik </option>
+                    <option value="20">20 Detik</option>
+                    <option value="30">30 Detik </option>
+                    <option value="45">45 Detik </option>
+                    <option value="60">60 Detik (1 Menit)</option>
+                    <option value="90">90 Detik (1.5 Menit)</option>
+                    <option value="120">120 Detik (2 Menit)</option>
+                    <option value="0">Tanpa Batas Waktu (∞)</option>
+                  </select>
+                </div>
+
+                {/* <div
+                  className={cn(
+                    "p-2.5 border rounded-xl text-[11px] font-bold leading-relaxed flex items-start gap-1.5",
+                    allSameTime
+                      ? "bg-emerald-50/80 border-emerald-200 text-emerald-800"
+                      : "bg-amber-50/80 border-amber-200 text-amber-800",
+                  )}
+                >
+                  <span className="text-sm">{allSameTime ? "✅" : "⚡"}</span>
+                  <span>
+                    {allSameTime
+                      ? `Semua (${questions.length}) soal diatur serentak ke ${questions[0]?.timeLimitSeconds ?? 30} detik. Setiap soal tetap bisa diubah secara individual.`
+                      : `Durasi soal berbeda-beda (Kustom). Pilih durasi di atas jika ingin menyamakan seluruh soal kembali.`}
+                  </span>
+                </div> */}
+              </div>
+            )}
+          </DuoCard>
+
+          <DuoCard elevated className="p-4 flex flex-col gap-3">
+            <div className="flex flex-col gap-2.5 pb-2 border-b border-slate-100">
               <h3 className="text-xs font-black uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
                 <HelpCircle className="w-4 h-4 text-duo-blue" />
                 Daftar Soal ({questions.length})
@@ -556,70 +739,64 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
                       </select>
                     </div>
 
+                    {/* Waktu Pengerjaan Soal (Terkunci saat Mode Global, Aktif saat Mode Per Soal) */}
                     <div className="flex flex-col gap-2">
                       <div className="flex items-center justify-between">
                         <label className="text-xs font-black uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
-                          <Clock className="w-3.5 h-3.5 text-duo-blue" />
-                          Pengaturan Waktu
+                          <Clock
+                            className={cn(
+                              "w-3.5 h-3.5",
+                              (currentQuiz.timerMode || "global") === "global"
+                                ? "text-slate-400"
+                                : "text-duo-green",
+                            )}
+                          />
+                          Batas Waktu Soal #{activeQuestionIndex + 1}
                         </label>
 
-                        {/* Mode Selector Switcher */}
-                        <div className="inline-flex items-center p-0.5 bg-slate-100 rounded-xl border border-slate-200 text-[11px] font-black">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              playTap();
-                              setTimerMode("global");
-                            }}
-                            className={cn(
-                              "px-2.5 py-1 rounded-lg transition-all cursor-pointer",
-                              (currentQuiz.timerMode || "global") === "global"
-                                ? "bg-white text-duo-blue shadow-xs font-black"
-                                : "text-slate-500 hover:text-duo-dark font-bold",
-                            )}
-                          >
-                            Waktu Global
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              playTap();
-                              setTimerMode("per_question");
-                            }}
-                            className={cn(
-                              "px-2.5 py-1 rounded-lg transition-all cursor-pointer",
-                              currentQuiz.timerMode === "per_question"
-                                ? "bg-white text-duo-blue shadow-xs font-black"
-                                : "text-slate-500 hover:text-duo-dark font-bold",
-                            )}
-                          >
-                            Per Soal
-                          </button>
-                        </div>
+                        {(currentQuiz.timerMode || "global") === "global" ? (
+                          <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 border border-slate-200 flex items-center gap-1">
+                            <Lock className="w-3 h-3 text-slate-400" />
+                            Global
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-duo-green/10 text-duo-green border border-duo-green/20">
+                            Per Soal Aktif
+                          </span>
+                        )}
                       </div>
 
-                      {/* Dropdown & Visual Feedback based on active mode */}
                       {(currentQuiz.timerMode || "global") === "global" ? (
                         <div className="flex flex-col gap-1.5">
-                          <select
-                            value={currentQuiz.globalTimeLimitSeconds ?? 30}
-                            onChange={(e) =>
-                              setGlobalTimeLimit(parseInt(e.target.value) || 0)
-                            }
-                            className="w-full px-4 py-2.5 bg-white border-2 border-duo-blue/40 rounded-2xl font-bold text-sm text-duo-dark focus:outline-none focus:border-duo-blue"
-                          >
-                            <option value={15}>15 Detik (Cepat)</option>
-                            <option value={30}>30 Detik (Ideal Kelas)</option>
-                            <option value={45}>45 Detik (Sedang)</option>
-                            <option value={60}>60 Detik (Analitis)</option>
-                            <option value={90}>90 Detik (Kompleks)</option>
-                            <option value={120}>120 Detik (2 Menit)</option>
-                            <option value={0}>Tanpa Batas Waktu (∞)</option>
-                          </select>
-                          <span className="text-[11px] font-bold text-duo-blue flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-duo-blue inline-block animate-pulse" />
-                            Mode Global Aktif: Seluruh ({questions.length}) soal
-                            menggunakan durasi ini.
+                          <div className="relative">
+                            <select
+                              disabled
+                              value="global"
+                              className="w-full px-4 py-2.5 bg-slate-100/90 border-2 border-slate-200 rounded-2xl font-bold text-sm text-slate-400 cursor-not-allowed opacity-75 select-none"
+                            >
+                              <option value="global">
+                                Mengikuti Waktu Global Kuis (
+                                {Math.round(
+                                  (currentQuiz.globalTimeLimitSeconds ?? 7200) /
+                                    60,
+                                )}{" "}
+                                Menit)
+                              </option>
+                            </select>
+                            <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400">
+                              <Lock className="w-4 h-4" />
+                            </div>
+                          </div>
+                          <span className="text-[11px] font-bold text-slate-400 flex items-center gap-1.5">
+                            <span>🔒</span>
+                            Kuis menggunakan waktu global{" "}
+                            <strong>
+                              {Math.round(
+                                (currentQuiz.globalTimeLimitSeconds ?? 7200) /
+                                  60,
+                              )}{" "}
+                              menit
+                            </strong>{" "}
                           </span>
                         </div>
                       ) : (
@@ -631,20 +808,21 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
                                 timeLimitSeconds: parseInt(e.target.value) || 0,
                               })
                             }
-                            className="w-full px-4 py-2.5 bg-white border-2 border-duo-green/40 rounded-2xl font-bold text-sm text-duo-dark focus:outline-none focus:border-duo-green"
+                            className="w-full px-4 py-2.5 bg-white border-2 border-duo-green/40 rounded-2xl font-bold text-sm text-duo-dark focus:outline-none focus:border-duo-green cursor-pointer"
                           >
-                            <option value={15}>15 Detik (Cepat)</option>
-                            <option value={30}>30 Detik (Ideal Kelas)</option>
+                            <option value={15}>15 Detik (Kilat)</option>
+                            <option value={20}>20 Detik</option>
+                            <option value={30}>30 Detik (Standar)</option>
                             <option value={45}>45 Detik (Sedang)</option>
-                            <option value={60}>60 Detik (Analitis)</option>
-                            <option value={90}>90 Detik (Kompleks)</option>
+                            <option value={60}>60 Detik (1 Menit)</option>
+                            <option value={90}>90 Detik (1.5 Menit)</option>
                             <option value={120}>120 Detik (2 Menit)</option>
                             <option value={0}>Tanpa Batas Waktu (∞)</option>
                           </select>
-                          <span className="text-[11px] font-bold text-duo-green flex items-center gap-1.5">
+                          <span className="text-[11px] font-bold text-slate-500 flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-duo-green inline-block" />
-                            Mode Per Soal: Atur durasi khusus untuk Soal #
-                            {activeQuestionIndex + 1}.
+                            Kamu tetap bisa mengubah waktu per soal secara
+                            terpisah.
                           </span>
                         </div>
                       )}

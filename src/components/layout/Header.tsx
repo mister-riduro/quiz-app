@@ -1,6 +1,6 @@
-import React from 'react';
-import { Gamepad2, Volume2, VolumeX } from 'lucide-react';
-import { useSoundEffect } from '@/hooks/useSoundEffect';
+import React from "react";
+import { Gamepad2, Volume2, VolumeX } from "lucide-react";
+import { useSoundEffect } from "@/hooks/useSoundEffect";
 
 export interface HeaderProps {
   title?: string;
@@ -9,8 +9,8 @@ export interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({
-  title = 'EduPlay',
-  subtitle = 'Interactive Classroom Quiz Studio',
+  title = "EduPlay",
+  // subtitle = "Interactive Classroom Quiz Studio",
   showSoundToggle = true,
 }) => {
   const { isMuted, toggleMute, playTap } = useSoundEffect();
@@ -33,9 +33,6 @@ export const Header: React.FC<HeaderProps> = ({
             <h1 className="text-xl font-black tracking-tight text-duo-dark flex items-center gap-2">
               {title}
             </h1>
-            <p className="text-xs font-semibold text-[#777777] hidden sm:block">
-              {subtitle}
-            </p>
           </div>
         </div>
 
