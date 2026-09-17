@@ -1,8 +1,9 @@
-import { create } from 'zustand';
-import { Quiz } from '@/types/quiz';
-import { QuestionTypeEnum } from '@/types/database';
-import { pluginRegistry } from '@/plugins/core/registry';
-import { arrayMove } from '@dnd-kit/sortable';
+import { create } from "zustand";
+import { Quiz } from "@/types/quiz";
+import { QuestionTypeEnum } from "@/types/database";
+import { pluginRegistry } from "@/plugins/core/registry";
+import { arrayMove } from "@dnd-kit/sortable";
+import { useQuizStore, StoredQuiz } from "./quizStore";
 
 export interface BuilderQuestion {
   id: string;
@@ -13,6 +14,7 @@ export interface BuilderQuestion {
   mediaUrl?: string;
   content: any;
   points: number;
+  timeLimitSeconds?: number;
 }
 
 export interface BuilderState {
@@ -25,6 +27,8 @@ export interface BuilderState {
   // Actions
   setQuizTitle: (title: string) => void;
   setQuizMetadata: (data: Partial<Quiz>) => void;
+  setTimerMode: (mode: "global" | "per_question") => void;
+  setGlobalTimeLimit: (seconds: number) => void;
   togglePublish: () => void;
   addQuestion: (type?: QuestionTypeEnum) => void;
   updateQuestion: (index: number, data: Partial<BuilderQuestion>) => void;
@@ -33,20 +37,22 @@ export interface BuilderState {
   reorderQuestions: (startIndex: number, endIndex: number) => void;
   setActiveQuestionIndex: (index: number) => void;
   saveQuiz: () => Promise<boolean>;
-  resetBuilder: () => void;
+  resetBuilder: (initialData?: Partial<Quiz>) => void;
   loadQuiz: (quiz: Partial<Quiz>, questions?: BuilderQuestion[]) => void;
 }
 
 const DEFAULT_QUIZ: Partial<Quiz> = {
-  title: 'Kuis Kelas Baru',
-  description: 'Kuis interaktif pembelajaran tatap muka.',
-  category: 'Umum',
+  title: "Kuis Kelas Baru",
+  description: "Kuis interaktif pembelajaran tatap muka.",
+  category: "Umum",
   isPublished: false,
+  timerMode: "global",
+  globalTimeLimitSeconds: 30,
 };
 
 const createInitialQuestion = (
   orderIndex: number = 0,
-  type: QuestionTypeEnum = 'true_false'
+  type: QuestionTypeEnum = "true_false",
 ): BuilderQuestion => {
   let defaultContent: any = {};
   if (pluginRegistry.hasPlugin(type)) {
@@ -57,16 +63,17 @@ const createInitialQuestion = (
     id: `q-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
     type,
     orderIndex,
-    titlePrompt: 'Tuliskan pertanyaan kuis di sini...',
-    mediaUrl: '',
+    titlePrompt: "Tuliskan pertanyaan kuis di sini...",
+    mediaUrl: "",
     content: defaultContent,
     points: 100,
+    timeLimitSeconds: 30,
   };
 };
 
-export const useBuilderStore = create<BuilderState>((set) => ({
-  currentQuiz: { ...DEFAULT_QUIZ },
-  questions: [createInitialQuestion(0, 'true_false')],
+export const useBuilderStore = create<BuilderState>((set, get) => ({
+  currentQuiz: { ...DEFAULT_QUIZ, id: `quiz-${Date.now()}` },
+  questions: [createInitialQuestion(0, "true_false")],
   activeQuestionIndex: 0,
   isDirty: false,
   isSaving: false,
@@ -83,6 +90,18 @@ export const useBuilderStore = create<BuilderState>((set) => ({
       isDirty: true,
     })),
 
+  setTimerMode: (mode: "global" | "per_question") =>
+    set((state) => ({
+      currentQuiz: { ...state.currentQuiz, timerMode: mode },
+      isDirty: true,
+    })),
+
+  setGlobalTimeLimit: (seconds: number) =>
+    set((state) => ({
+      currentQuiz: { ...state.currentQuiz, globalTimeLimitSeconds: seconds },
+      isDirty: true,
+    })),
+
   togglePublish: () =>
     set((state) => ({
       currentQuiz: {
@@ -92,7 +111,7 @@ export const useBuilderStore = create<BuilderState>((set) => ({
       isDirty: true,
     })),
 
-  addQuestion: (type: QuestionTypeEnum = 'true_false') =>
+  addQuestion: (type: QuestionTypeEnum = "true_false") =>
     set((state) => {
       const newQuestion = createInitialQuestion(state.questions.length, type);
       const newQuestions = [...state.questions, newQuestion];
@@ -143,7 +162,7 @@ export const useBuilderStore = create<BuilderState>((set) => ({
 
       const nextActiveIndex = Math.min(
         state.activeQuestionIndex,
-        filtered.length - 1
+        filtered.length - 1,
       );
 
       return {
@@ -157,7 +176,7 @@ export const useBuilderStore = create<BuilderState>((set) => ({
     set((state) => {
       if (startIndex === endIndex) return state;
       const reordered = arrayMove(state.questions, startIndex, endIndex).map(
-        (item, idx) => ({ ...item, orderIndex: idx })
+        (item, idx) => ({ ...item, orderIndex: idx }),
       );
       return {
         questions: reordered,
@@ -168,21 +187,53 @@ export const useBuilderStore = create<BuilderState>((set) => ({
 
   setActiveQuestionIndex: (index: number) =>
     set((state) => ({
-      activeQuestionIndex: Math.max(0, Math.min(index, state.questions.length - 1)),
+      activeQuestionIndex: Math.max(
+        0,
+        Math.min(index, state.questions.length - 1),
+      ),
     })),
 
   saveQuiz: async () => {
     set({ isSaving: true });
-    // Simulated async saving or Supabase update
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    set({ isSaving: false, isDirty: false });
+    // Brief natural tactile pause
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const state = get();
+    const quizId = state.currentQuiz.id || `quiz-${Date.now()}`;
+
+    const storedQuiz: StoredQuiz = {
+      id: quizId,
+      teacherId: state.currentQuiz.teacherId || "teacher-me",
+      title: state.currentQuiz.title?.trim() || "Kuis Tanpa Judul",
+      description: state.currentQuiz.description || "",
+      category: state.currentQuiz.category || "Umum",
+      isPublished: state.currentQuiz.isPublished ?? false,
+      coverImageUrl: state.currentQuiz.coverImageUrl || "",
+      questionsCount: state.questions.length,
+      createdAt: state.currentQuiz.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      timerMode: state.currentQuiz.timerMode || "global",
+      globalTimeLimitSeconds: state.currentQuiz.globalTimeLimitSeconds ?? 30,
+      questions: state.questions,
+    };
+
+    useQuizStore.getState().saveQuiz(storedQuiz);
+
+    set({
+      currentQuiz: { ...state.currentQuiz, id: quizId },
+      isSaving: false,
+      isDirty: false,
+    });
     return true;
   },
 
-  resetBuilder: () =>
+  resetBuilder: (initialData?: Partial<Quiz>) =>
     set({
-      currentQuiz: { ...DEFAULT_QUIZ },
-      questions: [createInitialQuestion(0, 'true_false')],
+      currentQuiz: {
+        ...DEFAULT_QUIZ,
+        id: `quiz-${Date.now()}`,
+        ...initialData,
+      },
+      questions: [createInitialQuestion(0, "true_false")],
       activeQuestionIndex: 0,
       isDirty: false,
       isSaving: false,
@@ -194,7 +245,7 @@ export const useBuilderStore = create<BuilderState>((set) => ({
       questions:
         questions && questions.length > 0
           ? questions
-          : [createInitialQuestion(0, 'true_false')],
+          : [createInitialQuestion(0, "true_false")],
       activeQuestionIndex: 0,
       isDirty: false,
       isSaving: false,

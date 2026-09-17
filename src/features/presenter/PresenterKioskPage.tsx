@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   X,
   Volume2,
@@ -10,17 +10,19 @@ import {
   KeyRound,
   ChevronLeft,
   ChevronRight,
-} from 'lucide-react';
-import { Quiz } from '@/types/quiz';
-import { BuilderQuestion } from '@/stores/builderStore';
-import { pluginRegistry } from '@/plugins/core/registry';
-import { defaultCrosswordContent } from '@/plugins/questions/crossword';
-import { defaultWordsearchContent } from '@/plugins/questions/wordsearch';
-import { ProgressBar } from '@/components/ui/ProgressBar';
-import { BottomSheetFeedback } from '@/components/common/BottomSheetFeedback';
-import { VictoryScreen } from './VictoryScreen';
-import { useSoundEffect } from '@/hooks/useSoundEffect';
-import { cn } from '@/utils/cn';
+  ArrowLeft,
+  Clock,
+} from "lucide-react";
+import { Quiz } from "@/types/quiz";
+import { BuilderQuestion } from "@/stores/builderStore";
+import { pluginRegistry } from "@/plugins/core/registry";
+import { ProgressBar } from "@/components/ui/ProgressBar";
+import { DuoCard } from "@/components/ui/DuoCard";
+import { TactileButton } from "@/components/ui/TactileButton";
+import { BottomSheetFeedback } from "@/components/common/BottomSheetFeedback";
+import { VictoryScreen } from "./VictoryScreen";
+import { useSoundEffect } from "@/hooks/useSoundEffect";
+import { cn } from "@/utils/cn";
 
 export interface PresenterKioskPageProps {
   quiz?: Partial<Quiz>;
@@ -28,49 +30,6 @@ export interface PresenterKioskPageProps {
   initialQuestionIndex?: number;
   onExit: () => void;
 }
-
-// Starter showcase questions across multiple EduPlay game engines if none provided
-const DEFAULT_KIOSK_QUESTIONS: BuilderQuestion[] = [
-  {
-    id: 'kiosk-q1',
-    type: 'crossword',
-    orderIndex: 0,
-    titlePrompt: 'Pecahkan Mini Teka-Teki Silang astronomi & alam berikut!',
-    points: 100,
-    content: defaultCrosswordContent,
-  },
-  {
-    id: 'kiosk-q2',
-    type: 'true_false',
-    orderIndex: 1,
-    titlePrompt: 'Bumi merupakan planet terbesar di dalam Tata Surya kita.',
-    points: 50,
-    content: {
-      statement: 'Bumi merupakan planet terbesar di dalam Tata Surya kita.',
-      isTrue: false,
-      explanation: 'Planet terbesar di Tata Surya kita adalah Jupiter, bukan Bumi.',
-    },
-  },
-  {
-    id: 'kiosk-q3',
-    type: 'wordsearch',
-    orderIndex: 2,
-    titlePrompt: 'Temukan nama-nama hewan yang tersembunyi di dalam matriks huruf!',
-    points: 150,
-    content: defaultWordsearchContent,
-  },
-  {
-    id: 'kiosk-q4',
-    type: 'anagram',
-    orderIndex: 3,
-    titlePrompt: 'Susun huruf-huruf acak ini menjadi nama planet terdekat dengan Matahari!',
-    points: 100,
-    content: {
-      targetWord: 'MERKURIUS',
-      hint: 'Planet terkecil dan terdekat posisinya dengan Matahari.',
-    },
-  },
-];
 
 export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
   quiz,
@@ -86,12 +45,12 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
     if (passedQuestions && passedQuestions.length > 0) {
       return passedQuestions;
     }
-    return DEFAULT_KIOSK_QUESTIONS;
+    return [];
   }, [passedQuestions]);
 
   // Current active question index
   const [currentIndex, setCurrentIndex] = useState(
-    Math.min(initialQuestionIndex, Math.max(0, questions.length - 1))
+    Math.min(initialQuestionIndex, Math.max(0, questions.length - 1)),
   );
 
   // Student submitted answers mapped by question id
@@ -131,13 +90,62 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
     return pluginRegistry.getAllPlugins()[0];
   }, [activeQuestion]);
 
+  // Calculate effective time limit for active question based on quiz.timerMode
+  const effectiveTimeLimit = useMemo(() => {
+    if (quiz?.timerMode === "per_question") {
+      return activeQuestion?.timeLimitSeconds ?? 30;
+    }
+    // Mode global (default)
+    return (
+      quiz?.globalTimeLimitSeconds ?? activeQuestion?.timeLimitSeconds ?? 30
+    );
+  }, [
+    quiz?.timerMode,
+    quiz?.globalTimeLimitSeconds,
+    activeQuestion?.timeLimitSeconds,
+  ]);
+
+  // Live countdown timer state for active question
+  const [timeLeft, setTimeLeft] = useState<number>(effectiveTimeLimit);
+
+  // Reset timer on question change
+  useEffect(() => {
+    setTimeLeft(effectiveTimeLimit);
+  }, [currentIndex, effectiveTimeLimit]);
+
+  // Countdown interval effect
+  useEffect(() => {
+    if (effectiveTimeLimit <= 0 || feedbackState.isOpen || isCompleted) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          playWrong();
+          setFeedbackState({
+            isOpen: true,
+            isCorrect: false,
+            title: "Waktu Habis! ⏰",
+            message: "Waktu menjawab untuk soal ini telah habis.",
+            solutionExplanation: "Silakan lanjutkan ke soal berikutnya.",
+          });
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [effectiveTimeLimit, feedbackState.isOpen, isCompleted, playWrong]);
+
   // Sync fullscreen state
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
     };
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () =>
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, []);
 
   // Toggle browser fullscreen
@@ -159,7 +167,10 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
     (studentAnswer: any) => {
       if (!activeQuestion || !activePlugin) return;
 
-      const validation = activePlugin.validateAnswer(activeQuestion.content, studentAnswer);
+      const validation = activePlugin.validateAnswer(
+        activeQuestion.content,
+        studentAnswer,
+      );
       const isCorrect = validation.isCorrect;
 
       // Record answer & evaluation
@@ -176,14 +187,17 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
       setFeedbackState({
         isOpen: true,
         isCorrect,
-        title: isCorrect ? 'Luar Biasa! Jawaban Tepat!' : 'Jawaban Belum Tepat!',
+        title: isCorrect
+          ? "Luar Biasa! Jawaban Tepat!"
+          : "Jawaban Belum Tepat!",
         message: validation.feedbackMessage,
         solutionExplanation: !isCorrect
-          ? activeQuestion.content?.explanation || 'Pelajari kembali petunjuk untuk memahami konsep ini.'
+          ? activeQuestion.content?.explanation ||
+            "Pelajari kembali petunjuk untuk memahami konsep ini."
           : undefined,
       });
     },
-    [activeQuestion, activePlugin, playVictory, playWrong]
+    [activeQuestion, activePlugin, playVictory, playWrong],
   );
 
   // Action on bottom sheet continue button
@@ -194,7 +208,9 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
       setCurrentIndex((prev) => prev + 1);
     } else {
       // Finished all questions!
-      setDurationSeconds(Math.max(1, Math.floor((Date.now() - startTime) / 1000)));
+      setDurationSeconds(
+        Math.max(1, Math.floor((Date.now() - startTime) / 1000)),
+      );
       setIsCompleted(true);
     }
   };
@@ -206,7 +222,9 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
     if (currentIndex < questions.length - 1) {
       setCurrentIndex((prev) => prev + 1);
     } else {
-      setDurationSeconds(Math.max(1, Math.floor((Date.now() - startTime) / 1000)));
+      setDurationSeconds(
+        Math.max(1, Math.floor((Date.now() - startTime) / 1000)),
+      );
       setIsCompleted(true);
     }
   };
@@ -216,20 +234,20 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
     playPop();
     if (!activeQuestion) return;
 
-    let solutionText = 'Kunci jawaban dibuka oleh Guru.';
+    let solutionText = "Kunci jawaban dibuka oleh Guru.";
     if (activeQuestion.content?.explanation) {
       solutionText = activeQuestion.content.explanation;
     } else if (activeQuestion.content?.isTrue !== undefined) {
-      solutionText = `Pernyataan ini bernilai: ${activeQuestion.content.isTrue ? 'BENAR' : 'SALAH'}`;
+      solutionText = `Pernyataan ini bernilai: ${activeQuestion.content.isTrue ? "BENAR" : "SALAH"}`;
     } else if (activeQuestion.content?.targetWord) {
       solutionText = `Kata yang tepat adalah: "${activeQuestion.content.targetWord}"`;
     } else if (activeQuestion.content?.words) {
       const wordsList = Array.isArray(activeQuestion.content.words)
         ? activeQuestion.content.words
-            .map((w: any) => (typeof w === 'string' ? w : w.word))
+            .map((w: any) => (typeof w === "string" ? w : w.word))
             .filter(Boolean)
-            .join(', ')
-        : '';
+            .join(", ")
+        : "";
       if (wordsList) {
         solutionText = `Daftar kata: ${wordsList}`;
       }
@@ -239,8 +257,9 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
     setFeedbackState({
       isOpen: true,
       isCorrect: true,
-      title: 'Kunci Jawaban Dibuka (Mode Guru)',
-      message: 'Guru telah membuka kunci jawaban untuk dibahas bersama di kelas.',
+      title: "Kunci Jawaban Dibuka (Mode Guru)",
+      message:
+        "Guru telah membuka kunci jawaban untuk dibahas bersama di kelas.",
       solutionExplanation: solutionText,
     });
   };
@@ -272,6 +291,40 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
   const maxScore = useMemo(() => {
     return questions.reduce((sum, q) => sum + (q.points || 100), 0);
   }, [questions]);
+
+  if (questions.length === 0) {
+    return (
+      <div className="fixed inset-0 z-50 bg-[#F8FAFC] text-duo-dark flex flex-col items-center justify-center p-6 text-center select-none">
+        <DuoCard
+          elevated
+          className="max-w-md w-full p-8 flex flex-col items-center gap-4 bg-white"
+        >
+          <div className="w-20 h-20 rounded-3xl bg-amber-100 border-2 border-amber-300 text-amber-600 flex items-center justify-center text-3xl font-black">
+            📋
+          </div>
+          <h2 className="text-xl font-black text-duo-dark">
+            Tidak Ada Soal untuk Ditampilkan
+          </h2>
+          <p className="text-sm font-semibold text-[#777777] leading-relaxed">
+            Kuis ini belum memiliki butir soal yang dapat dimainkan. Silakan
+            buat atau lengkapi butir soal di Studio Kuis.
+          </p>
+          <TactileButton
+            variant="blue"
+            size="md"
+            icon={<ArrowLeft className="w-4 h-4" />}
+            onClick={() => {
+              playTap();
+              onExit();
+            }}
+            className="mt-2"
+          >
+            Kembali
+          </TactileButton>
+        </DuoCard>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 bg-[#F8FAFC] text-duo-dark flex flex-col overflow-hidden select-none">
@@ -313,12 +366,14 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
             <button
               type="button"
               onClick={toggleMute}
-              title={isMuted ? 'Nyalakan Suara (Unmute)' : 'Matikan Suara (Mute)'}
+              title={
+                isMuted ? "Nyalakan Suara (Unmute)" : "Matikan Suara (Mute)"
+              }
               className={cn(
-                'w-10 h-10 rounded-2xl border-2 flex items-center justify-center transition-all active:scale-95 cursor-pointer shadow-xs',
+                "w-10 h-10 rounded-2xl border-2 flex items-center justify-center transition-all active:scale-95 cursor-pointer shadow-xs",
                 isMuted
-                  ? 'bg-red-50 border-red-200 text-duo-red'
-                  : 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700'
+                  ? "bg-red-50 border-red-200 text-duo-red"
+                  : "bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700",
               )}
             >
               {isMuted ? (
@@ -331,7 +386,11 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
             <button
               type="button"
               onClick={toggleFullscreen}
-              title={isFullscreen ? 'Keluar Layar Penuh' : 'Mode Layar Penuh (Fullscreen)'}
+              title={
+                isFullscreen
+                  ? "Keluar Layar Penuh"
+                  : "Mode Layar Penuh (Fullscreen)"
+              }
               className="w-10 h-10 rounded-2xl bg-slate-100 hover:bg-slate-200 border-2 border-slate-200 text-slate-700 flex items-center justify-center transition-all active:scale-95 cursor-pointer shadow-xs hidden sm:flex"
             >
               {isFullscreen ? (
@@ -355,10 +414,25 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
               </span>
             )}
             <span className="text-xs font-black uppercase px-2.5 py-0.5 rounded-lg bg-duo-blue/10 text-duo-blue border border-duo-blue/20">
-              {activePlugin?.title || 'Mini-Game'}
+              {activePlugin?.title || "Mini-Game"}
             </span>
             <span className="text-xs font-black uppercase px-2.5 py-0.5 rounded-lg bg-amber-50 text-amber-700 border border-amber-200">
               {activeQuestion?.points || 100} Poin
+            </span>
+
+            {/* Live Question Timer Badge */}
+            <span
+              className={cn(
+                "text-xs font-black uppercase px-2.5 py-0.5 rounded-lg flex items-center gap-1 border transition-all",
+                effectiveTimeLimit <= 0
+                  ? "bg-slate-100 text-slate-600 border-slate-200"
+                  : timeLeft <= 5
+                    ? "bg-red-100 text-duo-red border-red-300 animate-pulse font-black shadow-xs"
+                    : "bg-duo-blue/10 text-duo-blue border-duo-blue/20",
+              )}
+            >
+              <Clock className="w-3.5 h-3.5" />
+              {effectiveTimeLimit <= 0 ? "Tanpa Batas" : `${timeLeft}s`}
             </span>
           </div>
 
@@ -381,17 +455,27 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
           )}
 
           {/* DYNAMIC PLAYER COMPONENT RENDERING VIA REGISTRY */}
-          {activePlugin && (
-            <div className="w-full flex justify-center">
-              <activePlugin.PlayerComponent
-                content={activeQuestion.content}
-                submittedAnswer={answers[activeQuestion.id]}
-                onAnswerSubmit={handleAnswerSubmit}
-                isEvaluating={feedbackState.isOpen}
-                isCorrect={evaluations[activeQuestion.id]}
-              />
-            </div>
-          )}
+          <AnimatePresence mode="wait">
+            {activePlugin && activeQuestion && (
+              <motion.div
+                key={activeQuestion.id}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+                className="w-full flex justify-center"
+              >
+                <activePlugin.PlayerComponent
+                  key={activeQuestion.id}
+                  content={activeQuestion.content}
+                  submittedAnswer={answers[activeQuestion.id]}
+                  onAnswerSubmit={handleAnswerSubmit}
+                  isEvaluating={feedbackState.isOpen}
+                  isCorrect={evaluations[activeQuestion.id]}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </main>
 
@@ -420,7 +504,9 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
             onClick={() => {
               playTap();
               setFeedbackState((prev) => ({ ...prev, isOpen: false }));
-              setCurrentIndex((prev) => Math.min(questions.length - 1, prev + 1));
+              setCurrentIndex((prev) =>
+                Math.min(questions.length - 1, prev + 1),
+              );
             }}
             title="Soal Berikutnya"
             className="w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center transition-all active:scale-95"
@@ -464,7 +550,11 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
         message={feedbackState.message}
         solutionExplanation={feedbackState.solutionExplanation}
         onAction={handleContinueNext}
-        actionText={currentIndex < questions.length - 1 ? 'Lanjutkan' : 'Lihat Hasil Akhir'}
+        actionText={
+          currentIndex < questions.length - 1
+            ? "Lanjutkan"
+            : "Lihat Hasil Akhir"
+        }
       />
 
       {/* 5. SPECTACULAR VICTORY CELEBRATION SCREEN */}

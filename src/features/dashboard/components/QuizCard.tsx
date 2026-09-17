@@ -1,9 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { DuoCard } from '@/components/ui/DuoCard';
-import { TactileButton } from '@/components/ui/TactileButton';
-import { Badge } from '@/components/ui/Badge';
-import { Quiz } from '@/types/quiz';
-import { useSoundEffect } from '@/hooks/useSoundEffect';
+import React, { useState, useRef, useEffect } from "react";
+import { DuoCard } from "@/components/ui/DuoCard";
+import { TactileButton } from "@/components/ui/TactileButton";
+import { Badge } from "@/components/ui/Badge";
+import { Quiz } from "@/types/quiz";
+import { useSoundEffect } from "@/hooks/useSoundEffect";
+import { getMeshGradientStyle } from "@/utils";
 import {
   Play,
   Edit3,
@@ -11,11 +12,10 @@ import {
   Copy,
   Trash2,
   CheckCircle2,
-  FileQuestion,
   HelpCircle,
   Eye,
   EyeOff,
-} from 'lucide-react';
+} from "lucide-react";
 
 export interface QuizCardProps {
   quiz: Quiz;
@@ -46,10 +46,10 @@ export const QuizCard: React.FC<QuizCardProps> = ({
       }
     };
     if (isMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
     }
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isMenuOpen]);
 
@@ -66,17 +66,18 @@ export const QuizCard: React.FC<QuizCardProps> = ({
     >
       <div>
         {/* Top Cover Thumbnail */}
-        <div className="relative w-full h-40 rounded-2xl overflow-hidden bg-gradient-to-br from-duo-blue/20 via-duo-green/15 to-duo-yellow/20 border-2 border-duo-gray mb-4 flex items-center justify-center">
-          {quiz.coverImageUrl ? (
+        <div
+          className="relative w-full h-40 rounded-2xl overflow-hidden border-2 border-duo-gray mb-4 transition-transform duration-300 group-hover:scale-[1.01]"
+          style={
+            !quiz.coverImageUrl ? getMeshGradientStyle(quiz.id) : undefined
+          }
+        >
+          {quiz.coverImageUrl && (
             <img
               src={quiz.coverImageUrl}
               alt={quiz.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
-          ) : (
-            <div className="flex flex-col items-center justify-center text-duo-blue/70">
-              <FileQuestion className="w-12 h-12 stroke-[1.5] group-hover:scale-110 transition-transform duration-200" />
-            </div>
           )}
 
           {/* Status Badge (Published / Draft) */}
@@ -96,7 +97,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({
           {/* Category Tag */}
           <div className="absolute bottom-3 left-3">
             <Badge variant="blue" className="shadow-sm bg-white/95 text-[11px]">
-              {quiz.category || 'Umum'}
+              {quiz.category || "Umum"}
             </Badge>
           </div>
         </div>
@@ -117,7 +118,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({
         </h3>
 
         <p className="text-xs font-semibold text-[#777777] line-clamp-2 mt-1 mb-5 min-h-[32px]">
-          {quiz.description || 'Kuis interaktif pembelajaran kelas tatap muka.'}
+          {quiz.description || "Kuis interaktif pembelajaran kelas tatap muka."}
         </p>
       </div>
 
@@ -242,4 +243,3 @@ export const QuizCard: React.FC<QuizCardProps> = ({
 };
 
 export default QuizCard;
-

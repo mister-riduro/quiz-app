@@ -1,7 +1,7 @@
-import { create } from 'zustand';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabaseClient';
-import { DatabaseProfile } from '@/types/database';
+import { create } from "zustand";
+import { User, Session } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabaseClient";
+import { DatabaseProfile } from "@/types/database";
 
 export interface AuthState {
   user: User | null;
@@ -12,7 +12,12 @@ export interface AuthState {
 
   // Actions
   signIn: (email: string, password: string) => Promise<boolean>;
-  signUp: (email: string, password: string, fullName: string, schoolName?: string) => Promise<boolean>;
+  signUp: (
+    email: string,
+    password: string,
+    fullName: string,
+    schoolName?: string,
+  ) => Promise<boolean>;
   signOut: () => Promise<void>;
   initialize: () => Promise<void>;
   clearError: () => void;
@@ -24,26 +29,38 @@ export interface AuthState {
  */
 function translateAuthError(errorMsg: string): string {
   const lower = errorMsg.toLowerCase();
-  if (lower.includes('invalid login credentials')) {
-    return 'Email atau kata sandi tidak cocok. Silakan periksa kembali.';
+  if (lower.includes("invalid login credentials")) {
+    return "Email atau kata sandi tidak cocok. Silakan periksa kembali.";
   }
-  if (lower.includes('user already registered') || lower.includes('already exists')) {
-    return 'Alamat email ini sudah terdaftar. Silakan langsung masuk.';
+  if (
+    lower.includes("user already registered") ||
+    lower.includes("already exists")
+  ) {
+    return "Alamat email ini sudah terdaftar. Silakan langsung masuk.";
   }
-  if (lower.includes('password should be at least') || lower.includes('at least 6 characters')) {
-    return 'Kata sandi minimal harus terdiri dari 6 karakter demi keamanan.';
+  if (
+    lower.includes("password should be at least") ||
+    lower.includes("at least 6 characters")
+  ) {
+    return "Kata sandi minimal harus terdiri dari 6 karakter demi keamanan.";
   }
-  if (lower.includes('invalid email') || lower.includes('valid email')) {
-    return 'Format alamat email belum benar. Silakan periksa kembali.';
+  if (lower.includes("invalid email") || lower.includes("valid email")) {
+    return "Format alamat email belum benar. Silakan periksa kembali.";
   }
-  if (lower.includes('network') || lower.includes('fetch') || lower.includes('failed to fetch')) {
-    return 'Koneksi jaringan terputus. Silakan periksa koneksi internet Anda.';
+  if (
+    lower.includes("network") ||
+    lower.includes("fetch") ||
+    lower.includes("failed to fetch")
+  ) {
+    return "Koneksi jaringan terputus. Silakan periksa koneksi internet Anda.";
   }
-  if (lower.includes('email not confirmed')) {
-    return 'Email Anda belum dikonfirmasi. Silakan periksa tautan di kotak masuk email Anda.';
+  if (lower.includes("email not confirmed")) {
+    return "Email Anda belum dikonfirmasi. Silakan periksa tautan di kotak masuk email Anda.";
   }
-  return 'Terjadi kendala saat menghubungi server. Silakan coba sesaat lagi.';
+  return "Terjadi kendala saat menghubungi server. Silakan coba sesaat lagi.";
 }
+
+let authSubscription: { unsubscribe: () => void } | null = null;
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
@@ -55,13 +72,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   fetchProfile: async (userId: string) => {
     try {
       const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
         .single();
 
       if (error) {
-        console.warn('[EduPlay Auth] Could not load profile:', error.message);
+        console.warn("[EduPlay Auth] Could not load profile:", error.message);
         return null;
       }
       set({ profile: data as DatabaseProfile });
@@ -100,13 +117,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       return true;
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Login gagal';
+      const msg = err instanceof Error ? err.message : "Login gagal";
       set({ error: translateAuthError(msg), isLoading: false });
       return false;
     }
   },
 
-  signUp: async (email: string, password: string, fullName: string, schoolName?: string) => {
+  signUp: async (
+    email: string,
+    password: string,
+    fullName: string,
+    schoolName?: string,
+  ) => {
     set({ isLoading: true, error: null });
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -115,7 +137,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         options: {
           data: {
             full_name: fullName,
-            school_name: schoolName || '',
+            school_name: schoolName || "",
           },
         },
       });
@@ -142,7 +164,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       return true;
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Registrasi gagal';
+      const msg = err instanceof Error ? err.message : "Registrasi gagal";
       set({ error: translateAuthError(msg), isLoading: false });
       return false;
     }
@@ -153,7 +175,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       await supabase.auth.signOut();
     } catch (err) {
-      console.warn('[EduPlay Auth] Sign out error:', err);
+      console.warn("[EduPlay Auth] Sign out error:", err);
     } finally {
       set({
         user: null,
@@ -188,26 +210,34 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         });
       }
 
-      // 2. Subscribe to auth state changes
-      supabase.auth.onAuthStateChange(async (_event, newSession) => {
-        if (newSession?.user) {
-          set({
-            user: newSession.user,
-            session: newSession,
-            isLoading: false,
-          });
-          await get().fetchProfile(newSession.user.id);
-        } else {
-          set({
-            user: null,
-            session: null,
-            profile: null,
-            isLoading: false,
-          });
-        }
-      });
+      // 2. Subscribe to auth state changes (clean up prior subscription if any)
+      if (authSubscription) {
+        authSubscription.unsubscribe();
+        authSubscription = null;
+      }
+
+      const { data: authListener } = supabase.auth.onAuthStateChange(
+        async (_event, newSession) => {
+          if (newSession?.user) {
+            set({
+              user: newSession.user,
+              session: newSession,
+              isLoading: false,
+            });
+            await get().fetchProfile(newSession.user.id);
+          } else {
+            set({
+              user: null,
+              session: null,
+              profile: null,
+              isLoading: false,
+            });
+          }
+        },
+      );
+      authSubscription = authListener.subscription;
     } catch (err) {
-      console.warn('[EduPlay Auth] Initialization failed:', err);
+      console.warn("[EduPlay Auth] Initialization failed:", err);
       set({ isLoading: false });
     }
   },
@@ -216,4 +246,3 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 }));
 
 export default useAuthStore;
-

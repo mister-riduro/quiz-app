@@ -1,8 +1,8 @@
-import React from 'react';
-import { DuoCard } from '@/components/ui/DuoCard';
-import { TactileButton } from '@/components/ui/TactileButton';
-import { useSoundEffect } from '@/hooks/useSoundEffect';
-import { PlusCircle, Sparkles } from 'lucide-react';
+import React from "react";
+import { DuoCard } from "@/components/ui/DuoCard";
+import { TactileButton } from "@/components/ui/TactileButton";
+import { useSoundEffect } from "@/hooks/useSoundEffect";
+import { PlusCircle, Sparkles } from "lucide-react";
 
 export interface EmptyStateProps {
   onCreateQuiz: () => void;
@@ -12,8 +12,8 @@ export interface EmptyStateProps {
 
 export const EmptyState: React.FC<EmptyStateProps> = ({
   onCreateQuiz,
-  title = 'Belum Ada Kuis di Studio Anda!',
-  description = 'Mulai susun kuis interaktif pertama Anda. Pilih dari 8 mini-game seru dan langsung mainkan bersama murid di kelas!',
+  title = "Belum Ada Kuis di Studio Anda!",
+  description = "Mulai susun kuis interaktif pertama Anda. Pilih dari 8 mini-game seru dan langsung mainkan bersama murid di kelas!",
 }) => {
   const { playTap, playVictory } = useSoundEffect();
 
@@ -56,11 +56,10 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
         }}
         className="px-8 py-4 text-base tracking-wider font-black shadow-lg"
       >
-        + Buat Kuis Pertama Sekarang
+        Buat Kuis Pertama Sekarang
       </TactileButton>
     </DuoCard>
   );
 };
 
 export default EmptyState;
-

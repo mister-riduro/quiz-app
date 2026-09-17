@@ -1,12 +1,12 @@
 export type QuestionType =
-  | 'crossword'
-  | 'wordsearch'
-  | 'spell_word'
-  | 'anagram'
-  | 'true_false'
-  | 'labelled_diagram'
-  | 'unjumble'
-  | 'hangman';
+  | "crossword"
+  | "wordsearch"
+  | "spell_word"
+  | "anagram"
+  | "true_false"
+  | "labelled_diagram"
+  | "unjumble"
+  | "hangman";
 
 export interface BaseQuestionContent {
   prompt: string;
@@ -36,6 +36,8 @@ export interface Quiz {
   updatedAt: string;
   questionsCount?: number;
   category?: string;
+  timerMode?: "global" | "per_question";
+  globalTimeLimitSeconds?: number;
 }
 
 export interface GameParticipant {
@@ -45,4 +47,3 @@ export interface GameParticipant {
   score: number;
   streak: number;
 }
-

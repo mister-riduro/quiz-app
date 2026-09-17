@@ -1,16 +1,29 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { HelpCircle, Check, Sparkles, RotateCcw, Search, CheckCircle2 } from 'lucide-react';
-import { PlayerProps } from '@/plugins/core/types';
-import { WordsearchContent, WordsearchAnswer } from './types';
-import { TactileButton } from '@/components/ui/TactileButton';
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useRef,
+  useCallback,
+} from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  HelpCircle,
+  Check,
+  Sparkles,
+  RotateCcw,
+  Search,
+  CheckCircle2,
+} from "lucide-react";
+import { PlayerProps } from "@/plugins/core/types";
+import { WordsearchContent, WordsearchAnswer } from "./types";
+import { TactileButton } from "@/components/ui/TactileButton";
 import {
   generateWordsearchGrid,
   PASTEL_PALETTES,
   PastelPalette,
-} from './wordsearchGenerator';
-import { useSoundEffect } from '@/hooks/useSoundEffect';
-import { cn } from '@/utils/cn';
+} from "./wordsearchGenerator";
+import { useSoundEffect } from "@/hooks/useSoundEffect";
+import { cn } from "@/utils/cn";
 
 interface GridCellCoord {
   row: number;
@@ -23,6 +36,58 @@ interface LockedCapsule {
   palette: PastelPalette;
 }
 
+interface WordsearchCellProps {
+  char: string;
+  row: number;
+  col: number;
+  isSelected: boolean;
+  lockedPalette?: PastelPalette;
+  onCellPointerDown: (
+    e: React.PointerEvent<HTMLDivElement>,
+    row: number,
+    col: number,
+  ) => void;
+}
+
+const WordsearchCell = React.memo<WordsearchCellProps>(
+  ({ char, row, col, isSelected, lockedPalette, onCellPointerDown }) => {
+    return (
+      <div
+        onPointerDown={(e) => onCellPointerDown(e, row, col)}
+        style={{
+          backgroundColor: isSelected
+            ? "#1CB0F6"
+            : lockedPalette
+              ? lockedPalette.bg
+              : "#FFFFFF",
+          color: isSelected
+            ? "#FFFFFF"
+            : lockedPalette
+              ? lockedPalette.text
+              : "#3C3C3C",
+          borderColor: isSelected
+            ? "#1899D6"
+            : lockedPalette
+              ? lockedPalette.border
+              : "#E5E5E5",
+        }}
+        className={cn(
+          "aspect-square rounded-xl sm:rounded-2xl border-2 flex items-center justify-center",
+          "font-black text-sm sm:text-lg transition-transform duration-75 select-none cursor-pointer",
+          isSelected && "scale-105 z-10 shadow-md ring-2 ring-duo-blue/40",
+          lockedPalette && !isSelected && "shadow-2xs font-extrabold",
+          !lockedPalette &&
+            !isSelected &&
+            "hover:bg-slate-50 active:scale-95 shadow-2xs",
+        )}
+      >
+        <span className="drop-shadow-xs">{char}</span>
+      </div>
+    );
+  },
+);
+WordsearchCell.displayName = "WordsearchCell";
+
 export const WordsearchPlayer: React.FC<
   PlayerProps<WordsearchContent, WordsearchAnswer>
 > = ({
@@ -32,14 +97,15 @@ export const WordsearchPlayer: React.FC<
   isEvaluating = false,
   isCorrect,
 }) => {
-  const { playTap, playPop, playCorrect, playWrong, playVictory } = useSoundEffect();
+  const { playTap, playPop, playCorrect, playWrong, playVictory } =
+    useSoundEffect();
 
   const targetWords = useMemo(
     () =>
-      (content.words || ['KUCING', 'ANJING', 'BURUNG']).map((w) =>
-        w.trim().toUpperCase()
+      (content.words || ["KUCING", "ANJING", "BURUNG"]).map((w) =>
+        w.trim().toUpperCase(),
       ),
-    [content.words]
+    [content.words],
   );
   const hint = content.hint;
 
@@ -49,7 +115,11 @@ export const WordsearchPlayer: React.FC<
       return content.grid;
     }
     // Fallback generate if grid missing in content
-    const fallback = generateWordsearchGrid(targetWords, 10, content.allowDiagonal ?? false);
+    const fallback = generateWordsearchGrid(
+      targetWords,
+      10,
+      content.allowDiagonal ?? false,
+    );
     return fallback.grid;
   }, [content.grid, targetWords, content.allowDiagonal]);
 
@@ -112,7 +182,7 @@ export const WordsearchPlayer: React.FC<
       }
       return null;
     },
-    []
+    [],
   );
 
   /**
@@ -146,79 +216,90 @@ export const WordsearchPlayer: React.FC<
       }
       return cells;
     },
-    []
+    [],
   );
 
   /**
    * 1. Start Swipe / Drag on Cell
    */
-  const handlePointerDown = (
-    e: React.PointerEvent<HTMLDivElement>,
-    row: number,
-    col: number
-  ) => {
-    if (isInteractionDisabled) return;
-    e.preventDefault();
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>, row: number, col: number) => {
+      if (isInteractionDisabled) return;
+      e.preventDefault();
 
-    setIsDragging(true);
-    const startCoord = { row, col };
-    setActiveSelection([startCoord]);
+      setIsDragging(true);
+      const startCoord = { row, col };
+      setActiveSelection([startCoord]);
 
-    const onPointerMove = (moveEvent: PointerEvent) => {
-      const cell = getCellFromCoordinates(moveEvent.clientX, moveEvent.clientY);
-      if (!cell) return;
+      const onPointerMove = (moveEvent: PointerEvent) => {
+        const cell = getCellFromCoordinates(
+          moveEvent.clientX,
+          moveEvent.clientY,
+        );
+        if (!cell) return;
 
-      const path = getLineCells(startCoord, cell);
-      setActiveSelection(path);
-    };
+        const path = getLineCells(startCoord, cell);
+        setActiveSelection(path);
+      };
 
-    const onPointerUp = () => {
-      window.removeEventListener('pointermove', onPointerMove);
-      window.removeEventListener('pointerup', onPointerUp);
+      const onPointerUp = () => {
+        window.removeEventListener("pointermove", onPointerMove);
+        window.removeEventListener("pointerup", onPointerUp);
 
-      setIsDragging(false);
+        setIsDragging(false);
 
-      // Verify selected word
-      setActiveSelection((currentPath) => {
-        if (currentPath.length >= 2) {
-          const forwardWord = currentPath
-            .map((c) => grid[c.row]?.[c.col] || '')
-            .join('');
-          const backwardWord = forwardWord.split('').reverse().join('');
+        // Verify selected word
+        setActiveSelection((currentPath) => {
+          if (currentPath.length >= 2) {
+            const forwardWord = currentPath
+              .map((c) => grid[c.row]?.[c.col] || "")
+              .join("");
+            const backwardWord = forwardWord.split("").reverse().join("");
 
-          // Check if matches any unfound target word
-          const matchedTarget = targetWords.find(
-            (w) =>
-              (w === forwardWord || w === backwardWord) &&
-              !foundWords.includes(w)
-          );
+            // Check if matches any unfound target word
+            const matchedTarget = targetWords.find(
+              (w) =>
+                (w === forwardWord || w === backwardWord) &&
+                !foundWords.includes(w),
+            );
 
-          if (matchedTarget) {
-            playPop();
-            const paletteIdx = foundWords.length % PASTEL_PALETTES.length;
-            const palette = PASTEL_PALETTES[paletteIdx]!;
+            if (matchedTarget) {
+              playPop();
+              const paletteIdx = foundWords.length % PASTEL_PALETTES.length;
+              const palette = PASTEL_PALETTES[paletteIdx]!;
 
-            setFoundWords((prev) => {
-              const updated = [...prev, matchedTarget];
-              if (updated.length === targetWords.length) {
-                playVictory();
-              }
-              return updated;
-            });
+              setFoundWords((prev) => {
+                const updated = [...prev, matchedTarget];
+                if (updated.length === targetWords.length) {
+                  playVictory();
+                }
+                return updated;
+              });
 
-            setLockedCapsules((prev) => [
-              ...prev,
-              { word: matchedTarget, cells: currentPath, palette },
-            ]);
+              setLockedCapsules((prev) => [
+                ...prev,
+                { word: matchedTarget, cells: currentPath, palette },
+              ]);
+            }
           }
-        }
-        return [];
-      });
-    };
+          return [];
+        });
+      };
 
-    window.addEventListener('pointermove', onPointerMove);
-    window.addEventListener('pointerup', onPointerUp);
-  };
+      window.addEventListener("pointermove", onPointerMove);
+      window.addEventListener("pointerup", onPointerUp);
+    },
+    [
+      isInteractionDisabled,
+      getCellFromCoordinates,
+      getLineCells,
+      grid,
+      targetWords,
+      foundWords,
+      playPop,
+      playVictory,
+    ],
+  );
 
   /**
    * Color lookup map for locked cells
@@ -242,8 +323,8 @@ export const WordsearchPlayer: React.FC<
 
   // Selected string currently being swiped
   const activeSelectedWord = useMemo(() => {
-    if (activeSelection.length <= 1) return '';
-    return activeSelection.map((c) => grid[c.row]?.[c.col] || '').join('');
+    if (activeSelection.length <= 1) return "";
+    return activeSelection.map((c) => grid[c.row]?.[c.col] || "").join("");
   }, [activeSelection, grid]);
 
   /**
@@ -312,9 +393,9 @@ export const WordsearchPlayer: React.FC<
           <div
             ref={gridRef}
             className={cn(
-              'relative grid grid-cols-10 gap-1 sm:gap-1.5 p-3 sm:p-5 rounded-3xl border-2 border-slate-200 border-b-4',
-              'bg-slate-100 shadow-sm max-w-[450px] w-full aspect-square touch-none select-none',
-              isDragging ? 'cursor-crosshair' : 'cursor-pointer'
+              "relative grid grid-cols-10 gap-1 sm:gap-1.5 p-3 sm:p-5 rounded-3xl border-2 border-slate-200 border-b-4",
+              "bg-slate-100 shadow-sm max-w-[450px] w-full aspect-square touch-none select-none",
+              isDragging ? "cursor-crosshair" : "cursor-pointer",
             )}
           >
             {grid.map((row, rIdx) =>
@@ -324,38 +405,17 @@ export const WordsearchPlayer: React.FC<
                 const isSelected = activeSelectionKeySet.has(cellKey);
 
                 return (
-                  <div
+                  <WordsearchCell
                     key={cellKey}
-                    onPointerDown={(e) => handlePointerDown(e, rIdx, cIdx)}
-                    style={{
-                      backgroundColor: isSelected
-                        ? '#1CB0F6'
-                        : lockedPalette
-                        ? lockedPalette.bg
-                        : '#FFFFFF',
-                      color: isSelected
-                        ? '#FFFFFF'
-                        : lockedPalette
-                        ? lockedPalette.text
-                        : '#3C3C3C',
-                      borderColor: isSelected
-                        ? '#1899D6'
-                        : lockedPalette
-                        ? lockedPalette.border
-                        : '#E5E5E5',
-                    }}
-                    className={cn(
-                      'aspect-square rounded-xl sm:rounded-2xl border-2 flex items-center justify-center',
-                      'font-black text-sm sm:text-lg transition-transform duration-75 select-none cursor-pointer',
-                      isSelected && 'scale-105 z-10 shadow-md ring-2 ring-duo-blue/40',
-                      lockedPalette && !isSelected && 'shadow-2xs font-extrabold',
-                      !lockedPalette && !isSelected && 'hover:bg-slate-50 active:scale-95 shadow-2xs'
-                    )}
-                  >
-                    <span className="drop-shadow-xs">{char}</span>
-                  </div>
+                    char={char}
+                    row={rIdx}
+                    col={cIdx}
+                    isSelected={isSelected}
+                    lockedPalette={lockedPalette}
+                    onCellPointerDown={handlePointerDown}
+                  />
                 );
-              })
+              }),
             )}
           </div>
         </div>
@@ -382,19 +442,23 @@ export const WordsearchPlayer: React.FC<
                   key={word}
                   layout
                   style={{
-                    backgroundColor: isFound && palette ? palette.bg : '#F8FAFC',
-                    borderColor: isFound && palette ? palette.border : '#E2E8F0',
+                    backgroundColor:
+                      isFound && palette ? palette.bg : "#F8FAFC",
+                    borderColor:
+                      isFound && palette ? palette.border : "#E2E8F0",
                   }}
                   className={cn(
-                    'flex items-center justify-between px-3.5 py-2.5 rounded-2xl border-2 transition-all shadow-2xs',
-                    isFound ? 'border-solid' : 'border-dashed'
+                    "flex items-center justify-between px-3.5 py-2.5 rounded-2xl border-2 transition-all shadow-2xs",
+                    isFound ? "border-solid" : "border-dashed",
                   )}
                 >
                   <div className="flex items-center gap-2">
                     <div
                       className={cn(
-                        'w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-xs transition-colors',
-                        isFound ? 'bg-duo-green text-white shadow-2xs' : 'bg-slate-200 text-slate-400'
+                        "w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-xs transition-colors",
+                        isFound
+                          ? "bg-duo-green text-white shadow-2xs"
+                          : "bg-slate-200 text-slate-400",
                       )}
                     >
                       {isFound ? (
@@ -404,10 +468,12 @@ export const WordsearchPlayer: React.FC<
                       )}
                     </div>
                     <span
-                      style={{ color: isFound && palette ? palette.text : '#3C3C3C' }}
+                      style={{
+                        color: isFound && palette ? palette.text : "#3C3C3C",
+                      }}
                       className={cn(
-                        'text-sm font-black tracking-wide',
-                        isFound && 'line-through opacity-80'
+                        "text-sm font-black tracking-wide",
+                        isFound && "line-through opacity-80",
                       )}
                     >
                       {word}
@@ -449,7 +515,7 @@ export const WordsearchPlayer: React.FC<
           onClick={handleSubmit}
           className="py-4 text-lg font-black tracking-wider shadow-md"
         >
-          {isAnswered ? 'Jawaban Terkirim' : 'Periksa Jawaban'}
+          {isAnswered ? "Jawaban Terkirim" : "Periksa Jawaban"}
         </TactileButton>
       </div>
 
@@ -459,16 +525,16 @@ export const WordsearchPlayer: React.FC<
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           className={cn(
-            'mt-6 p-4 sm:p-5 rounded-2xl border-2 flex items-center gap-3.5 w-full text-left',
+            "mt-6 p-4 sm:p-5 rounded-2xl border-2 flex items-center gap-3.5 w-full text-left",
             isCorrect
-              ? 'bg-duo-green-light/60 border-duo-green text-duo-dark'
-              : 'bg-duo-red-light/60 border-duo-red text-duo-dark'
+              ? "bg-duo-green-light/60 border-duo-green text-duo-dark"
+              : "bg-duo-red-light/60 border-duo-red text-duo-dark",
           )}
         >
           <div
             className={cn(
-              'w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-xs',
-              isCorrect ? 'bg-duo-green text-white' : 'bg-duo-red text-white'
+              "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-xs",
+              isCorrect ? "bg-duo-green text-white" : "bg-duo-red text-white",
             )}
           >
             {isCorrect ? (
@@ -479,7 +545,9 @@ export const WordsearchPlayer: React.FC<
           </div>
           <div>
             <h4 className="text-xs font-black uppercase tracking-wider">
-              {isCorrect ? 'Semua Kata Berhasil Ditemukan!' : 'Pencarian Belum Lengkap'}
+              {isCorrect
+                ? "Semua Kata Berhasil Ditemukan!"
+                : "Pencarian Belum Lengkap"}
             </h4>
             <p className="text-sm font-bold mt-0.5">
               {isCorrect

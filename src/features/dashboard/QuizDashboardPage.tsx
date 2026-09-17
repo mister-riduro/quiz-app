@@ -1,74 +1,38 @@
-import React, { useState } from 'react';
-import { DuoCard } from '@/components/ui/DuoCard';
-import { TactileButton } from '@/components/ui/TactileButton';
-import { QuizCard } from './components/QuizCard';
-import { EmptyState } from './components/EmptyState';
-import { Quiz } from '@/types/quiz';
-import { useAuthStore } from '@/stores/authStore';
-import { useSoundEffect } from '@/hooks/useSoundEffect';
-import {
-  Plus,
-  Search,
-  BookOpen,
-  Sparkles,
-} from 'lucide-react';
+import React, { useState } from "react";
+import { DuoCard } from "@/components/ui/DuoCard";
+import { TactileButton } from "@/components/ui/TactileButton";
+import { QuizCard } from "./components/QuizCard";
+import { EmptyState } from "./components/EmptyState";
+import { CreateQuizModal } from "./components/CreateQuizModal";
+import { Quiz } from "@/types/quiz";
+import { useAuthStore } from "@/stores/authStore";
+import { useQuizStore } from "@/stores/quizStore";
+import { useSoundEffect } from "@/hooks/useSoundEffect";
+import { Plus, Search, BookOpen, Sparkles } from "lucide-react";
 
 export interface QuizDashboardPageProps {
   onHostQuiz?: (quiz: Quiz) => void;
-  onCreateQuiz?: () => void;
+  onCreateQuiz?: (quizData?: {
+    id: string;
+    title: string;
+    category: string;
+    description: string;
+  }) => void;
   onEditQuiz?: (quiz: Quiz) => void;
 }
 
-// Initial starter sample quizzes for interactive demo
-const DEFAULT_SAMPLE_QUIZZES: Quiz[] = [
-  {
-    id: 'quiz-1',
-    teacherId: 'teacher-1',
-    title: 'Tata Surya & Planet Kelas 4',
-    description: 'Kuis interaktif sains astronomi dasar: mengenal nama-nama planet dan rotasi bumi.',
-    category: 'IPA / Sains',
-    isPublished: true,
-    questionsCount: 8,
-    coverImageUrl: 'https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?w=600&auto=format&fit=crop&q=80',
-    createdAt: '2026-09-01T08:00:00Z',
-    updatedAt: '2026-09-10T10:30:00Z',
-  },
-  {
-    id: 'quiz-2',
-    teacherId: 'teacher-1',
-    title: 'Kosakata Bahasa Inggris: Animals',
-    description: 'Tebak nama-nama hewan mamalia, reptil, dan burung menggunakan Wordsearch & Anagram.',
-    category: 'Bahasa Inggris',
-    isPublished: true,
-    questionsCount: 10,
-    coverImageUrl: 'https://images.unsplash.com/photo-1535083783855-76ae62b2914e?w=600&auto=format&fit=crop&q=80',
-    createdAt: '2026-09-05T09:15:00Z',
-    updatedAt: '2026-09-12T14:20:00Z',
-  },
-  {
-    id: 'quiz-3',
-    teacherId: 'teacher-1',
-    title: 'Matematika: Perkalian Cepat Pecahan',
-    description: 'Latihan kecepatan hitung pecahan dasar dan persentase untuk persiapan PTS.',
-    category: 'Matematika',
-    isPublished: false,
-    questionsCount: 6,
-    coverImageUrl: '',
-    createdAt: '2026-09-15T11:00:00Z',
-    updatedAt: '2026-09-16T16:00:00Z',
-  },
-];
-
-type FilterTab = 'all' | 'published' | 'draft';
+type FilterTab = "all" | "published" | "draft";
 
 export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
   onHostQuiz,
   onCreateQuiz,
   onEditQuiz,
 }) => {
-  const [quizzes, setQuizzes] = useState<Quiz[]>(DEFAULT_SAMPLE_QUIZZES);
-  const [activeTab, setActiveTab] = useState<FilterTab>('all');
-  const [searchQuery, setSearchQuery] = useState('');
+  const quizzes = useQuizStore((state) => state.quizzes);
+  const { saveQuiz, duplicateQuiz, togglePublish, deleteQuiz } = useQuizStore();
+  const [activeTab, setActiveTab] = useState<FilterTab>("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const { profile, user } = useAuthStore();
   const { playTap, playPop, playWrong, playVictory } = useSoundEffect();
@@ -76,54 +40,54 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
   // Handlers for quiz operations
   const handleCreateNew = () => {
     playTap();
-    playVictory();
-    if (onCreateQuiz) {
-      onCreateQuiz();
+    setIsCreateModalOpen(true);
+  };
+
+  const handleModalSubmit = (
+    data: { title: string; category: string; description: string },
+    openEditor: boolean,
+  ) => {
+    setIsCreateModalOpen(false);
+    const newQuizId = `quiz-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+
+    // Save to quizStore as draft immediately!
+    saveQuiz({
+      id: newQuizId,
+      teacherId: user?.id || "teacher-me",
+      title: data.title,
+      category: data.category,
+      description: data.description,
+      isPublished: false, // DRAFT
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      questionsCount: 0,
+      questions: [],
+    });
+
+    if (openEditor) {
+      if (onCreateQuiz) {
+        onCreateQuiz({ id: newQuizId, ...data });
+      }
     } else {
-      // Inline mock creation
-      const newQuiz: Quiz = {
-        id: `quiz-${Date.now()}`,
-        teacherId: user?.id || 'teacher-1',
-        title: `Kuis Baru #${quizzes.length + 1}`,
-        description: 'Draf kuis interaktif baru siap dirancang.',
-        category: 'Umum',
-        isPublished: false,
-        questionsCount: 0,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      setQuizzes([newQuiz, ...quizzes]);
+      setActiveTab("draft");
+      playVictory();
     }
   };
 
   const handleDuplicate = (quiz: Quiz) => {
     playPop();
-    const duplicated: Quiz = {
-      ...quiz,
-      id: `quiz-${Date.now()}`,
-      title: `${quiz.title} (Salinan)`,
-      isPublished: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    setQuizzes([duplicated, ...quizzes]);
+    duplicateQuiz(quiz.id);
   };
 
   const handleTogglePublish = (quiz: Quiz) => {
     playPop();
-    setQuizzes((prev) =>
-      prev.map((item) =>
-        item.id === quiz.id
-          ? { ...item, isPublished: !item.isPublished, updatedAt: new Date().toISOString() }
-          : item
-      )
-    );
+    togglePublish(quiz.id);
   };
 
   const handleDelete = (quiz: Quiz) => {
     playWrong();
     if (window.confirm(`Yakin ingin menghapus kuis "${quiz.title}"?`)) {
-      setQuizzes((prev) => prev.filter((item) => item.id !== quiz.id));
+      deleteQuiz(quiz.id);
     }
   };
 
@@ -134,8 +98,8 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
 
   const filteredQuizzes = quizzes.filter((q) => {
     // 1. Tab filter
-    if (activeTab === 'published' && !q.isPublished) return false;
-    if (activeTab === 'draft' && q.isPublished) return false;
+    if (activeTab === "published" && !q.isPublished) return false;
+    if (activeTab === "draft" && q.isPublished) return false;
 
     // 2. Search query filter
     if (searchQuery.trim()) {
@@ -148,13 +112,18 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
     return true;
   });
 
-  const teacherName = profile?.full_name || (user?.email ? user.email.split('@')[0] : 'Guru Hebat');
-  const teacherInitial = teacherName ? teacherName[0]?.toUpperCase() : 'G';
+  const teacherName =
+    profile?.full_name ||
+    (user?.email ? user.email.split("@")[0] : "Guru Hebat");
+  const teacherInitial = teacherName ? teacherName[0]?.toUpperCase() : "G";
 
   return (
     <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 md:p-8 flex flex-col gap-6">
       {/* 1. Header Sambutan Guru */}
-      <DuoCard elevated className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-6 sm:p-8 bg-white">
+      <DuoCard
+        elevated
+        className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-6 sm:p-8 bg-white"
+      >
         <div className="flex items-center gap-4">
           {/* Avatar Profil */}
           <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-gradient-to-br from-duo-green to-[#46A302] border-4 border-duo-green-border text-white flex items-center justify-center font-black text-2xl sm:text-3xl shadow-md shrink-0">
@@ -175,7 +144,9 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
                 <Sparkles className="w-3.5 h-3.5" /> Studio Pengajar
               </span>
               {profile?.school_name && (
-                <span className="text-xs font-bold text-slate-400">• {profile.school_name}</span>
+                <span className="text-xs font-bold text-slate-400">
+                  • {profile.school_name}
+                </span>
               )}
             </div>
 
@@ -183,12 +154,13 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
               Selamat Datang, {teacherName}! 👋
             </h1>
             <p className="text-xs sm:text-sm font-semibold text-[#777777] mt-1">
-              Kelola materi kuis kelas dan mulai sesi presentasi di depan proyektor / tablet.
+              Kelola materi kuis kelas dan mulai sesi presentasi di depan
+              proyektor / tablet.
             </p>
           </div>
         </div>
 
-        {/* Action Button: + Buat Kuis Baru */}
+        {/* Action Button: Buat Kuis Baru */}
         <div className="shrink-0">
           <TactileButton
             variant="green"
@@ -197,7 +169,7 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
             onClick={handleCreateNew}
             className="w-full sm:w-auto px-7 py-3.5 text-base tracking-wide font-black shadow-md"
           >
-            + Buat Kuis Baru
+            Buat Kuis Baru
           </TactileButton>
         </div>
       </DuoCard>
@@ -210,12 +182,12 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
             type="button"
             onClick={() => {
               playPop();
-              setActiveTab('all');
+              setActiveTab("all");
             }}
             className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-black transition-all ${
-              activeTab === 'all'
-                ? 'bg-white text-duo-dark shadow-sm border-b-2 border-b-slate-300'
-                : 'text-[#777777] hover:text-duo-dark'
+              activeTab === "all"
+                ? "bg-white text-duo-dark shadow-sm border-b-2 border-b-slate-300"
+                : "text-[#777777] hover:text-duo-dark"
             }`}
           >
             Semua ({totalCount})
@@ -225,12 +197,12 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
             type="button"
             onClick={() => {
               playPop();
-              setActiveTab('published');
+              setActiveTab("published");
             }}
             className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-black transition-all ${
-              activeTab === 'published'
-                ? 'bg-duo-green text-white shadow-sm border-b-2 border-b-duo-green-border'
-                : 'text-[#777777] hover:text-duo-dark'
+              activeTab === "published"
+                ? "bg-duo-green text-white shadow-sm border-b-2 border-b-duo-green-border"
+                : "text-[#777777] hover:text-duo-dark"
             }`}
           >
             Dipublikasikan ({publishedCount})
@@ -240,12 +212,12 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
             type="button"
             onClick={() => {
               playPop();
-              setActiveTab('draft');
+              setActiveTab("draft");
             }}
             className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-black transition-all ${
-              activeTab === 'draft'
-                ? 'bg-duo-yellow text-duo-dark shadow-sm border-b-2 border-b-duo-yellow-border'
-                : 'text-[#777777] hover:text-duo-dark'
+              activeTab === "draft"
+                ? "bg-duo-yellow text-duo-dark shadow-sm border-b-2 border-b-duo-yellow-border"
+                : "text-[#777777] hover:text-duo-dark"
             }`}
           >
             Draft ({draftCount})
@@ -271,7 +243,7 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
       {filteredQuizzes.length === 0 ? (
         <EmptyState
           onCreateQuiz={handleCreateNew}
-          title={searchQuery ? 'Kuis Tidak Ditemukan' : undefined}
+          title={searchQuery ? "Kuis Tidak Ditemukan" : undefined}
           description={
             searchQuery
               ? `Tidak ada kuis yang cocok dengan kata kunci "${searchQuery}". Silakan coba kata kunci lain atau bersihkan pencarian.`
@@ -308,9 +280,15 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
           </div>
         </div>
       )}
+
+      {/* Create Quiz Modal Dialog */}
+      <CreateQuizModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSubmit={handleModalSubmit}
+      />
     </div>
   );
 };
 
 export default QuizDashboardPage;
-

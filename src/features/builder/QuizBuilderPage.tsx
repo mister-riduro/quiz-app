@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from "react";
 import {
   DndContext,
   closestCenter,
@@ -7,22 +7,24 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
-} from '@dnd-kit/core';
+} from "@dnd-kit/core";
 import {
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
+} from "@dnd-kit/sortable";
 
-import { useBuilderStore } from '@/stores/builderStore';
-import { pluginRegistry } from '@/plugins/core/registry';
-import { QuestionTypeEnum } from '@/types/database';
-import { TactileButton } from '@/components/ui/TactileButton';
-import { DuoCard } from '@/components/ui/DuoCard';
-import { Badge } from '@/components/ui/Badge';
-import { ImageUploader } from '@/components/common/ImageUploader';
-import { SortableQuestionItem } from './components/SortableQuestionItem';
-import { useSoundEffect } from '@/hooks/useSoundEffect';
+import { useBuilderStore, BuilderQuestion } from "@/stores/builderStore";
+import { pluginRegistry } from "@/plugins/core/registry";
+import { QuestionTypeEnum } from "@/types/database";
+import { Quiz } from "@/types/quiz";
+import { TactileButton } from "@/components/ui/TactileButton";
+import { DuoCard } from "@/components/ui/DuoCard";
+import { Badge } from "@/components/ui/Badge";
+import { ImageUploader } from "@/components/common/ImageUploader";
+import { SortableQuestionItem } from "./components/SortableQuestionItem";
+import { useSoundEffect } from "@/hooks/useSoundEffect";
+import { cn } from "@/utils/cn";
 import {
   ArrowLeft,
   Save,
@@ -35,11 +37,13 @@ import {
   Award,
   Play,
   CheckCircle2,
-} from 'lucide-react';
+  ChevronDown,
+  Check,
+} from "lucide-react";
 
 export interface QuizBuilderPageProps {
   onBack?: () => void;
-  onPreview?: () => void;
+  onPreview?: (quiz: Partial<Quiz>, questions: BuilderQuestion[]) => void;
 }
 
 export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
@@ -53,6 +57,8 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
     isDirty,
     isSaving,
     setQuizTitle,
+    setTimerMode,
+    setGlobalTimeLimit,
     togglePublish,
     addQuestion,
     updateQuestion,
@@ -65,7 +71,31 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
 
   const [previewMode, setPreviewMode] = useState(false);
   const [saveToast, setSaveToast] = useState(false);
+  const [isAddDropdownOpen, setIsAddDropdownOpen] = useState(false);
+  const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
+  const addDropdownRef = useRef<HTMLDivElement>(null);
+  const typeDropdownRef = useRef<HTMLDivElement>(null);
   const { playTap, playPop, playCorrect, playVictory } = useSoundEffect();
+
+  // Close dropdowns on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        addDropdownRef.current &&
+        !addDropdownRef.current.contains(e.target as Node)
+      ) {
+        setIsAddDropdownOpen(false);
+      }
+      if (
+        typeDropdownRef.current &&
+        !typeDropdownRef.current.contains(e.target as Node)
+      ) {
+        setIsTypeDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Sensors for @dnd-kit drag-and-drop
   const sensors = useSensors(
@@ -76,7 +106,7 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -105,9 +135,10 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
   const allRegisteredPlugins = pluginRegistry.getAllPlugins();
 
   // Resolve current active plugin
-  const currentPlugin = activeQuestion && pluginRegistry.hasPlugin(activeQuestion.type)
-    ? pluginRegistry.getPlugin(activeQuestion.type)
-    : allRegisteredPlugins[0];
+  const currentPlugin =
+    activeQuestion && pluginRegistry.hasPlugin(activeQuestion.type)
+      ? pluginRegistry.getPlugin(activeQuestion.type)
+      : allRegisteredPlugins[0];
 
   const handleTypeChange = (type: QuestionTypeEnum) => {
     playPop();
@@ -143,7 +174,7 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
             <div className="flex-1 min-w-0">
               <input
                 type="text"
-                value={currentQuiz.title || ''}
+                value={currentQuiz.title || ""}
                 onChange={(e) => setQuizTitle(e.target.value)}
                 placeholder="Judul Kuis Kelas..."
                 className="w-full bg-transparent font-black text-lg sm:text-xl text-duo-dark px-2.5 py-1 rounded-xl border border-transparent hover:border-duo-gray focus:border-duo-blue focus:bg-white focus:outline-none transition-all truncate"
@@ -162,8 +193,8 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
               }}
               className={`px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all border-2 ${
                 currentQuiz.isPublished
-                  ? 'bg-duo-green-light border-duo-green text-duo-green-border'
-                  : 'bg-slate-100 border-slate-300 text-[#777777]'
+                  ? "bg-duo-green-light border-duo-green text-duo-green-border"
+                  : "bg-slate-100 border-slate-300 text-[#777777]"
               }`}
             >
               {currentQuiz.isPublished ? (
@@ -186,12 +217,15 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
               icon={<Play className="w-3.5 h-3.5 fill-current" />}
               onClick={() => {
                 playTap();
-                if (onPreview) onPreview();
-                else setPreviewMode(!previewMode);
+                if (onPreview) {
+                  onPreview(currentQuiz, questions);
+                } else {
+                  setPreviewMode(!previewMode);
+                }
               }}
               className="border-2 border-duo-gray text-[#4B4B4B]"
             >
-              {previewMode ? 'Tutup Pratinjau' : 'Pratinjau'}
+              {previewMode ? "Tutup Pratinjau" : "Pratinjau"}
             </TactileButton>
 
             {/* Save Button */}
@@ -199,20 +233,28 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
               variant="green"
               size="sm"
               isLoading={isSaving}
-              icon={isDirty ? <Save className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />}
+              icon={
+                isDirty ? (
+                  <Save className="w-4 h-4" />
+                ) : (
+                  <CheckCircle2 className="w-4 h-4" />
+                )
+              }
               onClick={handleSave}
               className="font-black px-4"
             >
-              {isSaving ? 'Menyimpan...' : isDirty ? 'Simpan' : 'Tersimpan'}
+              {isSaving ? "Menyimpan..." : isDirty ? "Simpan" : "Tersimpan"}
             </TactileButton>
           </div>
         </div>
 
         {/* Save Toast Notification */}
         {saveToast && (
-          <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 bg-duo-green text-white text-xs font-black px-4 py-2 rounded-2xl shadow-lg flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
+          <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 bg-duo-green text-white text-xs font-black px-4 py-2 rounded-2xl shadow-lg flex items-center gap-2 animate-in fade-in slide-in-from-top-2 z-50">
             <Sparkles className="w-4 h-4" />
-            Perubahan kuis berhasil disimpan!
+            {currentQuiz.isPublished
+              ? "Kuis berhasil disimpan & dipublikasikan!"
+              : "Draf kuis berhasil disimpan!"}
           </div>
         )}
       </header>
@@ -227,7 +269,9 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
                 <HelpCircle className="w-4 h-4 text-duo-blue" />
                 Daftar Soal ({questions.length})
               </h3>
-              <span className="text-[11px] font-bold text-slate-400">Tarik untuk ubah urutan</span>
+              <span className="text-[11px] font-bold text-slate-400">
+                Tarik untuk ubah urutan
+              </span>
             </div>
 
             {/* Sortable Dnd-Kit List */}
@@ -248,6 +292,8 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
                       index={idx}
                       isActive={idx === activeQuestionIndex}
                       canRemove={questions.length > 1}
+                      timerMode={currentQuiz.timerMode || "global"}
+                      globalSeconds={currentQuiz.globalTimeLimitSeconds ?? 30}
                       onSelect={() => {
                         playTap();
                         setActiveQuestionIndex(idx);
@@ -262,8 +308,11 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
               </SortableContext>
             </DndContext>
 
-            {/* Add Question Button */}
-            <div className="pt-2 border-t border-slate-100">
+            {/* Add Question Button with Dropdown Selector */}
+            <div
+              className="pt-2 border-t border-slate-100 relative"
+              ref={addDropdownRef}
+            >
               <TactileButton
                 variant="blue"
                 size="md"
@@ -271,12 +320,47 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
                 icon={<Plus className="w-5 h-5 stroke-[3]" />}
                 onClick={() => {
                   playPop();
-                  addQuestion('true_false');
+                  setIsAddDropdownOpen((prev) => !prev);
                 }}
                 className="py-3 text-sm font-black shadow-sm"
               >
-                + Tambah Soal
+                Tambah Soal
               </TactileButton>
+
+              {isAddDropdownOpen && (
+                <div className="absolute left-0 top-full mt-2 w-full bg-white rounded-2xl border-2 border-slate-200 border-b-4 border-b-slate-300 shadow-xl z-50 py-2 flex flex-col max-h-72 overflow-y-auto animate-in fade-in zoom-in-95 duration-100">
+                  <div className="px-3.5 py-1 text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                    Pilih Format Soal (8 Mini-Game):
+                  </div>
+                  {allRegisteredPlugins.map((plugin) => {
+                    const Icon = plugin.icon;
+                    return (
+                      <button
+                        key={plugin.type}
+                        type="button"
+                        onClick={() => {
+                          playPop();
+                          addQuestion(plugin.type);
+                          setIsAddDropdownOpen(false);
+                        }}
+                        className="w-full px-3 py-2 text-left text-xs font-bold text-duo-dark hover:bg-slate-100 flex items-center gap-2.5 transition-colors cursor-pointer"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-duo-blue/10 text-duo-blue flex items-center justify-center shrink-0">
+                          <Icon className="w-4 h-4" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <span className="block font-black truncate">
+                            {plugin.title}
+                          </span>
+                          <span className="block text-[10px] text-slate-400 truncate">
+                            {plugin.description}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </DuoCard>
         </aside>
@@ -308,7 +392,9 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
                   <currentPlugin.PlayerComponent
                     content={{
                       ...activeQuestion.content,
-                      mediaUrl: activeQuestion.mediaUrl || activeQuestion.content?.mediaUrl,
+                      mediaUrl:
+                        activeQuestion.mediaUrl ||
+                        activeQuestion.content?.mediaUrl,
                     }}
                     onAnswerSubmit={(ans: any) => {
                       playCorrect();
@@ -321,61 +407,94 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
           ) : (
             /* EDITOR WORKSPACE */
             <>
-              {/* Question Type Selector Tab Bar */}
-              <DuoCard elevated className="p-4 flex flex-col gap-3">
-                <span className="text-xs font-black uppercase text-slate-400 tracking-wider">
-                  Pilih Format Mini-Game (8 Tipe Soal EduPlay):
-                </span>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                  {allRegisteredPlugins.map((plugin) => {
-                    const isSelected = activeQuestion?.type === plugin.type;
-                    const Icon = plugin.icon;
-
-                    return (
-                      <button
-                        key={plugin.type}
-                        type="button"
-                        onClick={() => handleTypeChange(plugin.type)}
-                        className={`flex items-center gap-2.5 p-2.5 rounded-2xl border-2 transition-all text-left ${
-                          isSelected
-                            ? 'bg-duo-blue-light border-duo-blue border-b-4 border-b-duo-blue-border text-duo-dark shadow-sm'
-                            : 'bg-white border-duo-gray hover:border-slate-300 text-duo-dark/80 hover:bg-slate-50'
-                        }`}
-                      >
-                        <div
-                          className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
-                            isSelected
-                              ? 'bg-duo-blue text-white shadow-xs'
-                              : 'bg-slate-100 text-slate-500'
-                          }`}
-                        >
-                          <Icon className="w-4 h-4" />
-                        </div>
-                        <div className="min-w-0">
-                          <span className="block text-xs font-black truncate">
-                            {plugin.title}
-                          </span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </DuoCard>
-
               {/* Question Configuration Card */}
               {activeQuestion && (
                 <DuoCard elevated className="p-6 flex flex-col gap-6">
+                  {/* Compact Question Type Header Row */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-duo-blue/10 border-2 border-duo-blue/30 text-duo-blue flex items-center justify-center shrink-0 shadow-xs">
+                        {currentPlugin && (
+                          <currentPlugin.icon className="w-5 h-5" />
+                        )}
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">
+                          Format Soal #{activeQuestionIndex + 1}
+                        </span>
+                        <span className="text-base font-black text-duo-dark">
+                          {currentPlugin?.title}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Compact Question Type Changer Dropdown */}
+                    <div className="relative" ref={typeDropdownRef}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          playTap();
+                          setIsTypeDropdownOpen((prev) => !prev);
+                        }}
+                        className="inline-flex items-center gap-2 px-3.5 py-2 bg-slate-50 hover:bg-slate-100 border-2 border-duo-gray hover:border-duo-blue rounded-xl text-xs font-black text-duo-dark transition-all cursor-pointer shadow-xs active:translate-y-0.5"
+                      >
+                        <span>{currentPlugin?.title || "Pilih Tipe Soal"}</span>
+                        <ChevronDown className="w-4 h-4 text-slate-500" />
+                      </button>
+
+                      {isTypeDropdownOpen && (
+                        <div className="absolute right-0 top-full mt-2 w-72 bg-white rounded-2xl border-2 border-slate-200 border-b-4 border-b-slate-300 shadow-xl z-30 py-2 flex flex-col max-h-80 overflow-y-auto animate-in fade-in zoom-in-95 duration-100">
+                          <div className="px-3.5 py-1.5 text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                            Pilih Format Baru:
+                          </div>
+                          {allRegisteredPlugins.map((plugin) => {
+                            const Icon = plugin.icon;
+                            const isSelected =
+                              activeQuestion.type === plugin.type;
+                            return (
+                              <button
+                                key={plugin.type}
+                                type="button"
+                                onClick={() => {
+                                  handleTypeChange(plugin.type);
+                                  setIsTypeDropdownOpen(false);
+                                }}
+                                className={`w-full px-3.5 py-2.5 text-left text-xs font-extrabold flex items-center gap-2.5 transition-colors cursor-pointer ${
+                                  isSelected
+                                    ? "bg-duo-blue-light/60 text-duo-blue font-black"
+                                    : "text-duo-dark hover:bg-slate-100"
+                                }`}
+                              >
+                                <div
+                                  className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                                    isSelected
+                                      ? "bg-duo-blue text-white"
+                                      : "bg-slate-100 text-slate-600"
+                                  }`}
+                                >
+                                  <Icon className="w-4 h-4" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <span className="block truncate font-black">
+                                    {plugin.title}
+                                  </span>
+                                </div>
+                                {isSelected && (
+                                  <Check className="w-4 h-4 text-duo-blue shrink-0" />
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
                   {/* Prompt Text Field */}
                   <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <label className="text-xs font-black uppercase text-slate-400 tracking-wider">
-                        Pertanyaan / Instruksi Soal #{activeQuestionIndex + 1}
-                      </label>
-                      <Badge variant="blue" className="text-[10px]">
-                        {currentPlugin?.title}
-                      </Badge>
-                    </div>
+                    <label className="text-xs font-black uppercase text-slate-400 tracking-wider block mb-1.5">
+                      Pertanyaan / Instruksi Soal #{activeQuestionIndex + 1}
+                    </label>
 
                     <textarea
                       rows={2}
@@ -407,7 +526,9 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
                       </h4>
                       <currentPlugin.EditorComponent
                         value={activeQuestion.content}
-                        onChange={(newContent) => updateActiveQuestionContent(newContent)}
+                        onChange={(newContent) =>
+                          updateActiveQuestionContent(newContent)
+                        }
                       />
                     </div>
                   )}
@@ -435,20 +556,98 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
                       </select>
                     </div>
 
-                    <div>
-                      <label className="text-xs font-black uppercase text-slate-400 tracking-wider flex items-center gap-1.5 mb-1.5">
-                        <Clock className="w-3.5 h-3.5 text-duo-blue" />
-                        Waktu Menjawab (Kiosk)
-                      </label>
-                      <select
-                        defaultValue={30}
-                        className="w-full px-4 py-2.5 bg-white border-2 border-duo-gray rounded-2xl font-bold text-sm text-duo-dark focus:outline-none focus:border-duo-blue"
-                      >
-                        <option value={15}>15 Detik (Cepat)</option>
-                        <option value={30}>30 Detik (Ideal Kelas)</option>
-                        <option value={60}>60 Detik (Analitis)</option>
-                        <option value={0}>Tanpa Batas Waktu</option>
-                      </select>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-black uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-duo-blue" />
+                          Pengaturan Waktu
+                        </label>
+
+                        {/* Mode Selector Switcher */}
+                        <div className="inline-flex items-center p-0.5 bg-slate-100 rounded-xl border border-slate-200 text-[11px] font-black">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              playTap();
+                              setTimerMode("global");
+                            }}
+                            className={cn(
+                              "px-2.5 py-1 rounded-lg transition-all cursor-pointer",
+                              (currentQuiz.timerMode || "global") === "global"
+                                ? "bg-white text-duo-blue shadow-xs font-black"
+                                : "text-slate-500 hover:text-duo-dark font-bold",
+                            )}
+                          >
+                            Waktu Global
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              playTap();
+                              setTimerMode("per_question");
+                            }}
+                            className={cn(
+                              "px-2.5 py-1 rounded-lg transition-all cursor-pointer",
+                              currentQuiz.timerMode === "per_question"
+                                ? "bg-white text-duo-blue shadow-xs font-black"
+                                : "text-slate-500 hover:text-duo-dark font-bold",
+                            )}
+                          >
+                            Per Soal
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Dropdown & Visual Feedback based on active mode */}
+                      {(currentQuiz.timerMode || "global") === "global" ? (
+                        <div className="flex flex-col gap-1.5">
+                          <select
+                            value={currentQuiz.globalTimeLimitSeconds ?? 30}
+                            onChange={(e) =>
+                              setGlobalTimeLimit(parseInt(e.target.value) || 0)
+                            }
+                            className="w-full px-4 py-2.5 bg-white border-2 border-duo-blue/40 rounded-2xl font-bold text-sm text-duo-dark focus:outline-none focus:border-duo-blue"
+                          >
+                            <option value={15}>15 Detik (Cepat)</option>
+                            <option value={30}>30 Detik (Ideal Kelas)</option>
+                            <option value={45}>45 Detik (Sedang)</option>
+                            <option value={60}>60 Detik (Analitis)</option>
+                            <option value={90}>90 Detik (Kompleks)</option>
+                            <option value={120}>120 Detik (2 Menit)</option>
+                            <option value={0}>Tanpa Batas Waktu (∞)</option>
+                          </select>
+                          <span className="text-[11px] font-bold text-duo-blue flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-duo-blue inline-block animate-pulse" />
+                            Mode Global Aktif: Seluruh ({questions.length}) soal
+                            menggunakan durasi ini.
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-1.5">
+                          <select
+                            value={activeQuestion.timeLimitSeconds ?? 30}
+                            onChange={(e) =>
+                              updateQuestion(activeQuestionIndex, {
+                                timeLimitSeconds: parseInt(e.target.value) || 0,
+                              })
+                            }
+                            className="w-full px-4 py-2.5 bg-white border-2 border-duo-green/40 rounded-2xl font-bold text-sm text-duo-dark focus:outline-none focus:border-duo-green"
+                          >
+                            <option value={15}>15 Detik (Cepat)</option>
+                            <option value={30}>30 Detik (Ideal Kelas)</option>
+                            <option value={45}>45 Detik (Sedang)</option>
+                            <option value={60}>60 Detik (Analitis)</option>
+                            <option value={90}>90 Detik (Kompleks)</option>
+                            <option value={120}>120 Detik (2 Menit)</option>
+                            <option value={0}>Tanpa Batas Waktu (∞)</option>
+                          </select>
+                          <span className="text-[11px] font-bold text-duo-green flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-duo-green inline-block" />
+                            Mode Per Soal: Atur durasi khusus untuk Soal #
+                            {activeQuestionIndex + 1}.
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </DuoCard>
@@ -462,4 +661,3 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
 };
 
 export default QuizBuilderPage;
-
