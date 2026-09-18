@@ -153,8 +153,40 @@ export const WordsearchPlayer: React.FC<
     }
   }, [isCorrect, playCorrect, playWrong]);
 
-  const isAnswered = submittedAnswer !== undefined;
-  const isInteractionDisabled = isEvaluating || isAnswered;
+  const isAnswered = submittedAnswer !== undefined && isCorrect === true;
+  const isInteractionDisabled = isEvaluating || isCorrect === true;
+
+  const hasAutoSubmittedRef = useRef(false);
+
+  // Reset auto-submitted flag when content changes
+  useEffect(() => {
+    hasAutoSubmittedRef.current = false;
+  }, [content]);
+
+  // Automatically trigger victory celebration and submit prompt when all target words are found!
+  useEffect(() => {
+    if (hasAutoSubmittedRef.current || isEvaluating || isCorrect === true)
+      return;
+
+    if (targetWords.length > 0 && foundWords.length >= targetWords.length) {
+      hasAutoSubmittedRef.current = true;
+      playVictory();
+
+      // Smooth 400ms delay so the final capsule highlight finishes before bottom sheet prompt appears
+      const timer = setTimeout(() => {
+        onAnswerSubmit(foundWords);
+      }, 400);
+
+      return () => clearTimeout(timer);
+    }
+  }, [
+    foundWords,
+    targetWords,
+    isEvaluating,
+    isCorrect,
+    onAnswerSubmit,
+    playVictory,
+  ]);
 
   /**
    * Helper: Convert client (X, Y) to Grid (row, col) in O(1) time
@@ -269,11 +301,8 @@ export const WordsearchPlayer: React.FC<
               const palette = PASTEL_PALETTES[paletteIdx]!;
 
               setFoundWords((prev) => {
-                const updated = [...prev, matchedTarget];
-                if (updated.length === targetWords.length) {
-                  playVictory();
-                }
-                return updated;
+                if (prev.includes(matchedTarget)) return prev;
+                return [...prev, matchedTarget];
               });
 
               setLockedCapsules((prev) => [
@@ -341,13 +370,13 @@ export const WordsearchPlayer: React.FC<
    * Submit Answer
    */
   const isAllFound =
-    targetWords.length > 0 && foundWords.length === targetWords.length;
+    targetWords.length > 0 && foundWords.length >= targetWords.length;
 
   const handleSubmit = useCallback(() => {
-    if (isInteractionDisabled) return;
+    if (isEvaluating || isCorrect === true) return;
     playTap();
     onAnswerSubmit(foundWords);
-  }, [isInteractionDisabled, foundWords, playTap, onAnswerSubmit]);
+  }, [isEvaluating, isCorrect, foundWords, playTap, onAnswerSubmit]);
 
   return (
     <div className="flex flex-col items-center w-full max-w-4xl mx-auto py-4 px-2 select-none">
@@ -511,16 +540,18 @@ export const WordsearchPlayer: React.FC<
           variant="green"
           size="lg"
           fullWidth
-          disabled={!isAllFound || isEvaluating || isAnswered}
+          disabled={isEvaluating || isCorrect === true}
           onClick={handleSubmit}
           className="py-4 text-lg font-black tracking-wider shadow-md"
         >
-          {isAnswered ? "Jawaban Terkirim" : "Periksa Jawaban"}
+          {isCorrect === true || isAllFound
+            ? "Semua Kata Berhasil Ditemukan!"
+            : `Periksa Jawaban (${foundWords.length}/${targetWords.length} Kata)`}
         </TactileButton>
       </div>
 
       {/* Post-submission Educational Feedback Banner */}
-      {isAnswered && (
+      {isCorrect !== undefined && isCorrect !== null && (
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -10,15 +10,15 @@ import {
   useSensors,
   DragEndEvent,
   DragStartEvent,
-} from '@dnd-kit/core';
-import { motion } from 'framer-motion';
-import { HelpCircle, RotateCcw, Check, Sparkles } from 'lucide-react';
-import { PlayerProps } from '@/plugins/core/types';
-import { SpellWordContent, SpellWordAnswer } from './types';
-import { TileToken, TileTokenState } from '@/components/ui/TileToken';
-import { TactileButton } from '@/components/ui/TactileButton';
-import { useSoundEffect } from '@/hooks/useSoundEffect';
-import { cn } from '@/utils/cn';
+} from "@dnd-kit/core";
+import { motion } from "framer-motion";
+import { HelpCircle, RotateCcw, Check, Sparkles } from "lucide-react";
+import { PlayerProps } from "@/plugins/core/types";
+import { SpellWordContent, SpellWordAnswer } from "./types";
+import { TileToken, TileTokenState } from "@/components/ui/TileToken";
+import { TactileButton } from "@/components/ui/TactileButton";
+import { useSoundEffect } from "@/hooks/useSoundEffect";
+import { cn } from "@/utils/cn";
 
 interface LetterItem {
   id: string;
@@ -44,7 +44,7 @@ const DroppableSlot: React.FC<{
   disabled: boolean;
   state?: TileTokenState;
   onTap: () => void;
-}> = ({ index, item, disabled, state = 'idle', onTap }) => {
+}> = ({ index, item, disabled, state = "idle", onTap }) => {
   const { setNodeRef, isOver } = useDroppable({
     id: `slot-${index}`,
     disabled,
@@ -54,13 +54,16 @@ const DroppableSlot: React.FC<{
     <div
       ref={setNodeRef}
       className={cn(
-        'relative w-13 h-16 sm:w-16 sm:h-20 rounded-2xl transition-all duration-150 flex items-center justify-center',
+        "relative w-13 h-16 sm:w-16 sm:h-20 rounded-2xl transition-all duration-150 flex items-center justify-center",
         // Empty slot dashed style
-        !item && 'border-2 border-dashed border-duo-gray bg-slate-50/80 shadow-xs',
+        !item &&
+          "border-2 border-dashed border-duo-gray bg-slate-50/80 shadow-xs",
         // Highlight when dragging over
-        isOver && !disabled && 'border-duo-blue bg-duo-blue-light/50 ring-4 ring-duo-blue/20 scale-105',
+        isOver &&
+          !disabled &&
+          "border-duo-blue bg-duo-blue-light/50 ring-4 ring-duo-blue/20 scale-105",
         // Filled slot border
-        item && 'border-transparent'
+        item && "border-transparent",
       )}
     >
       {item ? (
@@ -89,7 +92,7 @@ const DraggableSlotTile: React.FC<{
   disabled: boolean;
   state?: TileTokenState;
   onTap: () => void;
-}> = ({ item, slotIndex, disabled, state = 'idle', onTap }) => {
+}> = ({ item, slotIndex, disabled, state = "idle", onTap }) => {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: item.id,
     data: { fromSlotIndex: slotIndex, item },
@@ -101,7 +104,10 @@ const DraggableSlotTile: React.FC<{
       ref={setNodeRef}
       {...attributes}
       {...listeners}
-      className={cn('touch-none cursor-grab active:cursor-grabbing', isDragging && 'opacity-20')}
+      className={cn(
+        "touch-none cursor-grab active:cursor-grabbing",
+        isDragging && "opacity-20",
+      )}
     >
       <TileToken
         label={item.letter}
@@ -133,19 +139,16 @@ const DraggableBankTile: React.FC<{
       ref={setNodeRef}
       {...attributes}
       {...listeners}
-      className={cn('touch-none cursor-pointer', isDragging && 'opacity-25')}
+      className={cn("touch-none cursor-pointer", isDragging && "opacity-25")}
     >
-      <TileToken
-        label={item.letter}
-        state="idle"
-        size="md"
-        onClick={onTap}
-      />
+      <TileToken label={item.letter} state="idle" size="md" onClick={onTap} />
     </div>
   );
 };
 
-export const SpellWordPlayer: React.FC<PlayerProps<SpellWordContent, SpellWordAnswer>> = ({
+export const SpellWordPlayer: React.FC<
+  PlayerProps<SpellWordContent, SpellWordAnswer>
+> = ({
   content,
   submittedAnswer,
   onAnswerSubmit,
@@ -155,25 +158,30 @@ export const SpellWordPlayer: React.FC<PlayerProps<SpellWordContent, SpellWordAn
   const { playTap, playPop, playCorrect, playWrong } = useSoundEffect();
 
   const targetWord = useMemo(
-    () => (content.targetWord || 'PLANET').toUpperCase().trim(),
-    [content.targetWord]
+    () => (content.targetWord || "PLANET").toUpperCase().trim(),
+    [content.targetWord],
   );
-  const distractors = useMemo(() => content.distractors || [], [content.distractors]);
+  const distractors = useMemo(
+    () => content.distractors || [],
+    [content.distractors],
+  );
   const hint = content.hint;
 
   const targetLength = targetWord.length;
 
   // Track slots and remaining bank tokens
   const [slots, setSlots] = useState<(LetterItem | null)[]>(() =>
-    new Array(targetLength).fill(null)
+    new Array(targetLength).fill(null),
   );
   const [bank, setBank] = useState<LetterItem[]>([]);
   const [activeDragItem, setActiveDragItem] = useState<LetterItem | null>(null);
 
   // Initialize randomized letter bank
   useEffect(() => {
-    const targetLetters = targetWord.split('').filter(Boolean);
-    const distractorLetters = distractors.map((d) => d.toUpperCase().trim()).filter(Boolean);
+    const targetLetters = targetWord.split("").filter(Boolean);
+    const distractorLetters = distractors
+      .map((d) => d.toUpperCase().trim())
+      .filter(Boolean);
     const combined = [...targetLetters, ...distractorLetters];
 
     const tokens: LetterItem[] = combined.map((char, index) => ({
@@ -183,17 +191,24 @@ export const SpellWordPlayer: React.FC<PlayerProps<SpellWordContent, SpellWordAn
 
     // If pre-existing submitted answer is provided, map into slots
     if (submittedAnswer && submittedAnswer.length > 0) {
-      const initialSlots: (LetterItem | null)[] = new Array(targetLength).fill(null);
+      const initialSlots: (LetterItem | null)[] = new Array(targetLength).fill(
+        null,
+      );
       const remainingTokens = [...tokens];
 
       submittedAnswer.forEach((ansChar, idx) => {
         if (idx < targetLength && ansChar) {
-          const tokenIdx = remainingTokens.findIndex((t) => t.letter === ansChar);
+          const tokenIdx = remainingTokens.findIndex(
+            (t) => t.letter === ansChar,
+          );
           if (tokenIdx !== -1) {
             initialSlots[idx] = remainingTokens[tokenIdx]!;
             remainingTokens.splice(tokenIdx, 1);
           } else {
-            initialSlots[idx] = { id: `manual-${idx}-${ansChar}`, letter: ansChar };
+            initialSlots[idx] = {
+              id: `manual-${idx}-${ansChar}`,
+              letter: ansChar,
+            };
           }
         }
       });
@@ -218,7 +233,7 @@ export const SpellWordPlayer: React.FC<PlayerProps<SpellWordContent, SpellWordAn
         delay: 150, // Short press activates drag on touch screens
         tolerance: 6,
       },
-    })
+    }),
   );
 
   const isAnswered = submittedAnswer !== undefined;
@@ -300,11 +315,13 @@ export const SpellWordPlayer: React.FC<PlayerProps<SpellWordContent, SpellWordAn
     const activeItem = active.data.current?.item as LetterItem;
     if (!activeItem) return;
 
-    const fromSlotIndex = active.data.current?.fromSlotIndex as number | undefined;
+    const fromSlotIndex = active.data.current?.fromSlotIndex as
+      | number
+      | undefined;
     const fromBank = active.data.current?.fromBank as boolean | undefined;
 
     // Dropped on Bank Dropzone -> return to bank
-    if (over.id === 'bank-dropzone') {
+    if (over.id === "bank-dropzone") {
       if (fromSlotIndex !== undefined) {
         playPop();
         setSlots((prev) => {
@@ -318,9 +335,10 @@ export const SpellWordPlayer: React.FC<PlayerProps<SpellWordContent, SpellWordAn
     }
 
     // Dropped on a Slot
-    if (typeof over.id === 'string' && over.id.startsWith('slot-')) {
-      const toSlotIndex = parseInt(over.id.replace('slot-', ''), 10);
-      if (isNaN(toSlotIndex) || toSlotIndex < 0 || toSlotIndex >= targetLength) return;
+    if (typeof over.id === "string" && over.id.startsWith("slot-")) {
+      const toSlotIndex = parseInt(over.id.replace("slot-", ""), 10);
+      if (isNaN(toSlotIndex) || toSlotIndex < 0 || toSlotIndex >= targetLength)
+        return;
 
       playPop();
 
@@ -345,7 +363,10 @@ export const SpellWordPlayer: React.FC<PlayerProps<SpellWordContent, SpellWordAn
 
           // If slot was occupied, return previous item to bank
           if (previousSlotItem) {
-            setBank((b) => [...b.filter((item) => item.id !== activeItem.id), previousSlotItem]);
+            setBank((b) => [
+              ...b.filter((item) => item.id !== activeItem.id),
+              previousSlotItem,
+            ]);
           } else {
             setBank((b) => b.filter((item) => item.id !== activeItem.id));
           }
@@ -363,14 +384,14 @@ export const SpellWordPlayer: React.FC<PlayerProps<SpellWordContent, SpellWordAn
 
   const handleSubmit = () => {
     if (isInteractionDisabled) return;
-    const answerArr = slots.map((s) => (s ? s.letter : ''));
+    const answerArr = slots.map((s) => (s ? s.letter : ""));
     playTap();
     onAnswerSubmit(answerArr);
   };
 
   // Droppable bank container
   const { setNodeRef: setBankDropRef } = useDroppable({
-    id: 'bank-dropzone',
+    id: "bank-dropzone",
     disabled: isInteractionDisabled,
   });
 
@@ -385,16 +406,16 @@ export const SpellWordPlayer: React.FC<PlayerProps<SpellWordContent, SpellWordAn
 
   // Calculate tile states after submission
   const getSlotTileState = (index: number): TileTokenState => {
-    if (!isAnswered) return 'idle';
-    if (isCorrect === true) return 'correct';
+    if (!isAnswered) return "idle";
+    if (isCorrect === true) return "correct";
     if (isCorrect === false) {
       const currentItem = slots[index];
       if (currentItem && currentItem.letter === targetWord[index]) {
-        return 'correct';
+        return "correct";
       }
-      return 'wrong';
+      return "wrong";
     }
-    return 'selected';
+    return "selected";
   };
 
   return (
@@ -405,7 +426,7 @@ export const SpellWordPlayer: React.FC<PlayerProps<SpellWordContent, SpellWordAn
     >
       <div className="flex flex-col items-center w-full max-w-2xl mx-auto py-4 px-2 select-none">
         {/* Optional Media Image */}
-        {content.mediaUrl && (
+        {content.mediaUrl && !(content as any)._hideMedia && (
           <div className="flex justify-center w-full mb-5">
             <img
               src={content.mediaUrl}
@@ -498,7 +519,7 @@ export const SpellWordPlayer: React.FC<PlayerProps<SpellWordContent, SpellWordAn
             onClick={handleSubmit}
             className="py-4 text-lg font-black tracking-wider shadow-md"
           >
-            {isAnswered ? 'Jawaban Terkirim' : 'Periksa Jawaban'}
+            {isAnswered ? "Jawaban Terkirim" : "Periksa Jawaban"}
           </TactileButton>
         </div>
 
@@ -508,23 +529,27 @@ export const SpellWordPlayer: React.FC<PlayerProps<SpellWordContent, SpellWordAn
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             className={cn(
-              'mt-6 p-4 sm:p-5 rounded-2xl border-2 flex items-center gap-3.5 w-full text-left',
+              "mt-6 p-4 sm:p-5 rounded-2xl border-2 flex items-center gap-3.5 w-full text-left",
               isCorrect
-                ? 'bg-duo-green-light/60 border-duo-green text-duo-dark'
-                : 'bg-duo-red-light/60 border-duo-red text-duo-dark'
+                ? "bg-duo-green-light/60 border-duo-green text-duo-dark"
+                : "bg-duo-red-light/60 border-duo-red text-duo-dark",
             )}
           >
             <div
               className={cn(
-                'w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-xs',
-                isCorrect ? 'bg-duo-green text-white' : 'bg-duo-red text-white'
+                "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-xs",
+                isCorrect ? "bg-duo-green text-white" : "bg-duo-red text-white",
               )}
             >
-              {isCorrect ? <Check className="w-6 h-6 stroke-[3]" /> : <Sparkles className="w-5 h-5 text-white" />}
+              {isCorrect ? (
+                <Check className="w-6 h-6 stroke-[3]" />
+              ) : (
+                <Sparkles className="w-5 h-5 text-white" />
+              )}
             </div>
             <div>
               <h4 className="text-xs font-black uppercase tracking-wider">
-                {isCorrect ? 'Susunan Huruf Sempurna!' : 'Kata Belum Tepat'}
+                {isCorrect ? "Susunan Huruf Sempurna!" : "Kata Belum Tepat"}
               </h4>
               <p className="text-sm font-bold mt-0.5">
                 {isCorrect

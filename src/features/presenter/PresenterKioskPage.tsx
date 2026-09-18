@@ -10,8 +10,12 @@ import {
   KeyRound,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  SlidersHorizontal,
   ArrowLeft,
   Clock,
+  Sparkles,
 } from "lucide-react";
 import { Quiz } from "@/types/quiz";
 import { BuilderQuestion } from "@/stores/builderStore";
@@ -78,6 +82,9 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
 
   // Fullscreen state
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Collapsible floating teacher controls state
+  const [isControlsCollapsed, setIsControlsCollapsed] = useState(false);
 
   // Active question object
   const activeQuestion = questions[currentIndex] || questions[0];
@@ -354,6 +361,39 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
     return questions.reduce((sum, q) => sum + (q.points || 100), 0);
   }, [questions]);
 
+  const effectiveMediaUrl =
+    activeQuestion?.mediaUrl || activeQuestion?.content?.mediaUrl;
+  const promptText =
+    (activeQuestion?.titlePrompt &&
+    activeQuestion.titlePrompt !== "Tuliskan pertanyaan kuis di sini..."
+      ? activeQuestion.titlePrompt
+      : activeQuestion?.content?.statement) ||
+    activeQuestion?.titlePrompt ||
+    activeQuestion?.content?.statement ||
+    "Pertanyaan Kuis";
+
+  const isDiagram = activeQuestion?.type === "labelled_diagram";
+  const hasMedia = Boolean(effectiveMediaUrl && !isDiagram);
+  const hintText = activeQuestion?.content?.hint;
+  const isWidePlugin =
+    activeQuestion?.type === "wordsearch" ||
+    activeQuestion?.type === "crossword";
+  const leftColClass = isWidePlugin
+    ? "md:col-span-4 lg:col-span-4"
+    : "md:col-span-5 lg:col-span-5";
+  const rightColClass = isWidePlugin
+    ? "md:col-span-8 lg:col-span-8"
+    : "md:col-span-7 lg:col-span-7";
+
+  const playerContent = useMemo(() => {
+    if (!activeQuestion?.content) return activeQuestion?.content;
+    return {
+      ...activeQuestion.content,
+      _hideMedia: hasMedia,
+      _hideStatement: Boolean(promptText && promptText !== "Pertanyaan Kuis"),
+    };
+  }, [activeQuestion?.content, hasMedia, promptText]);
+
   if (questions.length === 0) {
     return (
       <div className="fixed inset-0 z-50 bg-[#F8FAFC] text-duo-dark flex flex-col items-center justify-center p-6 text-center select-none">
@@ -465,145 +505,235 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
         </div>
       </header>
 
-      {/* 2. MAIN CENTER STAGE: DYNAMIC QUESTION ENGINE RENDERER */}
-      <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 pb-28 flex flex-col items-center justify-center">
-        <div className="w-full max-w-5xl mx-auto flex flex-col items-center">
-          {/* Quiz Title & Question Type Badge */}
-          <div className="flex items-center gap-2 mb-2 flex-wrap justify-center">
-            {quiz?.title && (
-              <span className="text-xs font-black uppercase text-slate-400 tracking-wider">
-                {quiz.title} &bull;
-              </span>
-            )}
-            <span className="text-xs font-black uppercase px-2.5 py-0.5 rounded-lg bg-duo-blue/10 text-duo-blue border border-duo-blue/20">
-              {activePlugin?.title || "Mini-Game"}
-            </span>
-            <span className="text-xs font-black uppercase px-2.5 py-0.5 rounded-lg bg-amber-50 text-amber-700 border border-amber-200">
-              {activeQuestion?.points || 100} Poin
-            </span>
-
-            {/* Live Question / Global Timer Badge */}
-            <span
+      {/* 2. MAIN HORIZONTAL STAGE: DYNAMIC QUESTION & PLAYER RENDERER */}
+      <main className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-5 md:p-6 lg:p-8 pb-28 flex flex-col justify-center items-center">
+        <div className="w-full max-w-7xl mx-auto my-auto">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-10 xl:gap-12 items-center">
+            {/* LEFT COLUMN: Badges, Big Prompt Text, and Large Supporting Image */}
+            <div
               className={cn(
-                "text-xs font-black uppercase px-2.5 py-0.5 rounded-lg flex items-center gap-1.5 border transition-all",
-                effectiveTimeLimit <= 0
-                  ? "bg-slate-100 text-slate-600 border-slate-200"
-                  : timeLeft <= 10
-                    ? "bg-red-100 text-duo-red border-red-300 animate-pulse font-black shadow-xs"
-                    : isGlobalTimer
-                      ? "bg-blue-50 text-duo-blue border-blue-200"
-                      : "bg-emerald-50 text-duo-green border-emerald-200",
+                leftColClass,
+                "flex flex-col justify-center gap-4 text-left",
               )}
             >
-              <Clock className="w-3.5 h-3.5" />
-              {formatTimerBadge(timeLeft, isGlobalTimer)}
-            </span>
-          </div>
+              {/* Badges: Quiz Title, Plugin, Points, Live Timer */}
+              <div className="flex items-center gap-2 flex-wrap">
+                {quiz?.title && (
+                  <span className="text-xs font-black uppercase text-slate-400 tracking-wider">
+                    {quiz.title} &bull;
+                  </span>
+                )}
+                <span className="text-xs sm:text-sm font-black uppercase px-3 py-1 rounded-xl bg-duo-blue/10 text-duo-blue border border-duo-blue/20">
+                  {activePlugin?.title || "Mini-Game"}
+                </span>
+                <span className="text-xs sm:text-sm font-black uppercase px-3 py-1 rounded-xl bg-amber-50 text-amber-700 border border-amber-200">
+                  {activeQuestion?.points || 100} Poin
+                </span>
 
-          {/* Question Prompt Title (Big Typography for Projector / TV Screen) */}
-          {activeQuestion?.titlePrompt && (
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-center text-duo-dark max-w-3xl leading-snug mb-4 px-2">
-              {activeQuestion.titlePrompt}
-            </h2>
-          )}
+                {/* Live Question / Global Timer Badge */}
+                <span
+                  className={cn(
+                    "text-xs sm:text-sm font-black uppercase px-3 py-1 rounded-xl flex items-center gap-1.5 border transition-all",
+                    effectiveTimeLimit <= 0
+                      ? "bg-slate-100 text-slate-600 border-slate-200"
+                      : timeLeft <= 10
+                        ? "bg-red-100 text-duo-red border-red-300 animate-pulse font-black shadow-xs"
+                        : isGlobalTimer
+                          ? "bg-blue-50 text-duo-blue border-blue-200"
+                          : "bg-emerald-50 text-duo-green border-emerald-200",
+                  )}
+                >
+                  <Clock className="w-4 h-4" />
+                  {formatTimerBadge(timeLeft, isGlobalTimer)}
+                </span>
+              </div>
 
-          {/* Media Diagram / Supporting Image if present */}
-          {activeQuestion?.mediaUrl && (
-            <div className="mb-4 max-w-md w-full rounded-2xl overflow-hidden border-2 border-slate-200 shadow-sm bg-white p-1">
-              <img
-                src={activeQuestion.mediaUrl}
-                alt="Media Soal"
-                className="w-full max-h-56 object-contain rounded-xl"
-              />
+              {/* Big Question Prompt Text (Large & High Contrast for Kids / Projectors) */}
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-[38px] font-black text-duo-dark leading-tight tracking-tight">
+                {promptText}
+              </h2>
+
+              {/* Educational Hint Badge (if present) */}
+              {hintText && (
+                <div className="inline-flex items-center gap-2 px-3.5 py-2 bg-amber-50 border-2 border-amber-200 text-amber-800 rounded-2xl font-bold text-xs sm:text-sm">
+                  <Sparkles className="w-4 h-4 shrink-0 text-amber-600" />
+                  <span>Petunjuk: {hintText}</span>
+                </div>
+              )}
+
+              {/* Large Supporting Image / Diagram (Huge & Prominent for Kids) */}
+              {hasMedia && (
+                <div className="w-full rounded-3xl overflow-hidden border-4 border-slate-200 shadow-md bg-white p-2.5 flex items-center justify-center transition-all">
+                  <img
+                    src={effectiveMediaUrl}
+                    alt="Media Soal"
+                    className="w-full max-h-[320px] sm:max-h-[380px] md:max-h-[420px] lg:max-h-[480px] object-contain rounded-2xl"
+                  />
+                </div>
+              )}
+
+              {/* Friendly Challenge Card when no media image is needed */}
+              {!hasMedia && !isDiagram && (
+                <div className="p-4 sm:p-5 bg-gradient-to-br from-blue-50/80 to-indigo-50/40 border-2 border-blue-100 rounded-3xl flex items-start gap-3.5 shadow-2xs">
+                  <div className="w-10 h-10 rounded-2xl bg-duo-blue text-white flex items-center justify-center font-black text-lg shrink-0 shadow-xs">
+                    ⭐
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-black uppercase text-duo-blue tracking-wider mb-0.5">
+                      Tantangan Interaktif
+                    </h4>
+                    <p className="text-xs sm:text-sm font-bold text-slate-600 leading-relaxed">
+                      Selesaikan permainan interaktif di sebelah kanan untuk
+                      meraih skor penuh!
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
 
-          {/* DYNAMIC PLAYER COMPONENT RENDERING VIA REGISTRY */}
-          <AnimatePresence mode="wait">
-            {activePlugin && activeQuestion && (
-              <motion.div
-                key={activeQuestion.id}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -12 }}
-                transition={{ duration: 0.2, ease: "easeOut" }}
-                className="w-full flex justify-center"
-              >
-                <activePlugin.PlayerComponent
-                  key={activeQuestion.id}
-                  content={activeQuestion.content}
-                  submittedAnswer={answers[activeQuestion.id]}
-                  onAnswerSubmit={handleAnswerSubmit}
-                  isEvaluating={feedbackState.isOpen}
-                  isCorrect={evaluations[activeQuestion.id]}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
+            {/* RIGHT COLUMN: Spacious Interactive Player Component */}
+            <div
+              className={cn(
+                rightColClass,
+                "flex flex-col justify-center items-center w-full",
+              )}
+            >
+              <AnimatePresence mode="wait">
+                {activePlugin && activeQuestion && (
+                  <motion.div
+                    key={activeQuestion.id}
+                    initial={{ opacity: 0, scale: 0.98, y: 10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.98, y: -10 }}
+                    transition={{ duration: 0.22, ease: "easeOut" }}
+                    className="w-full flex justify-center"
+                  >
+                    <activePlugin.PlayerComponent
+                      key={activeQuestion.id}
+                      content={playerContent}
+                      submittedAnswer={answers[activeQuestion.id]}
+                      onAnswerSubmit={handleAnswerSubmit}
+                      isEvaluating={feedbackState.isOpen}
+                      isCorrect={evaluations[activeQuestion.id]}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
         </div>
       </main>
 
-      {/* 3. FLOATING TEACHER CONTROLS AT CORNER (USER REQUIREMENT) */}
-      <div className="fixed bottom-6 right-6 z-40 flex items-center gap-2.5">
-        <div className="bg-white/95 backdrop-blur-md border-2 border-slate-200/90 rounded-2xl p-2 shadow-xl flex items-center gap-2">
-          {/* Previous Question */}
-          <button
-            type="button"
-            disabled={currentIndex === 0}
-            onClick={() => {
-              playTap();
-              setFeedbackState((prev) => ({ ...prev, isOpen: false }));
-              setCurrentIndex((prev) => Math.max(0, prev - 1));
-            }}
-            title="Soal Sebelumnya"
-            className="w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center transition-all active:scale-95"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
+      {/* 3. FLOATING TEACHER CONTROLS AT CORNER (COLLAPSIBLE) */}
+      <div className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-40 flex items-center">
+        <AnimatePresence mode="wait">
+          {isControlsCollapsed ? (
+            /* Collapsed Trigger Pill Button */
+            <motion.button
+              key="collapsed-controls-trigger"
+              type="button"
+              initial={{ opacity: 0, scale: 0.8, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: 8 }}
+              transition={{ duration: 0.18, ease: "easeOut" }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                playTap();
+                setIsControlsCollapsed(false);
+              }}
+              title="Buka Menu Kontrol Guru"
+              className="h-10 sm:h-11 px-3 sm:px-3.5 rounded-2xl bg-white/95 hover:bg-slate-50 backdrop-blur-md border-2 border-slate-200 text-slate-700 shadow-xl flex items-center gap-2 font-black text-xs cursor-pointer transition-all active:scale-95"
+            >
+              <SlidersHorizontal className="w-4 h-4 text-duo-blue" />
+              <span className="hidden sm:inline">Kontrol</span>
+              <ChevronUp className="w-3.5 h-3.5 text-slate-400" />
+            </motion.button>
+          ) : (
+            /* Full Expanded Controls Bar */
+            <motion.div
+              key="expanded-controls-bar"
+              initial={{ opacity: 0, scale: 0.9, x: 20 }}
+              animate={{ opacity: 1, scale: 1, x: 0 }}
+              exit={{ opacity: 0, scale: 0.9, x: 20 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="bg-white/95 backdrop-blur-md border-2 border-slate-200/90 rounded-2xl p-2 shadow-xl flex items-center gap-2"
+            >
+              {/* Previous Question */}
+              <button
+                type="button"
+                disabled={currentIndex === 0}
+                onClick={() => {
+                  playTap();
+                  setFeedbackState((prev) => ({ ...prev, isOpen: false }));
+                  setCurrentIndex((prev) => Math.max(0, prev - 1));
+                }}
+                title="Soal Sebelumnya"
+                className="w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center transition-all active:scale-95 cursor-pointer"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
 
-          {/* Next Question */}
-          <button
-            type="button"
-            disabled={currentIndex === questions.length - 1}
-            onClick={() => {
-              playTap();
-              setFeedbackState((prev) => ({ ...prev, isOpen: false }));
-              setCurrentIndex((prev) =>
-                Math.min(questions.length - 1, prev + 1),
-              );
-            }}
-            title="Soal Berikutnya"
-            className="w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center transition-all active:scale-95"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
+              {/* Next Question */}
+              <button
+                type="button"
+                disabled={currentIndex === questions.length - 1}
+                onClick={() => {
+                  playTap();
+                  setFeedbackState((prev) => ({ ...prev, isOpen: false }));
+                  setCurrentIndex((prev) =>
+                    Math.min(questions.length - 1, prev + 1),
+                  );
+                }}
+                title="Soal Berikutnya"
+                className="w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center transition-all active:scale-95 cursor-pointer"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
 
-          <div className="w-[1px] h-6 bg-slate-200 mx-0.5" />
+              <div className="w-[1px] h-6 bg-slate-200 mx-0.5" />
 
-          {/* Buka Kunci Jawaban Button (Unlock Answer) */}
-          <button
-            type="button"
-            onClick={handleUnlockAnswer}
-            title="Buka Kunci Jawaban untuk Seluruh Kelas"
-            className="px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 border-2 border-amber-300 text-amber-800 font-black text-xs flex items-center gap-1.5 transition-all active:scale-95 shadow-2xs cursor-pointer"
-          >
-            <KeyRound className="w-3.5 h-3.5 text-amber-600" />
-            <span className="hidden sm:inline">Buka Kunci Jawaban</span>
-            <span className="sm:hidden">Kunci</span>
-          </button>
+              {/* Buka Kunci Jawaban Button (Unlock Answer) */}
+              <button
+                type="button"
+                onClick={handleUnlockAnswer}
+                title="Buka Kunci Jawaban untuk Seluruh Kelas"
+                className="px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 border-2 border-amber-300 text-amber-800 font-black text-xs flex items-center gap-1.5 transition-all active:scale-95 shadow-2xs cursor-pointer"
+              >
+                <KeyRound className="w-3.5 h-3.5 text-amber-600" />
+                <span className="hidden sm:inline">Buka Kunci Jawaban</span>
+                <span className="sm:hidden">Kunci</span>
+              </button>
 
-          {/* Lewati Soal Button (Skip Question) */}
-          <button
-            type="button"
-            onClick={handleSkipQuestion}
-            title="Lewati Pertanyaan Ini"
-            className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border-2 border-slate-300 text-slate-700 font-black text-xs flex items-center gap-1.5 transition-all active:scale-95 shadow-2xs cursor-pointer"
-          >
-            <SkipForward className="w-3.5 h-3.5 text-slate-600" />
-            <span className="hidden sm:inline">Lewati Soal</span>
-            <span className="sm:hidden">Lewati</span>
-          </button>
-        </div>
+              {/* Lewati Soal Button (Skip Question) */}
+              <button
+                type="button"
+                onClick={handleSkipQuestion}
+                title="Lewati Pertanyaan Ini"
+                className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border-2 border-slate-300 text-slate-700 font-black text-xs flex items-center gap-1.5 transition-all active:scale-95 shadow-2xs cursor-pointer"
+              >
+                <SkipForward className="w-3.5 h-3.5 text-slate-600" />
+                <span className="hidden sm:inline">Lewati Soal</span>
+                <span className="sm:hidden">Lewati</span>
+              </button>
+
+              <div className="w-[1px] h-6 bg-slate-200 mx-0.5" />
+
+              {/* Collapse Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  playTap();
+                  setIsControlsCollapsed(true);
+                }}
+                title="Ciutkan / Sembunyikan Kontrol Guru"
+                className="w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-all active:scale-95 cursor-pointer"
+              >
+                <ChevronDown className="w-4 h-4" />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* 4. DUOLINGO BOTTOM SHEET FEEDBACK COMPONENT */}

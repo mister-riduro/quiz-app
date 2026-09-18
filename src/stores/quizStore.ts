@@ -65,7 +65,7 @@ export const useQuizStore = create<QuizStoreState>()(
             set((state) => {
               const cloudIds = new Set(cloudQuizzes.map((q) => q.id));
               const localDrafts = state.quizzes.filter(
-                (q) => !cloudIds.has(q.id) && !isValidUUID(q.id),
+                (q) => !cloudIds.has(q.id),
               );
 
               return {

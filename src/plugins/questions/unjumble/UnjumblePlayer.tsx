@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -10,21 +10,27 @@ import {
   useSensors,
   DragEndEvent,
   DragStartEvent,
-} from '@dnd-kit/core';
+} from "@dnd-kit/core";
 import {
   SortableContext,
   useSortable,
   arrayMove,
   rectSortingStrategy,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { motion, AnimatePresence } from 'framer-motion';
-import { HelpCircle, RotateCcw, Check, Sparkles, MoveHorizontal } from 'lucide-react';
-import { PlayerProps } from '@/plugins/core/types';
-import { UnjumbleContent, UnjumbleAnswer, UnjumbleTokenItem } from './types';
-import { TactileButton } from '@/components/ui/TactileButton';
-import { useSoundEffect } from '@/hooks/useSoundEffect';
-import { cn } from '@/utils/cn';
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  HelpCircle,
+  RotateCcw,
+  Check,
+  Sparkles,
+  MoveHorizontal,
+} from "lucide-react";
+import { PlayerProps } from "@/plugins/core/types";
+import { UnjumbleContent, UnjumbleAnswer, UnjumbleTokenItem } from "./types";
+import { TactileButton } from "@/components/ui/TactileButton";
+import { useSoundEffect } from "@/hooks/useSoundEffect";
+import { cn } from "@/utils/cn";
 
 /**
  * Fisher-Yates array shuffle that attempts to avoid returning the exact same order
@@ -33,7 +39,7 @@ function shuffleTokens(tokens: UnjumbleTokenItem[]): UnjumbleTokenItem[] {
   if (tokens.length <= 1) return [...tokens];
   const copy = [...tokens];
   let attempts = 0;
-  const originalOrder = tokens.map((t) => t.text).join(' ');
+  const originalOrder = tokens.map((t) => t.text).join(" ");
 
   do {
     for (let i = copy.length - 1; i > 0; i--) {
@@ -41,7 +47,10 @@ function shuffleTokens(tokens: UnjumbleTokenItem[]): UnjumbleTokenItem[] {
       [copy[i], copy[j]] = [copy[j], copy[i]];
     }
     attempts++;
-  } while (copy.map((t) => t.text).join(' ') === originalOrder && attempts < 10);
+  } while (
+    copy.map((t) => t.text).join(" ") === originalOrder &&
+    attempts < 10
+  );
 
   return copy;
 }
@@ -89,19 +98,21 @@ const PlacedSortableTile: React.FC<PlacedSortableTileProps> = ({
   // Determine styling based on evaluation state
   const getStyleState = () => {
     if (!isAnswered) {
-      return 'bg-white text-duo-dark border-slate-200 border-b-slate-300 hover:border-duo-blue hover:border-b-duo-blue-border hover:bg-slate-50';
+      return "bg-white text-duo-dark border-slate-200 border-b-slate-300 hover:border-duo-blue hover:border-b-duo-blue-border hover:bg-slate-50";
     }
     if (isCorrect === true) {
-      return 'bg-duo-green-light text-duo-green-border border-duo-green border-b-duo-green-border ring-2 ring-duo-green/30';
+      return "bg-duo-green-light text-duo-green-border border-duo-green border-b-duo-green-border ring-2 ring-duo-green/30";
     }
     if (isCorrect === false) {
-      const isWordInTargetPos = targetToken && item.text.trim().toLowerCase() === targetToken.trim().toLowerCase();
+      const isWordInTargetPos =
+        targetToken &&
+        item.text.trim().toLowerCase() === targetToken.trim().toLowerCase();
       if (isWordInTargetPos) {
-        return 'bg-duo-green-light text-duo-green-border border-duo-green border-b-duo-green-border ring-2 ring-duo-green/30';
+        return "bg-duo-green-light text-duo-green-border border-duo-green border-b-duo-green-border ring-2 ring-duo-green/30";
       }
-      return 'bg-duo-red-light text-duo-red-border border-duo-red border-b-duo-red-border ring-2 ring-duo-red/30';
+      return "bg-duo-red-light text-duo-red-border border-duo-red border-b-duo-red-border ring-2 ring-duo-red/30";
     }
-    return 'bg-white text-duo-dark border-slate-200 border-b-slate-300';
+    return "bg-white text-duo-dark border-slate-200 border-b-slate-300";
   };
 
   return (
@@ -112,11 +123,13 @@ const PlacedSortableTile: React.FC<PlacedSortableTileProps> = ({
       {...listeners}
       onClick={!disabled ? onTap : undefined}
       className={cn(
-        'relative inline-flex items-center justify-center font-black select-none transition-all duration-150',
-        'px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl border-2 border-b-4 border-solid shadow-sm text-base sm:text-lg',
-        !disabled ? 'cursor-grab active:cursor-grabbing hover:-translate-y-0.5 active:translate-y-0.5' : 'cursor-default',
-        isDragging && 'opacity-25 scale-95',
-        getStyleState()
+        "relative inline-flex items-center justify-center font-black select-none transition-all duration-150",
+        "px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl border-2 border-b-4 border-solid shadow-sm text-base sm:text-lg",
+        !disabled
+          ? "cursor-grab active:cursor-grabbing hover:-translate-y-0.5 active:translate-y-0.5"
+          : "cursor-default",
+        isDragging && "opacity-25 scale-95",
+        getStyleState(),
       )}
     >
       <span className="tracking-tight drop-shadow-xs">{item.text}</span>
@@ -165,13 +178,13 @@ const BankTile: React.FC<BankTileProps> = ({
       {...listeners}
       onClick={!disabled ? onTap : undefined}
       className={cn(
-        'relative inline-flex items-center justify-center font-black select-none transition-all duration-150',
-        'px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl border-2 border-b-4 border-solid shadow-sm text-base sm:text-lg',
-        'bg-white text-duo-dark border-slate-200 border-b-slate-300',
+        "relative inline-flex items-center justify-center font-black select-none transition-all duration-150",
+        "px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl border-2 border-b-4 border-solid shadow-sm text-base sm:text-lg",
+        "bg-white text-duo-dark border-slate-200 border-b-slate-300",
         !disabled
-          ? 'cursor-pointer hover:border-duo-blue hover:border-b-duo-blue-border hover:-translate-y-1 hover:scale-105 active:translate-y-1 active:border-b-2'
-          : 'cursor-default opacity-60',
-        isDragging && 'opacity-25'
+          ? "cursor-pointer hover:border-duo-blue hover:border-b-duo-blue-border hover:-translate-y-1 hover:scale-105 active:translate-y-1 active:border-b-2"
+          : "cursor-default opacity-60",
+        isDragging && "opacity-25",
       )}
     >
       <span className="tracking-tight">{item.text}</span>
@@ -179,7 +192,9 @@ const BankTile: React.FC<BankTileProps> = ({
   );
 };
 
-export const UnjumblePlayer: React.FC<PlayerProps<UnjumbleContent, UnjumbleAnswer>> = ({
+export const UnjumblePlayer: React.FC<
+  PlayerProps<UnjumbleContent, UnjumbleAnswer>
+> = ({
   content,
   submittedAnswer,
   onAnswerSubmit,
@@ -193,13 +208,13 @@ export const UnjumblePlayer: React.FC<PlayerProps<UnjumbleContent, UnjumbleAnswe
     if (content.tokens && content.tokens.length > 0) {
       return content.tokens;
     }
-    return (content.fullSentence || '').trim().split(/\s+/).filter(Boolean);
+    return (content.fullSentence || "").trim().split(/\s+/).filter(Boolean);
   }, [content.tokens, content.fullSentence]);
 
   // Master tokens with stable IDs
   const masterTokens: UnjumbleTokenItem[] = useMemo(() => {
     return targetTokens.map((text, index) => ({
-      id: `token-${index}-${text.toLowerCase().replace(/[^a-z0-9]/g, '')}`,
+      id: `token-${index}-${text.toLowerCase().replace(/[^a-z0-9]/g, "")}`,
       text,
       originalIndex: index,
     }));
@@ -208,20 +223,25 @@ export const UnjumblePlayer: React.FC<PlayerProps<UnjumbleContent, UnjumbleAnswe
   // State: Bank pool (shuffled order) and Placed tokens in upper container
   const [bankTokens, setBankTokens] = useState<UnjumbleTokenItem[]>([]);
   const [placedTokens, setPlacedTokens] = useState<UnjumbleTokenItem[]>([]);
-  const [activeDragItem, setActiveDragItem] = useState<UnjumbleTokenItem | null>(null);
+  const [activeDragItem, setActiveDragItem] =
+    useState<UnjumbleTokenItem | null>(null);
 
   // Initialize or reset tokens
   useEffect(() => {
     if (masterTokens.length === 0) return;
 
-    if (submittedAnswer && Array.isArray(submittedAnswer) && submittedAnswer.length > 0) {
+    if (
+      submittedAnswer &&
+      Array.isArray(submittedAnswer) &&
+      submittedAnswer.length > 0
+    ) {
       // Reconstruct from submittedAnswer
       const remaining = [...masterTokens];
       const arranged: UnjumbleTokenItem[] = [];
 
       submittedAnswer.forEach((ansText) => {
         const foundIdx = remaining.findIndex(
-          (t) => t.text.trim().toLowerCase() === ansText.trim().toLowerCase()
+          (t) => t.text.trim().toLowerCase() === ansText.trim().toLowerCase(),
         );
         if (foundIdx !== -1) {
           arranged.push(remaining[foundIdx]!);
@@ -264,20 +284,21 @@ export const UnjumblePlayer: React.FC<PlayerProps<UnjumbleContent, UnjumbleAnswe
         delay: 150,
         tolerance: 6,
       },
-    })
+    }),
   );
 
   const isAnswered = submittedAnswer !== undefined;
   const isInteractionDisabled = isEvaluating || isAnswered;
 
   // Droppable containers for Sentence Tray (Upper) and Bank Tray (Lower)
-  const { setNodeRef: setSentenceTrayRef, isOver: isOverSentenceTray } = useDroppable({
-    id: 'sentence-tray',
-    disabled: isInteractionDisabled,
-  });
+  const { setNodeRef: setSentenceTrayRef, isOver: isOverSentenceTray } =
+    useDroppable({
+      id: "sentence-tray",
+      disabled: isInteractionDisabled,
+    });
 
   const { setNodeRef: setBankTrayRef } = useDroppable({
-    id: 'bank-tray',
+    id: "bank-tray",
     disabled: isInteractionDisabled,
   });
 
@@ -325,14 +346,16 @@ export const UnjumblePlayer: React.FC<PlayerProps<UnjumbleContent, UnjumbleAnswe
     const { active, over } = event;
     if (!over) return;
 
-    const activeItem = active.data.current?.item as UnjumbleTokenItem | undefined;
+    const activeItem = active.data.current?.item as
+      | UnjumbleTokenItem
+      | undefined;
     if (!activeItem) return;
 
     const fromUpper = Boolean(active.data.current?.fromUpper);
     const fromBank = Boolean(active.data.current?.fromBank);
 
     // Case A: Dropped onto Bank Tray -> remove from upper tray if it came from upper
-    if (over.id === 'bank-tray') {
+    if (over.id === "bank-tray") {
       if (fromUpper) {
         playPop();
         setPlacedTokens((prev) => prev.filter((t) => t.id !== activeItem.id));
@@ -362,7 +385,7 @@ export const UnjumblePlayer: React.FC<PlayerProps<UnjumbleContent, UnjumbleAnswe
 
       playPop();
 
-      if (over.id === 'sentence-tray') {
+      if (over.id === "sentence-tray") {
         // Appended to the end of tray
         setPlacedTokens((prev) => [...prev, activeItem]);
       } else {
@@ -389,8 +412,12 @@ export const UnjumblePlayer: React.FC<PlayerProps<UnjumbleContent, UnjumbleAnswe
     onAnswerSubmit(answerList);
   }, [isInteractionDisabled, placedTokens, playTap, onAnswerSubmit]);
 
-  const placedIds = useMemo(() => placedTokens.map((t) => t.id), [placedTokens]);
-  const isAllPlaced = masterTokens.length > 0 && placedTokens.length === masterTokens.length;
+  const placedIds = useMemo(
+    () => placedTokens.map((t) => t.id),
+    [placedTokens],
+  );
+  const isAllPlaced =
+    masterTokens.length > 0 && placedTokens.length === masterTokens.length;
 
   return (
     <DndContext
@@ -400,7 +427,7 @@ export const UnjumblePlayer: React.FC<PlayerProps<UnjumbleContent, UnjumbleAnswe
     >
       <div className="flex flex-col items-center w-full max-w-3xl mx-auto py-4 px-2 select-none">
         {/* Optional Media Image */}
-        {content.mediaUrl && (
+        {content.mediaUrl && !(content as any)._hideMedia && (
           <div className="flex justify-center w-full mb-5">
             <img
               src={content.mediaUrl}
@@ -425,7 +452,9 @@ export const UnjumblePlayer: React.FC<PlayerProps<UnjumbleContent, UnjumbleAnswe
           </h3>
           <p className="flex items-center gap-1.5 text-xs font-bold text-slate-400">
             <MoveHorizontal className="w-4 h-4 text-duo-blue" />
-            <span>Ketuk kata untuk memindahkan, atau geser untuk menyisipkan posisi</span>
+            <span>
+              Ketuk kata untuk memindahkan, atau geser untuk menyisipkan posisi
+            </span>
           </p>
         </div>
 
@@ -456,10 +485,12 @@ export const UnjumblePlayer: React.FC<PlayerProps<UnjumbleContent, UnjumbleAnswe
         <div
           ref={setSentenceTrayRef}
           className={cn(
-            'relative flex flex-wrap items-center justify-center gap-2.5 sm:gap-3.5 p-5 sm:p-7 w-full',
-            'min-h-[140px] sm:min-h-[160px] rounded-3xl transition-all duration-200',
-            'bg-slate-100/90 border-2 border-slate-300 shadow-inner',
-            isOverSentenceTray && !isInteractionDisabled && 'border-duo-blue bg-duo-blue-light/20 ring-4 ring-duo-blue/20'
+            "relative flex flex-wrap items-center justify-center gap-2.5 sm:gap-3.5 p-5 sm:p-7 w-full",
+            "min-h-[140px] sm:min-h-[160px] rounded-3xl transition-all duration-200",
+            "bg-slate-100/90 border-2 border-slate-300 shadow-inner",
+            isOverSentenceTray &&
+              !isInteractionDisabled &&
+              "border-duo-blue bg-duo-blue-light/20 ring-4 ring-duo-blue/20",
           )}
         >
           {/* Subtle lined baseline guide lines */}
@@ -470,7 +501,8 @@ export const UnjumblePlayer: React.FC<PlayerProps<UnjumbleContent, UnjumbleAnswe
               {placedTokens.length === 0 ? (
                 <div className="flex flex-col items-center justify-center gap-1.5 py-4 text-center select-none z-10">
                   <span className="text-sm sm:text-base font-bold text-slate-400">
-                    Ketuk kata di bawah atau seret ke sini untuk menyusun kalimat
+                    Ketuk kata di bawah atau seret ke sini untuk menyusun
+                    kalimat
                   </span>
                   <span className="text-xs font-semibold text-slate-300">
                     Balok-balok kata akan berbaris rapi di wadah ini
@@ -535,7 +567,7 @@ export const UnjumblePlayer: React.FC<PlayerProps<UnjumbleContent, UnjumbleAnswe
             onClick={handleSubmit}
             className="py-4 text-lg font-black tracking-wider shadow-md"
           >
-            {isAnswered ? 'Jawaban Terkirim' : 'Periksa Jawaban'}
+            {isAnswered ? "Jawaban Terkirim" : "Periksa Jawaban"}
           </TactileButton>
         </div>
 
@@ -545,28 +577,34 @@ export const UnjumblePlayer: React.FC<PlayerProps<UnjumbleContent, UnjumbleAnswe
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             className={cn(
-              'mt-6 p-4 sm:p-5 rounded-2xl border-2 flex items-center gap-3.5 w-full text-left',
+              "mt-6 p-4 sm:p-5 rounded-2xl border-2 flex items-center gap-3.5 w-full text-left",
               isCorrect
-                ? 'bg-duo-green-light/60 border-duo-green text-duo-dark'
-                : 'bg-duo-red-light/60 border-duo-red text-duo-dark'
+                ? "bg-duo-green-light/60 border-duo-green text-duo-dark"
+                : "bg-duo-red-light/60 border-duo-red text-duo-dark",
             )}
           >
             <div
               className={cn(
-                'w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-xs',
-                isCorrect ? 'bg-duo-green text-white' : 'bg-duo-red text-white'
+                "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-xs",
+                isCorrect ? "bg-duo-green text-white" : "bg-duo-red text-white",
               )}
             >
-              {isCorrect ? <Check className="w-6 h-6 stroke-[3]" /> : <Sparkles className="w-5 h-5 text-white" />}
+              {isCorrect ? (
+                <Check className="w-6 h-6 stroke-[3]" />
+              ) : (
+                <Sparkles className="w-5 h-5 text-white" />
+              )}
             </div>
             <div>
               <h4 className="text-xs font-black uppercase tracking-wider">
-                {isCorrect ? 'Kalimat Berhasil Disusun Sempurna!' : 'Susunan Kalimat Belum Tepat'}
+                {isCorrect
+                  ? "Kalimat Berhasil Disusun Sempurna!"
+                  : "Susunan Kalimat Belum Tepat"}
               </h4>
               <p className="text-sm font-bold mt-0.5">
                 {isCorrect
-                  ? 'Luar biasa! Seluruh balok kata berada pada posisi yang tepat.'
-                  : `Kalimat yang benar adalah: "${content.fullSentence || targetTokens.join(' ')}"`}
+                  ? "Luar biasa! Seluruh balok kata berada pada posisi yang tepat."
+                  : `Kalimat yang benar adalah: "${content.fullSentence || targetTokens.join(" ")}"`}
               </p>
             </div>
           </motion.div>
@@ -576,7 +614,9 @@ export const UnjumblePlayer: React.FC<PlayerProps<UnjumbleContent, UnjumbleAnswe
         <DragOverlay>
           {activeDragItem ? (
             <div className="inline-flex items-center justify-center font-black px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl border-2 border-b-4 border-duo-blue bg-duo-blue-light text-duo-blue-border text-base sm:text-lg shadow-2xl scale-110 pointer-events-none">
-              <span className="tracking-tight drop-shadow-xs">{activeDragItem.text}</span>
+              <span className="tracking-tight drop-shadow-xs">
+                {activeDragItem.text}
+              </span>
             </div>
           ) : null}
         </DragOverlay>
@@ -584,4 +624,3 @@ export const UnjumblePlayer: React.FC<PlayerProps<UnjumbleContent, UnjumbleAnswe
     </DndContext>
   );
 };
-

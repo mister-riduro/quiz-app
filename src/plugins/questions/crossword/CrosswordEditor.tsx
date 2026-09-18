@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import {
   Grid,
   Plus,
@@ -11,20 +11,21 @@ import {
   Info,
   Check,
   X,
-} from 'lucide-react';
-import { EditorProps } from '@/plugins/core/types';
-import { CrosswordContent, CrosswordWord, CrosswordDirection } from './types';
+} from "lucide-react";
+import { EditorProps } from "@/plugins/core/types";
+import { CrosswordContent, CrosswordWord, CrosswordDirection } from "./types";
 import {
   buildCrosswordGridMap,
   coordKey,
   renumberCrosswordWords,
   getWordCells,
-} from './crosswordUtils';
-import { DuoCard } from '@/components/ui/DuoCard';
-import { Badge } from '@/components/ui/Badge';
-import { TactileButton } from '@/components/ui/TactileButton';
-import { useSoundEffect } from '@/hooks/useSoundEffect';
-import { cn } from '@/utils/cn';
+  defaultCrosswordContent,
+} from "./crosswordUtils";
+import { DuoCard } from "@/components/ui/DuoCard";
+import { Badge } from "@/components/ui/Badge";
+import { TactileButton } from "@/components/ui/TactileButton";
+import { useSoundEffect } from "@/hooks/useSoundEffect";
+import { cn } from "@/utils/cn";
 
 export const CrosswordEditor: React.FC<EditorProps<CrosswordContent>> = ({
   value,
@@ -38,16 +39,33 @@ export const CrosswordEditor: React.FC<EditorProps<CrosswordContent>> = ({
       rows: Math.min(10, Math.max(4, value?.gridSize?.rows || 6)),
       cols: Math.min(10, Math.max(4, value?.gridSize?.cols || 6)),
     }),
-    [value?.gridSize]
+    [value?.gridSize],
   );
 
-  const words = useMemo(() => value?.words || [], [value?.words]);
+  const words = useMemo(
+    () =>
+      value?.words && value.words.length > 0
+        ? value.words
+        : defaultCrosswordContent.words,
+    [value?.words],
+  );
+
+  useEffect(() => {
+    if (!value?.words || value.words.length === 0) {
+      onChange({
+        gridSize: value?.gridSize || defaultCrosswordContent.gridSize,
+        words: defaultCrosswordContent.words,
+        hint: value?.hint || defaultCrosswordContent.hint,
+      });
+    }
+  }, []);
 
   // Editing state for word form
   const [editingWordId, setEditingWordId] = useState<number | null>(null);
-  const [formWord, setFormWord] = useState('');
-  const [formClue, setFormClue] = useState('');
-  const [formDirection, setFormDirection] = useState<CrosswordDirection>('ACROSS');
+  const [formWord, setFormWord] = useState("");
+  const [formClue, setFormClue] = useState("");
+  const [formDirection, setFormDirection] =
+    useState<CrosswordDirection>("ACROSS");
   const [formRow, setFormRow] = useState(1); // 1-indexed for user display
   const [formCol, setFormCol] = useState(1); // 1-indexed for user display
   const [selectedWordId, setSelectedWordId] = useState<number | null>(null);
@@ -55,13 +73,13 @@ export const CrosswordEditor: React.FC<EditorProps<CrosswordContent>> = ({
   // Computed grid map and collisions
   const { cellMap, collisionCount, outOfBoundsCount } = useMemo(
     () => buildCrosswordGridMap(gridSize, words),
-    [gridSize, words]
+    [gridSize, words],
   );
 
   // Selected word object
   const activeSelectedWord = useMemo(
     () => words.find((w) => w.id === (editingWordId ?? selectedWordId)),
-    [words, editingWordId, selectedWordId]
+    [words, editingWordId, selectedWordId],
   );
 
   // Highlighted cells of currently selected/editing word
@@ -80,7 +98,15 @@ export const CrosswordEditor: React.FC<EditorProps<CrosswordContent>> = ({
     if (!targetWord || !targetWord.word) return new Set<string>();
     const cells = getWordCells(targetWord);
     return new Set(cells.map((c) => coordKey(c.row, c.col)));
-  }, [editingWordId, formWord, formClue, formDirection, formRow, formCol, activeSelectedWord]);
+  }, [
+    editingWordId,
+    formWord,
+    formClue,
+    formDirection,
+    formRow,
+    formCol,
+    activeSelectedWord,
+  ]);
 
   // Handle grid size change
   const handleGridSizeChange = (newRows: number, newCols: number) => {
@@ -96,9 +122,9 @@ export const CrosswordEditor: React.FC<EditorProps<CrosswordContent>> = ({
   // Reset form
   const resetForm = useCallback(() => {
     setEditingWordId(null);
-    setFormWord('');
-    setFormClue('');
-    setFormDirection('ACROSS');
+    setFormWord("");
+    setFormClue("");
+    setFormDirection("ACROSS");
     setFormRow(1);
     setFormCol(1);
   }, []);
@@ -118,18 +144,21 @@ export const CrosswordEditor: React.FC<EditorProps<CrosswordContent>> = ({
   // Save (add or update) word
   const handleSaveWord = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    const sanitizedWord = formWord.trim().toUpperCase().replace(/[^A-Z]/g, '');
+    const sanitizedWord = formWord
+      .trim()
+      .toUpperCase()
+      .replace(/[^A-Z]/g, "");
 
     if (!sanitizedWord) {
-      alert('Mohon masukkan kata minimal 2 huruf.');
+      alert("Mohon masukkan kata minimal 2 huruf.");
       return;
     }
     if (sanitizedWord.length < 2) {
-      alert('Kata minimal harus memiliki 2 huruf.');
+      alert("Kata minimal harus memiliki 2 huruf.");
       return;
     }
     if (!formClue.trim()) {
-      alert('Mohon masukkan teks petunjuk (clue) untuk kata ini.');
+      alert("Mohon masukkan teks petunjuk (clue) untuk kata ini.");
       return;
     }
 
@@ -137,11 +166,19 @@ export const CrosswordEditor: React.FC<EditorProps<CrosswordContent>> = ({
     const col0 = formCol - 1;
 
     // Check bounds
-    if (formDirection === 'ACROSS' && col0 + sanitizedWord.length > gridSize.cols) {
-      alert(`Kata mendatar melebihi batas kolom grid (${gridSize.cols} kolom).`);
+    if (
+      formDirection === "ACROSS" &&
+      col0 + sanitizedWord.length > gridSize.cols
+    ) {
+      alert(
+        `Kata mendatar melebihi batas kolom grid (${gridSize.cols} kolom).`,
+      );
       return;
     }
-    if (formDirection === 'DOWN' && row0 + sanitizedWord.length > gridSize.rows) {
+    if (
+      formDirection === "DOWN" &&
+      row0 + sanitizedWord.length > gridSize.rows
+    ) {
       alert(`Kata menurun melebihi batas baris grid (${gridSize.rows} baris).`);
       return;
     }
@@ -160,11 +197,12 @@ export const CrosswordEditor: React.FC<EditorProps<CrosswordContent>> = ({
               direction: formDirection,
               startPos: { row: row0, col: col0 },
             }
-          : w
+          : w,
       );
     } else {
       // Add new word
-      const nextId = words.length > 0 ? Math.max(...words.map((w) => w.id)) + 1 : 1;
+      const nextId =
+        words.length > 0 ? Math.max(...words.map((w) => w.id)) + 1 : 1;
       const newWord: CrosswordWord = {
         id: nextId,
         number: words.length + 1,
@@ -225,12 +263,12 @@ export const CrosswordEditor: React.FC<EditorProps<CrosswordContent>> = ({
   };
 
   const acrossWords = useMemo(
-    () => words.filter((w) => w.direction === 'ACROSS'),
-    [words]
+    () => words.filter((w) => w.direction === "ACROSS"),
+    [words],
   );
   const downWords = useMemo(
-    () => words.filter((w) => w.direction === 'DOWN'),
-    [words]
+    () => words.filter((w) => w.direction === "DOWN"),
+    [words],
   );
 
   return (
@@ -254,12 +292,14 @@ export const CrosswordEditor: React.FC<EditorProps<CrosswordContent>> = ({
 
           {/* Quick preset buttons */}
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-xs font-bold text-slate-400 mr-1">Preset:</span>
+            <span className="text-xs font-bold text-slate-400 mr-1">
+              Preset:
+            </span>
             {[
-              { r: 5, c: 5, label: '5x5' },
-              { r: 6, c: 6, label: '6x6' },
-              { r: 8, c: 8, label: '8x8' },
-              { r: 10, c: 10, label: '10x10' },
+              { r: 5, c: 5, label: "5x5" },
+              { r: 6, c: 6, label: "6x6" },
+              { r: 8, c: 8, label: "8x8" },
+              { r: 10, c: 10, label: "10x10" },
             ].map((preset) => (
               <button
                 key={preset.label}
@@ -267,10 +307,10 @@ export const CrosswordEditor: React.FC<EditorProps<CrosswordContent>> = ({
                 disabled={disabled}
                 onClick={() => handleGridSizeChange(preset.r, preset.c)}
                 className={cn(
-                  'px-2.5 py-1 text-xs font-black rounded-xl border transition-all',
+                  "px-2.5 py-1 text-xs font-black rounded-xl border transition-all",
                   gridSize.rows === preset.r && gridSize.cols === preset.c
-                    ? 'bg-duo-blue text-white border-duo-blue-border shadow-xs'
-                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                    ? "bg-duo-blue text-white border-duo-blue-border shadow-xs"
+                    : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50",
                 )}
               >
                 {preset.label}
@@ -292,7 +332,10 @@ export const CrosswordEditor: React.FC<EditorProps<CrosswordContent>> = ({
               disabled={disabled}
               value={gridSize.rows}
               onChange={(e) =>
-                handleGridSizeChange(parseInt(e.target.value) || 6, gridSize.cols)
+                handleGridSizeChange(
+                  parseInt(e.target.value) || 6,
+                  gridSize.cols,
+                )
               }
               className="w-full px-3 py-2 border-2 border-duo-gray rounded-xl font-black text-sm text-duo-dark focus:outline-none focus:border-duo-blue"
             />
@@ -309,7 +352,10 @@ export const CrosswordEditor: React.FC<EditorProps<CrosswordContent>> = ({
               disabled={disabled}
               value={gridSize.cols}
               onChange={(e) =>
-                handleGridSizeChange(gridSize.rows, parseInt(e.target.value) || 6)
+                handleGridSizeChange(
+                  gridSize.rows,
+                  parseInt(e.target.value) || 6,
+                )
               }
               className="w-full px-3 py-2 border-2 border-duo-gray rounded-xl font-black text-sm text-duo-dark focus:outline-none focus:border-duo-blue"
             />
@@ -335,13 +381,14 @@ export const CrosswordEditor: React.FC<EditorProps<CrosswordContent>> = ({
             <div>
               {collisionCount > 0 && (
                 <p>
-                  Perhatian: Terdapat {collisionCount} tabrakan huruf pada titik persilangan kata.
-                  Periksa kotak berbingkai merah pada grid.
+                  Perhatian: Terdapat {collisionCount} tabrakan huruf pada titik
+                  persilangan kata. Periksa kotak berbingkai merah pada grid.
                 </p>
               )}
               {outOfBoundsCount > 0 && (
                 <p>
-                  Terdapat {outOfBoundsCount} kata yang melebihi batas ukuran grid ({gridSize.rows}x{gridSize.cols}).
+                  Terdapat {outOfBoundsCount} kata yang melebihi batas ukuran
+                  grid ({gridSize.rows}x{gridSize.cols}).
                 </p>
               )}
             </div>
@@ -363,7 +410,10 @@ export const CrosswordEditor: React.FC<EditorProps<CrosswordContent>> = ({
             </span>
           </div>
 
-          <DuoCard elevated className="p-4 sm:p-5 flex flex-col items-center bg-slate-50/50">
+          <DuoCard
+            elevated
+            className="p-4 sm:p-5 flex flex-col items-center bg-slate-50/50"
+          >
             {/* Visual Crossword Grid */}
             <div
               className="grid gap-1.5 p-2 bg-white rounded-2xl border-2 border-slate-200 shadow-inner max-w-full overflow-auto"
@@ -389,27 +439,28 @@ export const CrosswordEditor: React.FC<EditorProps<CrosswordContent>> = ({
                       onClick={() => handleCellClick(r, c)}
                       title={
                         cell
-                          ? `Baris ${r + 1}, Kolom ${c + 1}: ${cell.char} (Kata: #${cell.wordIds.join(', ')})`
+                          ? `Baris ${r + 1}, Kolom ${c + 1}: ${cell.char} (Kata: #${cell.wordIds.join(", ")})`
                           : `Klik untuk jadikan Posisi Awal (Baris ${r + 1}, Kolom ${c + 1})`
                       }
                       className={cn(
-                        'relative aspect-square rounded-xl flex items-center justify-center font-black text-sm sm:text-base select-none transition-all duration-150',
+                        "relative aspect-square rounded-xl flex items-center justify-center font-black text-sm sm:text-base select-none transition-all duration-150",
                         // Occupied active word cell
-                        isOccupied && !hasCollision && [
-                          'bg-white text-duo-dark border-2 border-duo-gray shadow-xs',
-                          isHighlighted &&
-                            'bg-duo-blue-light/70 border-duo-blue ring-2 ring-duo-blue/30 text-duo-blue-border scale-105 z-10',
-                        ],
+                        isOccupied &&
+                          !hasCollision && [
+                            "bg-white text-duo-dark border-2 border-duo-gray shadow-xs",
+                            isHighlighted &&
+                              "bg-duo-blue-light/70 border-duo-blue ring-2 ring-duo-blue/30 text-duo-blue-border scale-105 z-10",
+                          ],
                         // Collision error cell
                         hasCollision && [
-                          'bg-red-50 text-red-600 border-2 border-red-500 animate-pulse z-10 shadow-xs',
+                          "bg-red-50 text-red-600 border-2 border-red-500 animate-pulse z-10 shadow-xs",
                         ],
                         // Empty cell (inactive background)
                         !isOccupied && [
-                          'bg-slate-100/70 border border-dashed border-slate-200 text-slate-300 hover:bg-slate-200/60 hover:border-slate-300',
+                          "bg-slate-100/70 border border-dashed border-slate-200 text-slate-300 hover:bg-slate-200/60 hover:border-slate-300",
                           isStartPos &&
-                            'bg-duo-blue-light/40 border-2 border-dashed border-duo-blue text-duo-blue',
-                        ]
+                            "bg-duo-blue-light/40 border-2 border-dashed border-duo-blue text-duo-blue",
+                        ],
                       )}
                     >
                       {/* Clue number in top-left */}
@@ -426,12 +477,12 @@ export const CrosswordEditor: React.FC<EditorProps<CrosswordContent>> = ({
                         </span>
                       ) : isStartPos ? (
                         <span className="text-[10px] font-black text-duo-blue opacity-70">
-                          {formDirection === 'ACROSS' ? '→' : '↓'}
+                          {formDirection === "ACROSS" ? "→" : "↓"}
                         </span>
                       ) : null}
                     </button>
                   );
-                })
+                }),
               )}
             </div>
 
@@ -439,7 +490,8 @@ export const CrosswordEditor: React.FC<EditorProps<CrosswordContent>> = ({
             <div className="flex items-center gap-1.5 mt-3 text-[11px] font-semibold text-slate-500">
               <Info className="w-3.5 h-3.5 text-duo-blue shrink-0" />
               <span>
-                Klik kotak mana saja pada grid untuk menetapkan posisi awal (Start Pos: Baris {formRow}, Kolom {formCol}).
+                Klik kotak mana saja pada grid untuk menetapkan posisi awal
+                (Start Pos: Baris {formRow}, Kolom {formCol}).
               </span>
             </div>
           </DuoCard>
@@ -487,7 +539,9 @@ export const CrosswordEditor: React.FC<EditorProps<CrosswordContent>> = ({
                   disabled={disabled}
                   value={formWord}
                   onChange={(e) =>
-                    setFormWord(e.target.value.toUpperCase().replace(/[^A-Z]/g, ''))
+                    setFormWord(
+                      e.target.value.toUpperCase().replace(/[^A-Z]/g, ""),
+                    )
                   }
                   placeholder="Contoh: BUMI, BULAN, LAUT"
                   className="w-full px-4 py-2.5 border-2 border-duo-gray rounded-2xl font-black text-base text-duo-dark tracking-wider focus:outline-none focus:border-duo-blue uppercase"
@@ -525,13 +579,13 @@ export const CrosswordEditor: React.FC<EditorProps<CrosswordContent>> = ({
                       disabled={disabled}
                       onClick={() => {
                         playTap();
-                        setFormDirection('ACROSS');
+                        setFormDirection("ACROSS");
                       }}
                       className={cn(
-                        'py-2 px-2 rounded-lg font-black text-xs flex items-center justify-center gap-1.5 transition-all',
-                        formDirection === 'ACROSS'
-                          ? 'bg-white text-duo-blue shadow-xs font-black'
-                          : 'text-slate-500 hover:text-duo-dark'
+                        "py-2 px-2 rounded-lg font-black text-xs flex items-center justify-center gap-1.5 transition-all",
+                        formDirection === "ACROSS"
+                          ? "bg-white text-duo-blue shadow-xs font-black"
+                          : "text-slate-500 hover:text-duo-dark",
                       )}
                     >
                       <ArrowRight className="w-3.5 h-3.5" />
@@ -543,13 +597,13 @@ export const CrosswordEditor: React.FC<EditorProps<CrosswordContent>> = ({
                       disabled={disabled}
                       onClick={() => {
                         playTap();
-                        setFormDirection('DOWN');
+                        setFormDirection("DOWN");
                       }}
                       className={cn(
-                        'py-2 px-2 rounded-lg font-black text-xs flex items-center justify-center gap-1.5 transition-all',
-                        formDirection === 'DOWN'
-                          ? 'bg-white text-duo-blue shadow-xs font-black'
-                          : 'text-slate-500 hover:text-duo-dark'
+                        "py-2 px-2 rounded-lg font-black text-xs flex items-center justify-center gap-1.5 transition-all",
+                        formDirection === "DOWN"
+                          ? "bg-white text-duo-blue shadow-xs font-black"
+                          : "text-slate-500 hover:text-duo-dark",
                       )}
                     >
                       <ArrowDown className="w-3.5 h-3.5" />
@@ -578,8 +632,8 @@ export const CrosswordEditor: React.FC<EditorProps<CrosswordContent>> = ({
                           setFormRow(
                             Math.min(
                               gridSize.rows,
-                              Math.max(1, parseInt(e.target.value) || 1)
-                            )
+                              Math.max(1, parseInt(e.target.value) || 1),
+                            ),
                           )
                         }
                         className="w-full px-3 py-1.5 border-2 border-duo-gray rounded-xl font-black text-sm text-center focus:outline-none focus:border-duo-blue"
@@ -599,8 +653,8 @@ export const CrosswordEditor: React.FC<EditorProps<CrosswordContent>> = ({
                           setFormCol(
                             Math.min(
                               gridSize.cols,
-                              Math.max(1, parseInt(e.target.value) || 1)
-                            )
+                              Math.max(1, parseInt(e.target.value) || 1),
+                            ),
                           )
                         }
                         className="w-full px-3 py-1.5 border-2 border-duo-gray rounded-xl font-black text-sm text-center focus:outline-none focus:border-duo-blue"
@@ -614,7 +668,7 @@ export const CrosswordEditor: React.FC<EditorProps<CrosswordContent>> = ({
               <div className="pt-2">
                 <TactileButton
                   type="submit"
-                  variant={editingWordId ? 'yellow' : 'green'}
+                  variant={editingWordId ? "yellow" : "green"}
                   size="md"
                   disabled={disabled || !formWord.trim() || !formClue.trim()}
                   className="w-full justify-center"
@@ -658,7 +712,9 @@ export const CrosswordEditor: React.FC<EditorProps<CrosswordContent>> = ({
                 <WordListItem
                   key={word.id}
                   word={word}
-                  isSelected={selectedWordId === word.id || editingWordId === word.id}
+                  isSelected={
+                    selectedWordId === word.id || editingWordId === word.id
+                  }
                   disabled={disabled}
                   onSelect={() => {
                     playTap();
@@ -691,7 +747,9 @@ export const CrosswordEditor: React.FC<EditorProps<CrosswordContent>> = ({
                 <WordListItem
                   key={word.id}
                   word={word}
-                  isSelected={selectedWordId === word.id || editingWordId === word.id}
+                  isSelected={
+                    selectedWordId === word.id || editingWordId === word.id
+                  }
                   disabled={disabled}
                   onSelect={() => {
                     playTap();
@@ -730,10 +788,10 @@ const WordListItem: React.FC<WordListItemProps> = ({
     <div
       onClick={onSelect}
       className={cn(
-        'flex items-center justify-between gap-3 p-3 rounded-2xl border-2 transition-all cursor-pointer',
+        "flex items-center justify-between gap-3 p-3 rounded-2xl border-2 transition-all cursor-pointer",
         isSelected
-          ? 'bg-duo-blue-light/50 border-duo-blue text-duo-dark shadow-xs'
-          : 'bg-white border-slate-200 hover:border-slate-300'
+          ? "bg-duo-blue-light/50 border-duo-blue text-duo-dark shadow-xs"
+          : "bg-white border-slate-200 hover:border-slate-300",
       )}
     >
       <div className="flex items-start gap-2.5 min-w-0 flex-1">
@@ -758,7 +816,10 @@ const WordListItem: React.FC<WordListItemProps> = ({
         </div>
       </div>
 
-      <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="flex items-center gap-1 shrink-0"
+        onClick={(e) => e.stopPropagation()}
+      >
         <button
           type="button"
           disabled={disabled}

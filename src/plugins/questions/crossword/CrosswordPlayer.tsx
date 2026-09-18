@@ -1,5 +1,11 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
+import { motion } from "framer-motion";
 import {
   HelpCircle,
   Check,
@@ -11,9 +17,14 @@ import {
   ChevronRight,
   CheckCircle2,
   Delete,
-} from 'lucide-react';
-import { PlayerProps } from '@/plugins/core/types';
-import { CrosswordContent, CrosswordAnswer, CrosswordWord, CrosswordDirection } from './types';
+} from "lucide-react";
+import { PlayerProps } from "@/plugins/core/types";
+import {
+  CrosswordContent,
+  CrosswordAnswer,
+  CrosswordWord,
+  CrosswordDirection,
+} from "./types";
 import {
   buildCrosswordGridMap,
   coordKey,
@@ -21,47 +32,54 @@ import {
   getPrevCellInWord,
   getWordCells,
   isWordFilled,
+  getStudentWord,
   defaultCrosswordContent,
-} from './crosswordUtils';
-import { TactileButton } from '@/components/ui/TactileButton';
-import { Badge } from '@/components/ui/Badge';
-import { useSoundEffect } from '@/hooks/useSoundEffect';
-import { cn } from '@/utils/cn';
+} from "./crosswordUtils";
+import { TactileButton } from "@/components/ui/TactileButton";
+import { Badge } from "@/components/ui/Badge";
+import { useSoundEffect } from "@/hooks/useSoundEffect";
+import { cn } from "@/utils/cn";
 
 const QWERTY_ROWS = [
-  ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
-  ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
-  ['Z', 'X', 'C', 'V', 'B', 'N', 'M'],
+  ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
+  ["A", "S", "D", "F", "G", "H", "J", "K", "L"],
+  ["Z", "X", "C", "V", "B", "N", "M"],
 ];
 
-export const CrosswordPlayer: React.FC<PlayerProps<CrosswordContent, CrosswordAnswer>> = ({
+export const CrosswordPlayer: React.FC<
+  PlayerProps<CrosswordContent, CrosswordAnswer>
+> = ({
   content,
   submittedAnswer,
   onAnswerSubmit,
   isEvaluating = false,
   isCorrect,
 }) => {
-  const { playTap, playPop, playCorrect, playWrong, playVictory } = useSoundEffect();
+  const { playTap, playPop, playCorrect, playWrong, playVictory } =
+    useSoundEffect();
 
   const words = useMemo<CrosswordWord[]>(
-    () => (content?.words && content.words.length > 0 ? content.words : defaultCrosswordContent.words),
-    [content?.words]
+    () =>
+      content?.words && content.words.length > 0
+        ? content.words
+        : defaultCrosswordContent.words,
+    [content?.words],
   );
 
   const gridSize = useMemo(
     () => content?.gridSize || defaultCrosswordContent.gridSize,
-    [content?.gridSize]
+    [content?.gridSize],
   );
 
   // Precompute grid map
   const { cellMap } = useMemo(
     () => buildCrosswordGridMap(gridSize, words),
-    [gridSize, words]
+    [gridSize, words],
   );
 
   // Student's entered answers: key `${row}-${col}` => uppercase letter
   const [answers, setAnswers] = useState<CrosswordAnswer>(() => {
-    if (submittedAnswer && typeof submittedAnswer === 'object') {
+    if (submittedAnswer && typeof submittedAnswer === "object") {
       return submittedAnswer;
     }
     return {};
@@ -72,14 +90,18 @@ export const CrosswordPlayer: React.FC<PlayerProps<CrosswordContent, CrosswordAn
     return words[0]?.id ?? 1;
   });
 
-  const [activeDirection, setActiveDirection] = useState<CrosswordDirection>(() => {
-    return words[0]?.direction ?? 'ACROSS';
-  });
+  const [activeDirection, setActiveDirection] = useState<CrosswordDirection>(
+    () => {
+      return words[0]?.direction ?? "ACROSS";
+    },
+  );
 
-  const [activeCell, setActiveCell] = useState<{ row: number; col: number }>(() => {
-    const firstWord = words[0];
-    return firstWord ? { ...firstWord.startPos } : { row: 0, col: 0 };
-  });
+  const [activeCell, setActiveCell] = useState<{ row: number; col: number }>(
+    () => {
+      const firstWord = words[0];
+      return firstWord ? { ...firstWord.startPos } : { row: 0, col: 0 };
+    },
+  );
 
   // Track victory state
   const [hasCheckedAnswer, setHasCheckedAnswer] = useState(false);
@@ -87,12 +109,88 @@ export const CrosswordPlayer: React.FC<PlayerProps<CrosswordContent, CrosswordAn
 
   const effectiveIsCorrect =
     isCorrect !== null && isCorrect !== undefined ? isCorrect : isAnswerValid;
-  const showFeedback = hasCheckedAnswer || (isCorrect !== null && isCorrect !== undefined);
+  const showFeedback =
+    hasCheckedAnswer || (isCorrect !== null && isCorrect !== undefined);
+
+  // Check whether all target words and cells are completely and correctly filled
+  const checkIsAllCorrect = useCallback(
+    (currentAnswers: CrosswordAnswer): boolean => {
+      if (!words || words.length === 0 || cellMap.size === 0) return false;
+
+      // 1. Verify every word matches its target word
+      for (const word of words) {
+        const studentWord = getStudentWord(word, currentAnswers);
+        const targetWord = (word.word || "").trim().toUpperCase();
+        if (!studentWord || studentWord !== targetWord) {
+          return false;
+        }
+      }
+
+      // 2. Verify all active cells in grid have matching characters
+      for (const [key, cell] of cellMap.entries()) {
+        const studentChar = (currentAnswers[key] || "").trim().toUpperCase();
+        if (!studentChar || studentChar !== cell.char.toUpperCase()) {
+          return false;
+        }
+      }
+
+      return true;
+    },
+    [words, cellMap],
+  );
+
+  // Count how many words are correctly solved
+  const correctWordsCount = useMemo(() => {
+    let count = 0;
+    words.forEach((w) => {
+      const studentWord = getStudentWord(w, answers);
+      const targetWord = (w.word || "").trim().toUpperCase();
+      if (studentWord === targetWord && targetWord.length > 0) {
+        count++;
+      }
+    });
+    return count;
+  }, [words, answers]);
+
+  const hasAutoSubmittedRef = useRef(false);
+
+  // Reset auto-submitted flag when content changes
+  useEffect(() => {
+    hasAutoSubmittedRef.current = false;
+  }, [content]);
+
+  // Automatically trigger celebration and prompt when all words are correct!
+  useEffect(() => {
+    if (hasAutoSubmittedRef.current || isEvaluating || effectiveIsCorrect)
+      return;
+
+    if (words.length > 0 && checkIsAllCorrect(answers)) {
+      hasAutoSubmittedRef.current = true;
+      setHasCheckedAnswer(true);
+      setIsAnswerValid(true);
+      playVictory();
+
+      // Smooth delay (400ms) to allow the final letter to render and sound to chime
+      const timer = setTimeout(() => {
+        onAnswerSubmit(answers);
+      }, 400);
+
+      return () => clearTimeout(timer);
+    }
+  }, [
+    answers,
+    words,
+    checkIsAllCorrect,
+    isEvaluating,
+    effectiveIsCorrect,
+    onAnswerSubmit,
+    playVictory,
+  ]);
 
   // Resolve active word
   const activeWord = useMemo(
     () => words.find((w) => w.id === activeWordId) || words[0],
-    [words, activeWordId]
+    [words, activeWordId],
   );
 
   // Highlighted cells of currently selected word
@@ -122,9 +220,9 @@ export const CrosswordPlayer: React.FC<PlayerProps<CrosswordContent, CrosswordAn
         // If this cell is an intersection between ACROSS and DOWN, toggle direction!
         if (cell.acrossWordId && cell.downWordId) {
           const nextDir: CrosswordDirection =
-            activeDirection === 'ACROSS' ? 'DOWN' : 'ACROSS';
+            activeDirection === "ACROSS" ? "DOWN" : "ACROSS";
           const nextWordId =
-            nextDir === 'ACROSS' ? cell.acrossWordId : cell.downWordId;
+            nextDir === "ACROSS" ? cell.acrossWordId : cell.downWordId;
           setActiveDirection(nextDir);
           setActiveWordId(nextWordId);
           return;
@@ -134,9 +232,9 @@ export const CrosswordPlayer: React.FC<PlayerProps<CrosswordContent, CrosswordAn
       setActiveCell({ row, col });
 
       // Determine which word to activate
-      if (activeDirection === 'ACROSS' && cell.acrossWordId) {
+      if (activeDirection === "ACROSS" && cell.acrossWordId) {
         setActiveWordId(cell.acrossWordId);
-      } else if (activeDirection === 'DOWN' && cell.downWordId) {
+      } else if (activeDirection === "DOWN" && cell.downWordId) {
         setActiveWordId(cell.downWordId);
       } else {
         // Switch to whichever word is available
@@ -148,7 +246,7 @@ export const CrosswordPlayer: React.FC<PlayerProps<CrosswordContent, CrosswordAn
         }
       }
     },
-    [cellMap, activeCell, activeDirection, words, playTap]
+    [cellMap, activeCell, activeDirection, words, playTap],
   );
 
   // Cycle to next / prev clue
@@ -164,7 +262,9 @@ export const CrosswordPlayer: React.FC<PlayerProps<CrosswordContent, CrosswordAn
         setActiveDirection(nextWord.direction);
         // Focus first unfilled cell of next word, or startPos
         const cells = getWordCells(nextWord);
-        const firstUnfilled = cells.find((c) => !answers[coordKey(c.row, c.col)]);
+        const firstUnfilled = cells.find(
+          (c) => !answers[coordKey(c.row, c.col)],
+        );
         if (firstUnfilled) {
           setActiveCell({ row: firstUnfilled.row, col: firstUnfilled.col });
         } else {
@@ -172,17 +272,22 @@ export const CrosswordPlayer: React.FC<PlayerProps<CrosswordContent, CrosswordAn
         }
       }
     },
-    [words, activeWordId, answers, playTap]
+    [words, activeWordId, answers, playTap],
   );
 
   // Handle typing a single letter (Auto-Advance)
   const handleTypeLetter = useCallback(
     (letter: string) => {
-      const sanitized = letter.toUpperCase().replace(/[^A-Z]/g, '');
+      const sanitized = letter.toUpperCase().replace(/[^A-Z]/g, "");
       if (!sanitized || !activeWord) return;
 
       const { row, col } = activeCell;
       const key = coordKey(row, col);
+
+      // Reset check state on new input so student can correct mistakes smoothly
+      if (hasCheckedAnswer && !effectiveIsCorrect) {
+        setHasCheckedAnswer(false);
+      }
 
       // 1. Update answer state
       const nextAnswers = { ...answers, [key]: sanitized };
@@ -191,12 +296,14 @@ export const CrosswordPlayer: React.FC<PlayerProps<CrosswordContent, CrosswordAn
       // Check if this letter completes the active word correctly
       const activeCells = getWordCells(activeWord);
       const isWordNowComplete = activeCells.every(
-        (c) => (nextAnswers[coordKey(c.row, c.col)] || '').trim().length > 0
+        (c) => (nextAnswers[coordKey(c.row, c.col)] || "").trim().length > 0,
       );
       if (isWordNowComplete) {
         const studentWord = activeCells
-          .map((c) => (nextAnswers[coordKey(c.row, c.col)] || '').trim().toUpperCase())
-          .join('');
+          .map((c) =>
+            (nextAnswers[coordKey(c.row, c.col)] || "").trim().toUpperCase(),
+          )
+          .join("");
         if (studentWord === activeWord.word.toUpperCase()) {
           playCorrect();
         } else {
@@ -214,10 +321,14 @@ export const CrosswordPlayer: React.FC<PlayerProps<CrosswordContent, CrosswordAn
         // Reached end of current word:
         // Try finding next word that has unfilled cells
         const otherWords = words.filter((w) => w.id !== activeWord.id);
-        const nextUnfilledWord = otherWords.find((w) => !isWordFilled(w, nextAnswers));
+        const nextUnfilledWord = otherWords.find(
+          (w) => !isWordFilled(w, nextAnswers),
+        );
         if (nextUnfilledWord) {
           const nextCells = getWordCells(nextUnfilledWord);
-          const firstEmpty = nextCells.find((c) => !nextAnswers[coordKey(c.row, c.col)]);
+          const firstEmpty = nextCells.find(
+            (c) => !nextAnswers[coordKey(c.row, c.col)],
+          );
           if (firstEmpty) {
             setActiveWordId(nextUnfilledWord.id);
             setActiveDirection(nextUnfilledWord.direction);
@@ -226,7 +337,7 @@ export const CrosswordPlayer: React.FC<PlayerProps<CrosswordContent, CrosswordAn
         }
       }
     },
-    [activeWord, activeCell, answers, words, playTap, playCorrect]
+    [activeWord, activeCell, answers, words, playTap, playCorrect],
   );
 
   // Handle backspace
@@ -234,11 +345,16 @@ export const CrosswordPlayer: React.FC<PlayerProps<CrosswordContent, CrosswordAn
     if (!activeWord) return;
     playTap();
 
+    // Reset check state on backspace
+    if (hasCheckedAnswer && !effectiveIsCorrect) {
+      setHasCheckedAnswer(false);
+    }
+
     const { row, col } = activeCell;
     const currentKey = coordKey(row, col);
     const currentValue = answers[currentKey];
 
-    if (currentValue && currentValue.trim() !== '') {
+    if (currentValue && currentValue.trim() !== "") {
       // Clear current cell and move back
       const nextAnswers = { ...answers };
       delete nextAnswers[currentKey];
@@ -266,53 +382,59 @@ export const CrosswordPlayer: React.FC<PlayerProps<CrosswordContent, CrosswordAn
     const handleKeyDown = (e: KeyboardEvent) => {
       // Ignore if inside an input or textarea
       if (
-        document.activeElement?.tagName === 'INPUT' ||
-        document.activeElement?.tagName === 'TEXTAREA'
+        document.activeElement?.tagName === "INPUT" ||
+        document.activeElement?.tagName === "TEXTAREA"
       ) {
         return;
       }
 
-      if (e.key >= 'a' && e.key <= 'z') {
+      if (e.key >= "a" && e.key <= "z") {
         e.preventDefault();
         handleTypeLetter(e.key.toUpperCase());
-      } else if (e.key >= 'A' && e.key <= 'Z') {
+      } else if (e.key >= "A" && e.key <= "Z") {
         e.preventDefault();
         handleTypeLetter(e.key);
-      } else if (e.key === 'Backspace') {
+      } else if (e.key === "Backspace") {
         e.preventDefault();
         handleBackspace();
-      } else if (e.key === 'ArrowRight') {
+      } else if (e.key === "ArrowRight") {
         e.preventDefault();
         const nextCol = activeCell.col + 1;
-        if (nextCol < gridSize.cols && cellMap.has(coordKey(activeCell.row, nextCol))) {
+        if (
+          nextCol < gridSize.cols &&
+          cellMap.has(coordKey(activeCell.row, nextCol))
+        ) {
           handleSelectCell(activeCell.row, nextCol);
         }
-      } else if (e.key === 'ArrowLeft') {
+      } else if (e.key === "ArrowLeft") {
         e.preventDefault();
         const prevCol = activeCell.col - 1;
         if (prevCol >= 0 && cellMap.has(coordKey(activeCell.row, prevCol))) {
           handleSelectCell(activeCell.row, prevCol);
         }
-      } else if (e.key === 'ArrowDown') {
+      } else if (e.key === "ArrowDown") {
         e.preventDefault();
         const nextRow = activeCell.row + 1;
-        if (nextRow < gridSize.rows && cellMap.has(coordKey(nextRow, activeCell.col))) {
+        if (
+          nextRow < gridSize.rows &&
+          cellMap.has(coordKey(nextRow, activeCell.col))
+        ) {
           handleSelectCell(nextRow, activeCell.col);
         }
-      } else if (e.key === 'ArrowUp') {
+      } else if (e.key === "ArrowUp") {
         e.preventDefault();
         const prevRow = activeCell.row - 1;
         if (prevRow >= 0 && cellMap.has(coordKey(prevRow, activeCell.col))) {
           handleSelectCell(prevRow, activeCell.col);
         }
-      } else if (e.key === 'Tab' || e.key === 'Enter') {
+      } else if (e.key === "Tab" || e.key === "Enter") {
         e.preventDefault();
         handleNavigateClue(e.shiftKey ? -1 : 1);
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [
     handleTypeLetter,
     handleBackspace,
@@ -325,18 +447,10 @@ export const CrosswordPlayer: React.FC<PlayerProps<CrosswordContent, CrosswordAn
 
   // Answer validation submission
   const handleSubmitCheck = () => {
-    if (isEvaluating) return;
+    if (isEvaluating || effectiveIsCorrect) return;
     playPop();
-    // Validate whether all cells match target characters
-    let allCorrect = true;
 
-    cellMap.forEach((cell, key) => {
-      const studentChar = (answers[key] || '').trim().toUpperCase();
-      if (studentChar !== cell.char.toUpperCase()) {
-        allCorrect = false;
-      }
-    });
-
+    const allCorrect = checkIsAllCorrect(answers);
     setHasCheckedAnswer(true);
     setIsAnswerValid(allCorrect);
 
@@ -363,12 +477,12 @@ export const CrosswordPlayer: React.FC<PlayerProps<CrosswordContent, CrosswordAn
   };
 
   const acrossWords = useMemo(
-    () => words.filter((w) => w.direction === 'ACROSS'),
-    [words]
+    () => words.filter((w) => w.direction === "ACROSS"),
+    [words],
   );
   const downWords = useMemo(
-    () => words.filter((w) => w.direction === 'DOWN'),
-    [words]
+    () => words.filter((w) => w.direction === "DOWN"),
+    [words],
   );
 
   return (
@@ -387,23 +501,35 @@ export const CrosswordPlayer: React.FC<PlayerProps<CrosswordContent, CrosswordAn
 
           <div className="flex-1 min-w-0 text-center px-2">
             <div className="flex items-center justify-center gap-2 mb-1 flex-wrap">
-              <Badge variant="blue" className="text-[11px] font-black uppercase tracking-wider flex items-center gap-1">
-                {activeDirection === 'ACROSS' ? (
+              <Badge
+                variant="blue"
+                className="text-[11px] font-black uppercase tracking-wider flex items-center gap-1"
+              >
+                {activeDirection === "ACROSS" ? (
                   <ArrowRight className="w-3.5 h-3.5" />
                 ) : (
                   <ArrowDown className="w-3.5 h-3.5" />
                 )}
                 <span>
-                  {activeWord?.number} {activeDirection === 'ACROSS' ? 'Mendatar' : 'Menurun'}
+                  {activeWord?.number}{" "}
+                  {activeDirection === "ACROSS" ? "Mendatar" : "Menurun"}
                 </span>
               </Badge>
               <span className="text-xs font-bold text-slate-400">
                 ({activeWord?.word?.length || 0} Huruf)
               </span>
+              <span className="text-slate-300">•</span>
+              <Badge
+                variant={correctWordsCount === words.length ? "green" : "gray"}
+                className="text-[11px] font-black uppercase tracking-wider"
+              >
+                {correctWordsCount} / {words.length} Kata Benar
+              </Badge>
             </div>
 
             <p className="text-sm sm:text-base font-black text-duo-dark line-clamp-2">
-              {activeWord?.clue || 'Pilih kotak pada grid untuk melihat petunjuk kata.'}
+              {activeWord?.clue ||
+                "Pilih kotak pada grid untuk melihat petunjuk kata."}
             </p>
           </div>
 
@@ -423,8 +549,8 @@ export const CrosswordPlayer: React.FC<PlayerProps<CrosswordContent, CrosswordAn
         <div
           className="p-3 bg-slate-100/90 rounded-3xl border-2 border-slate-200 shadow-inner inline-block"
           style={{
-            maxWidth: '100%',
-            overflowX: 'auto',
+            maxWidth: "100%",
+            overflowX: "auto",
           }}
         >
           <div
@@ -442,7 +568,7 @@ export const CrosswordPlayer: React.FC<PlayerProps<CrosswordContent, CrosswordAn
                 const isCurrentActiveCell =
                   activeCell.row === r && activeCell.col === c;
                 const isInActiveWord = activeWordCells.has(key);
-                const userLetter = answers[key] || '';
+                const userLetter = answers[key] || "";
 
                 // Inactive / Black square in crossword
                 if (!isOccupied) {
@@ -461,21 +587,21 @@ export const CrosswordPlayer: React.FC<PlayerProps<CrosswordContent, CrosswordAn
                     type="button"
                     onClick={() => handleSelectCell(r, c)}
                     className={cn(
-                      'relative aspect-square rounded-xl flex items-center justify-center font-black select-none transition-all duration-150',
+                      "relative aspect-square rounded-xl flex items-center justify-center font-black select-none transition-all duration-150",
                       // Standard active cell appearance
-                      'bg-white text-duo-dark border-2 border-slate-300 shadow-xs cursor-pointer',
+                      "bg-white text-duo-dark border-2 border-slate-300 shadow-xs cursor-pointer",
                       // Active word row/col highlight (Light blue - User requirement)
                       isInActiveWord &&
                         !isCurrentActiveCell &&
-                        'bg-blue-50/90 border-blue-300',
+                        "bg-blue-50/90 border-blue-300",
                       // Active focused cell (Strong blue outline & ring - User requirement)
                       isCurrentActiveCell &&
-                        'bg-duo-blue-light border-duo-blue ring-3 ring-duo-blue/40 text-duo-dark z-20 scale-105 shadow-md',
+                        "bg-duo-blue-light border-duo-blue ring-3 ring-duo-blue/40 text-duo-dark z-20 scale-105 shadow-md",
                       // Feedback state after checking answer
                       hasCheckedAnswer &&
                         (userLetter.toUpperCase() === cell.char.toUpperCase()
-                          ? 'border-duo-green bg-duo-green-light/40 text-duo-green-border'
-                          : 'border-duo-red bg-duo-red-light/40 text-duo-red')
+                          ? "border-duo-green bg-duo-green-light/40 text-duo-green-border"
+                          : "border-duo-red bg-duo-red-light/40 text-duo-red"),
                     )}
                   >
                     {/* Clue index number at top-left corner (User requirement) */}
@@ -491,7 +617,7 @@ export const CrosswordPlayer: React.FC<PlayerProps<CrosswordContent, CrosswordAn
                     </span>
                   </button>
                 );
-              })
+              }),
             )}
           </div>
         </div>
@@ -503,29 +629,35 @@ export const CrosswordPlayer: React.FC<PlayerProps<CrosswordContent, CrosswordAn
           initial={{ opacity: 0, y: 8, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           className={cn(
-            'flex items-center justify-between p-4 rounded-2xl border-2 w-full max-w-xl my-3 shadow-xs',
+            "flex items-center justify-between p-4 rounded-2xl border-2 w-full max-w-xl my-3 shadow-xs",
             effectiveIsCorrect
-              ? 'bg-duo-green-light/60 border-duo-green text-duo-dark'
-              : 'bg-duo-red-light/60 border-duo-red text-duo-dark'
+              ? "bg-duo-green-light/60 border-duo-green text-duo-dark"
+              : "bg-duo-red-light/60 border-duo-red text-duo-dark",
           )}
         >
           <div className="flex items-center gap-3">
             <div
               className={cn(
-                'w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0',
-                effectiveIsCorrect ? 'bg-duo-green' : 'bg-duo-red'
+                "w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0",
+                effectiveIsCorrect ? "bg-duo-green" : "bg-duo-red",
               )}
             >
-              {effectiveIsCorrect ? <Sparkles className="w-5 h-5" /> : <HelpCircle className="w-5 h-5" />}
+              {effectiveIsCorrect ? (
+                <Sparkles className="w-5 h-5" />
+              ) : (
+                <HelpCircle className="w-5 h-5" />
+              )}
             </div>
             <div>
               <h4 className="font-black text-sm uppercase tracking-wider">
-                {effectiveIsCorrect ? 'Luar Biasa! Semua Benar!' : 'Periksa Kembali Kotakmu!'}
+                {effectiveIsCorrect
+                  ? "Luar Biasa! Semua Benar!"
+                  : "Periksa Kembali Kotakmu!"}
               </h4>
               <p className="text-xs sm:text-sm font-semibold text-slate-600">
                 {effectiveIsCorrect
-                  ? 'Selamat! Kamu berhasil memecahkan teka-teki silang dengan sempurna.'
-                  : 'Beberapa kotak huruf masih belum tepat. Coba telusuri kembali petunjuknya!'}
+                  ? "Selamat! Kamu berhasil memecahkan teka-teki silang dengan sempurna."
+                  : `${correctWordsCount} dari ${words.length} kata sudah tepat. Periksa kembali kotak huruf yang masih keliru!`}
               </p>
             </div>
           </div>
@@ -534,7 +666,7 @@ export const CrosswordPlayer: React.FC<PlayerProps<CrosswordContent, CrosswordAn
             type="button"
             disabled={isEvaluating}
             onClick={handleResetAnswers}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-slate-200 rounded-xl text-xs font-black text-duo-dark hover:bg-slate-50 transition-colors shrink-0 ml-2"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-slate-200 rounded-xl text-xs font-black text-duo-dark hover:bg-slate-50 transition-colors shrink-0 ml-2 cursor-pointer"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>Ulangi</span>
@@ -549,20 +681,25 @@ export const CrosswordPlayer: React.FC<PlayerProps<CrosswordContent, CrosswordAn
           variant="green"
           size="md"
           isLoading={isEvaluating}
-          disabled={isEvaluating}
+          disabled={isEvaluating || effectiveIsCorrect}
           onClick={handleSubmitCheck}
           className="flex-1 justify-center py-2.5"
         >
           <Check className="w-4 h-4 mr-1.5" />
-          <span>Periksa Jawaban TTS</span>
+          <span>
+            {effectiveIsCorrect ||
+            (words.length > 0 && correctWordsCount === words.length)
+              ? "Semua Kata Berhasil Dipecahkan!"
+              : `Periksa Jawaban TTS (${correctWordsCount}/${words.length} Kata)`}
+          </span>
         </TactileButton>
 
         <button
           type="button"
-          disabled={isEvaluating}
+          disabled={isEvaluating || effectiveIsCorrect}
           onClick={handleResetAnswers}
           title="Kosongkan jawaban"
-          className="px-3.5 py-2.5 rounded-2xl bg-white border-2 border-slate-200 hover:bg-slate-50 text-slate-600 font-black text-xs flex items-center gap-1.5 transition-colors shadow-xs"
+          className="px-3.5 py-2.5 rounded-2xl bg-white border-2 border-slate-200 hover:bg-slate-50 text-slate-600 font-black text-xs flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer disabled:opacity-50"
         >
           <RotateCcw className="w-4 h-4" />
           <span className="hidden sm:inline">Reset</span>
@@ -572,7 +709,10 @@ export const CrosswordPlayer: React.FC<PlayerProps<CrosswordContent, CrosswordAn
       {/* 5. ON-SCREEN TOUCH KEYBOARD (Mobile & Classroom Touchscreen friendly) */}
       <div className="flex flex-col items-center gap-1.5 w-full max-w-xl pt-2 pb-3">
         {QWERTY_ROWS.map((row, rowIdx) => (
-          <div key={`kbd-row-${rowIdx}`} className="flex justify-center gap-1 sm:gap-1.5 w-full">
+          <div
+            key={`kbd-row-${rowIdx}`}
+            className="flex justify-center gap-1 sm:gap-1.5 w-full"
+          >
             {row.map((letter) => (
               <button
                 key={`k-${letter}`}
@@ -603,15 +743,32 @@ export const CrosswordPlayer: React.FC<PlayerProps<CrosswordContent, CrosswordAn
       <div className="w-full max-w-3xl mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
         {/* Across Clues List */}
         <div className="bg-white border-2 border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col gap-2">
-          <div className="flex items-center gap-1.5 font-black text-xs uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2">
-            <ArrowRight className="w-3.5 h-3.5 text-duo-blue" />
-            <span>Mendatar (Across)</span>
+          <div className="flex items-center justify-between font-black text-xs uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2">
+            <div className="flex items-center gap-1.5">
+              <ArrowRight className="w-3.5 h-3.5 text-duo-blue" />
+              <span>Mendatar (Across)</span>
+            </div>
+            <span className="text-[10px] font-black text-slate-400">
+              {
+                acrossWords.filter(
+                  (w) =>
+                    getStudentWord(w, answers) ===
+                    (w.word || "").trim().toUpperCase(),
+                ).length
+              }{" "}
+              / {acrossWords.length} Benar
+            </span>
           </div>
 
           <div className="flex flex-col gap-1.5 mt-1">
             {acrossWords.map((word) => {
               const isFilled = isWordFilled(word, answers);
-              const isActive = activeWordId === word.id && activeDirection === 'ACROSS';
+              const isActive =
+                activeWordId === word.id && activeDirection === "ACROSS";
+              const studentWord = getStudentWord(word, answers);
+              const targetWord = (word.word || "").trim().toUpperCase();
+              const isWordCorrect =
+                studentWord === targetWord && targetWord.length > 0;
 
               return (
                 <button
@@ -620,19 +777,34 @@ export const CrosswordPlayer: React.FC<PlayerProps<CrosswordContent, CrosswordAn
                   onClick={() => {
                     playTap();
                     setActiveWordId(word.id);
-                    setActiveDirection('ACROSS');
+                    setActiveDirection("ACROSS");
                     const cells = getWordCells(word);
-                    const firstEmpty = cells.find((c) => !answers[coordKey(c.row, c.col)]);
-                    setActiveCell(firstEmpty ? { row: firstEmpty.row, col: firstEmpty.col } : { ...word.startPos });
+                    const firstEmpty = cells.find(
+                      (c) => !answers[coordKey(c.row, c.col)],
+                    );
+                    setActiveCell(
+                      firstEmpty
+                        ? { row: firstEmpty.row, col: firstEmpty.col }
+                        : { ...word.startPos },
+                    );
                   }}
                   className={cn(
-                    'p-2 rounded-xl text-left transition-all flex items-start gap-2 border-2',
+                    "p-2 rounded-xl text-left transition-all flex items-start gap-2 border-2 cursor-pointer",
                     isActive
-                      ? 'bg-duo-blue-light/60 border-duo-blue text-duo-dark'
-                      : 'bg-slate-50 border-transparent hover:border-slate-200 text-slate-700'
+                      ? "bg-duo-blue-light/60 border-duo-blue text-duo-dark"
+                      : isWordCorrect
+                        ? "bg-emerald-50/50 border-emerald-200 text-duo-dark"
+                        : "bg-slate-50 border-transparent hover:border-slate-200 text-slate-700",
                   )}
                 >
-                  <span className="w-5 h-5 rounded-md bg-white border border-slate-200 font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">
+                  <span
+                    className={cn(
+                      "w-5 h-5 rounded-md border font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5",
+                      isWordCorrect
+                        ? "bg-duo-green text-white border-duo-green"
+                        : "bg-white border-slate-200 text-duo-dark",
+                    )}
+                  >
                     {word.number}
                   </span>
                   <div className="flex-1 min-w-0">
@@ -640,9 +812,13 @@ export const CrosswordPlayer: React.FC<PlayerProps<CrosswordContent, CrosswordAn
                       {word.clue}
                     </p>
                   </div>
-                  {isFilled && (
+                  {isWordCorrect ? (
                     <CheckCircle2 className="w-4 h-4 text-duo-green shrink-0 mt-0.5" />
-                  )}
+                  ) : isFilled && hasCheckedAnswer ? (
+                    <span className="text-[10px] font-black text-duo-red shrink-0 mt-0.5 uppercase">
+                      Keliru
+                    </span>
+                  ) : null}
                 </button>
               );
             })}
@@ -651,15 +827,32 @@ export const CrosswordPlayer: React.FC<PlayerProps<CrosswordContent, CrosswordAn
 
         {/* Down Clues List */}
         <div className="bg-white border-2 border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col gap-2">
-          <div className="flex items-center gap-1.5 font-black text-xs uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2">
-            <ArrowDown className="w-3.5 h-3.5 text-duo-blue" />
-            <span>Menurun (Down)</span>
+          <div className="flex items-center justify-between font-black text-xs uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2">
+            <div className="flex items-center gap-1.5">
+              <ArrowDown className="w-3.5 h-3.5 text-duo-blue" />
+              <span>Menurun (Down)</span>
+            </div>
+            <span className="text-[10px] font-black text-slate-400">
+              {
+                downWords.filter(
+                  (w) =>
+                    getStudentWord(w, answers) ===
+                    (w.word || "").trim().toUpperCase(),
+                ).length
+              }{" "}
+              / {downWords.length} Benar
+            </span>
           </div>
 
           <div className="flex flex-col gap-1.5 mt-1">
             {downWords.map((word) => {
               const isFilled = isWordFilled(word, answers);
-              const isActive = activeWordId === word.id && activeDirection === 'DOWN';
+              const isActive =
+                activeWordId === word.id && activeDirection === "DOWN";
+              const studentWord = getStudentWord(word, answers);
+              const targetWord = (word.word || "").trim().toUpperCase();
+              const isWordCorrect =
+                studentWord === targetWord && targetWord.length > 0;
 
               return (
                 <button
@@ -668,19 +861,34 @@ export const CrosswordPlayer: React.FC<PlayerProps<CrosswordContent, CrosswordAn
                   onClick={() => {
                     playTap();
                     setActiveWordId(word.id);
-                    setActiveDirection('DOWN');
+                    setActiveDirection("DOWN");
                     const cells = getWordCells(word);
-                    const firstEmpty = cells.find((c) => !answers[coordKey(c.row, c.col)]);
-                    setActiveCell(firstEmpty ? { row: firstEmpty.row, col: firstEmpty.col } : { ...word.startPos });
+                    const firstEmpty = cells.find(
+                      (c) => !answers[coordKey(c.row, c.col)],
+                    );
+                    setActiveCell(
+                      firstEmpty
+                        ? { row: firstEmpty.row, col: firstEmpty.col }
+                        : { ...word.startPos },
+                    );
                   }}
                   className={cn(
-                    'p-2 rounded-xl text-left transition-all flex items-start gap-2 border-2',
+                    "p-2 rounded-xl text-left transition-all flex items-start gap-2 border-2 cursor-pointer",
                     isActive
-                      ? 'bg-duo-blue-light/60 border-duo-blue text-duo-dark'
-                      : 'bg-slate-50 border-transparent hover:border-slate-200 text-slate-700'
+                      ? "bg-duo-blue-light/60 border-duo-blue text-duo-dark"
+                      : isWordCorrect
+                        ? "bg-emerald-50/50 border-emerald-200 text-duo-dark"
+                        : "bg-slate-50 border-transparent hover:border-slate-200 text-slate-700",
                   )}
                 >
-                  <span className="w-5 h-5 rounded-md bg-white border border-slate-200 font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">
+                  <span
+                    className={cn(
+                      "w-5 h-5 rounded-md border font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5",
+                      isWordCorrect
+                        ? "bg-duo-green text-white border-duo-green"
+                        : "bg-white border-slate-200 text-duo-dark",
+                    )}
+                  >
                     {word.number}
                   </span>
                   <div className="flex-1 min-w-0">
@@ -688,9 +896,13 @@ export const CrosswordPlayer: React.FC<PlayerProps<CrosswordContent, CrosswordAn
                       {word.clue}
                     </p>
                   </div>
-                  {isFilled && (
+                  {isWordCorrect ? (
                     <CheckCircle2 className="w-4 h-4 text-duo-green shrink-0 mt-0.5" />
-                  )}
+                  ) : isFilled && hasCheckedAnswer ? (
+                    <span className="text-[10px] font-black text-duo-red shrink-0 mt-0.5 uppercase">
+                      Keliru
+                    </span>
+                  ) : null}
                 </button>
               );
             })}
