@@ -136,13 +136,42 @@ export const WordsearchPlayer: React.FC<
 
   // Restore submitted answer if present
   useEffect(() => {
-    if (submittedAnswer && Array.isArray(submittedAnswer)) {
+    if (
+      submittedAnswer &&
+      Array.isArray(submittedAnswer) &&
+      submittedAnswer.length > 0
+    ) {
       setFoundWords(submittedAnswer);
+
+      if (content.placements && content.placements.length > 0) {
+        const capsules: LockedCapsule[] = [];
+        content.placements.forEach((p, idx) => {
+          if (submittedAnswer.includes(p.word)) {
+            const dr = p.endRow - p.startRow;
+            const dc = p.endCol - p.startCol;
+            const steps = Math.max(Math.abs(dr), Math.abs(dc));
+            const stepR = dr === 0 ? 0 : dr / Math.abs(dr);
+            const stepC = dc === 0 ? 0 : dc / Math.abs(dc);
+            const cells: GridCellCoord[] = [];
+            for (let i = 0; i <= steps; i++) {
+              cells.push({
+                row: p.startRow + i * stepR,
+                col: p.startCol + i * stepC,
+              });
+            }
+            const palette = PASTEL_PALETTES[idx % PASTEL_PALETTES.length]!;
+            capsules.push({ word: p.word, cells, palette });
+          }
+        });
+        if (capsules.length > 0) {
+          setLockedCapsules(capsules);
+        }
+      }
     } else {
       setFoundWords([]);
       setLockedCapsules([]);
     }
-  }, [submittedAnswer]);
+  }, [submittedAnswer, content.placements]);
 
   // Play audio on evaluation
   useEffect(() => {

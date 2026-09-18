@@ -85,6 +85,13 @@ export const CrosswordPlayer: React.FC<
     return {};
   });
 
+  // Sync submitted answer when provided/updated (e.g. Teacher Unlock)
+  useEffect(() => {
+    if (submittedAnswer && typeof submittedAnswer === "object") {
+      setAnswers(submittedAnswer);
+    }
+  }, [submittedAnswer]);
+
   // Currently active word and cell focus
   const [activeWordId, setActiveWordId] = useState<number>(() => {
     return words[0]?.id ?? 1;

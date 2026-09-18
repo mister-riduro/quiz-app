@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -10,14 +10,25 @@ import {
   useSensors,
   DragEndEvent,
   DragStartEvent,
-} from '@dnd-kit/core';
-import { motion, AnimatePresence } from 'framer-motion';
-import { HelpCircle, Check, Sparkles, RotateCcw, Crosshair, X } from 'lucide-react';
-import { PlayerProps } from '@/plugins/core/types';
-import { LabelledDiagramContent, LabelledDiagramAnswer, DiagramLabel } from './types';
-import { TactileButton } from '@/components/ui/TactileButton';
-import { useSoundEffect } from '@/hooks/useSoundEffect';
-import { cn } from '@/utils/cn';
+} from "@dnd-kit/core";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  HelpCircle,
+  Check,
+  Sparkles,
+  RotateCcw,
+  Crosshair,
+  X,
+} from "lucide-react";
+import { PlayerProps } from "@/plugins/core/types";
+import {
+  LabelledDiagramContent,
+  LabelledDiagramAnswer,
+  DiagramLabel,
+} from "./types";
+import { TactileButton } from "@/components/ui/TactileButton";
+import { useSoundEffect } from "@/hooks/useSoundEffect";
+import { cn } from "@/utils/cn";
 
 // Fisher-Yates array shuffle
 function shuffleArray<T>(arr: T[]): T[] {
@@ -81,10 +92,10 @@ const TargetPin: React.FC<TargetPinProps> = ({
       <div
         onClick={!disabled ? onTapPin : undefined}
         className={cn(
-          'relative w-11 h-11 flex items-center justify-center cursor-pointer select-none rounded-full transition-transform',
-          !disabled && 'hover:scale-110 active:scale-95'
+          "relative w-11 h-11 flex items-center justify-center cursor-pointer select-none rounded-full transition-transform",
+          !disabled && "hover:scale-110 active:scale-95",
         )}
-        title={`Pin #${index + 1}: ${attachedLabel ? attachedLabel.text : 'Belum berlabel'}`}
+        title={`Pin #${index + 1}: ${attachedLabel ? attachedLabel.text : "Belum berlabel"}`}
       >
         {/* Pulsing Ripple Rings (Active when no label attached) */}
         {!hasLabel && (
@@ -97,11 +108,13 @@ const TargetPin: React.FC<TargetPinProps> = ({
               transition={{
                 repeat: Infinity,
                 duration: 2.2,
-                ease: 'easeOut',
+                ease: "easeOut",
               }}
               className={cn(
-                'absolute w-8 h-8 rounded-full pointer-events-none',
-                isOver || isSelectedForPlacement ? 'bg-duo-blue' : 'bg-duo-yellow'
+                "absolute w-8 h-8 rounded-full pointer-events-none",
+                isOver || isSelectedForPlacement
+                  ? "bg-duo-blue"
+                  : "bg-duo-yellow",
               )}
             />
             <motion.span
@@ -113,11 +126,13 @@ const TargetPin: React.FC<TargetPinProps> = ({
                 repeat: Infinity,
                 duration: 2.2,
                 delay: 0.6,
-                ease: 'easeOut',
+                ease: "easeOut",
               }}
               className={cn(
-                'absolute w-8 h-8 rounded-full pointer-events-none',
-                isOver || isSelectedForPlacement ? 'bg-duo-blue' : 'bg-duo-yellow'
+                "absolute w-8 h-8 rounded-full pointer-events-none",
+                isOver || isSelectedForPlacement
+                  ? "bg-duo-blue"
+                  : "bg-duo-yellow",
               )}
             />
           </>
@@ -126,25 +141,25 @@ const TargetPin: React.FC<TargetPinProps> = ({
         {/* Central Anchor Dot */}
         <div
           className={cn(
-            'relative w-6 h-6 sm:w-7 sm:h-7 rounded-full border-2 flex items-center justify-center font-black text-[11px] sm:text-xs shadow-md transition-all',
+            "relative w-6 h-6 sm:w-7 sm:h-7 rounded-full border-2 flex items-center justify-center font-black text-[11px] sm:text-xs shadow-md transition-all",
             // Default unattached state
             !hasLabel &&
               !isOver &&
               !isSelectedForPlacement &&
-              'bg-duo-yellow border-white text-duo-dark',
+              "bg-duo-yellow border-white text-duo-dark",
             // Drag-over or Tap-selected state
             (isOver || isSelectedForPlacement) &&
-              'bg-duo-blue border-white text-white ring-4 ring-duo-blue/40 scale-125',
+              "bg-duo-blue border-white text-white ring-4 ring-duo-blue/40 scale-125",
             // Attached label states
             hasLabel &&
               !isAnswered &&
-              'bg-duo-blue border-white text-white ring-2 ring-duo-blue/30',
+              "bg-duo-blue border-white text-white ring-2 ring-duo-blue/30",
             hasLabel &&
               isLabelCorrect &&
-              'bg-duo-green border-white text-white ring-4 ring-duo-green/40 shadow-[0_0_12px_#58cc02]',
+              "bg-duo-green border-white text-white ring-4 ring-duo-green/40 shadow-[0_0_12px_#58cc02]",
             hasLabel &&
               isLabelWrong &&
-              'bg-duo-red border-white text-white ring-4 ring-duo-red/40 shadow-[0_0_12px_#ea2b2b]'
+              "bg-duo-red border-white text-white ring-4 ring-duo-red/40 shadow-[0_0_12px_#ea2b2b]",
           )}
         >
           {index + 1}
@@ -158,23 +173,23 @@ const TargetPin: React.FC<TargetPinProps> = ({
             initial={{ scale: 0.5, opacity: 0, y: placeAbove ? 6 : -6 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.5, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 450, damping: 25 }}
+            transition={{ type: "spring", stiffness: 450, damping: 25 }}
             style={{
-              transformOrigin: placeAbove ? 'bottom center' : 'top center',
+              transformOrigin: placeAbove ? "bottom center" : "top center",
             }}
             className={cn(
-              'absolute left-1/2 -translate-x-1/2 z-30 flex flex-col items-center pointer-events-auto',
-              placeAbove ? 'bottom-full mb-1' : 'top-full mt-1'
+              "absolute left-1/2 -translate-x-1/2 z-30 flex flex-col items-center pointer-events-auto",
+              placeAbove ? "bottom-full mb-1" : "top-full mt-1",
             )}
           >
             {/* Glowing Connector Stem */}
             <div
               className={cn(
-                'w-1 transition-all duration-300',
-                placeAbove ? 'h-3' : 'h-3 order-first',
-                !isAnswered && 'bg-duo-blue',
-                isLabelCorrect && 'bg-duo-green shadow-[0_0_8px_#58cc02]',
-                isLabelWrong && 'bg-duo-red shadow-[0_0_8px_#ea2b2b]'
+                "w-1 transition-all duration-300",
+                placeAbove ? "h-3" : "h-3 order-first",
+                !isAnswered && "bg-duo-blue",
+                isLabelCorrect && "bg-duo-green shadow-[0_0_8px_#58cc02]",
+                isLabelWrong && "bg-duo-red shadow-[0_0_8px_#ea2b2b]",
               )}
             />
 
@@ -185,17 +200,19 @@ const TargetPin: React.FC<TargetPinProps> = ({
                 if (!disabled) onDetachLabel();
               }}
               className={cn(
-                'relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 border-b-4 font-black text-xs sm:text-sm whitespace-nowrap shadow-md select-none transition-all',
-                !disabled ? 'cursor-pointer hover:scale-105 active:scale-95' : 'cursor-default',
+                "relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 border-b-4 font-black text-xs sm:text-sm whitespace-nowrap shadow-md select-none transition-all",
+                !disabled
+                  ? "cursor-pointer hover:scale-105 active:scale-95"
+                  : "cursor-default",
                 // Pre-submit appearance
                 !isAnswered &&
-                  'bg-white text-duo-dark border-duo-blue border-b-duo-blue-border hover:bg-duo-blue-light/30',
+                  "bg-white text-duo-dark border-duo-blue border-b-duo-blue-border hover:bg-duo-blue-light/30",
                 // Correct evaluation appearance
                 isLabelCorrect &&
-                  'bg-duo-green-light text-duo-green-border border-duo-green border-b-duo-green-border shadow-[0_0_12px_rgba(88,204,2,0.4)]',
+                  "bg-duo-green-light text-duo-green-border border-duo-green border-b-duo-green-border shadow-[0_0_12px_rgba(88,204,2,0.4)]",
                 // Wrong evaluation appearance
                 isLabelWrong &&
-                  'bg-duo-red-light text-duo-red-border border-duo-red border-b-duo-red-border shadow-[0_0_12px_rgba(255,75,75,0.4)]'
+                  "bg-duo-red-light text-duo-red-border border-duo-red border-b-duo-red-border shadow-[0_0_12px_rgba(255,75,75,0.4)]",
               )}
             >
               <span>{attachedLabel.text}</span>
@@ -261,15 +278,15 @@ const TrayLabelBadge: React.FC<TrayLabelBadgeProps> = ({
       {...listeners}
       onClick={!disabled ? onTap : undefined}
       className={cn(
-        'relative inline-flex items-center justify-center font-black select-none transition-all duration-150',
-        'px-4 py-2.5 rounded-2xl border-2 border-b-4 border-solid shadow-sm text-sm sm:text-base',
+        "relative inline-flex items-center justify-center font-black select-none transition-all duration-150",
+        "px-4 py-2.5 rounded-2xl border-2 border-b-4 border-solid shadow-sm text-sm sm:text-base",
         !disabled
-          ? 'cursor-pointer hover:border-duo-blue hover:border-b-duo-blue-border hover:-translate-y-0.5 active:translate-y-1 active:border-b-2'
-          : 'cursor-default opacity-60',
+          ? "cursor-pointer hover:border-duo-blue hover:border-b-duo-blue-border hover:-translate-y-0.5 active:translate-y-1 active:border-b-2"
+          : "cursor-default opacity-60",
         isSelected
-          ? 'bg-duo-blue-light text-duo-blue-border border-duo-blue border-b-duo-blue-border ring-4 ring-duo-blue/20 scale-105'
-          : 'bg-white text-duo-dark border-slate-200 border-b-slate-300',
-        isDragging && 'opacity-25'
+          ? "bg-duo-blue-light text-duo-blue-border border-duo-blue border-b-duo-blue-border ring-4 ring-duo-blue/20 scale-105"
+          : "bg-white text-duo-dark border-slate-200 border-b-slate-300",
+        isDragging && "opacity-25",
       )}
     >
       <span className="tracking-tight">{label.text}</span>
@@ -288,17 +305,25 @@ export const DiagramPlayer: React.FC<
 }) => {
   const { playTap, playPop, playCorrect, playWrong } = useSoundEffect();
 
-  const imageUrl = content.image_url;
+  const imageUrl =
+    content?.image_url ||
+    (content as any)?.imageUrl ||
+    (content as any)?.mediaUrl ||
+    "";
   const pins = useMemo(() => content.labels || [], [content.labels]);
   const hint = content.hint;
 
   // Shuffled labels for the tray
   const [trayLabels, setTrayLabels] = useState<DiagramLabel[]>([]);
   // Placements state: maps pinId -> DiagramLabel
-  const [placements, setPlacements] = useState<Record<string, DiagramLabel>>({});
+  const [placements, setPlacements] = useState<Record<string, DiagramLabel>>(
+    {},
+  );
   // Selected label for Tap-to-Place mode
   const [selectedLabelId, setSelectedLabelId] = useState<string | null>(null);
-  const [activeDragLabel, setActiveDragLabel] = useState<DiagramLabel | null>(null);
+  const [activeDragLabel, setActiveDragLabel] = useState<DiagramLabel | null>(
+    null,
+  );
 
   // Initialize randomized tray labels and restore submitted answer if present
   useEffect(() => {
@@ -308,11 +333,21 @@ export const DiagramPlayer: React.FC<
     setTrayLabels(shuffleArray(pins));
 
     // Restore submitted answer if provided
-    if (submittedAnswer && Object.keys(submittedAnswer).length > 0) {
+    if (
+      submittedAnswer &&
+      typeof submittedAnswer === "object" &&
+      !Array.isArray(submittedAnswer) &&
+      Object.keys(submittedAnswer).length > 0
+    ) {
       const restored: Record<string, DiagramLabel> = {};
       Object.entries(submittedAnswer).forEach(([pinId, answerValue]) => {
+        const valStr =
+          typeof answerValue === "string"
+            ? answerValue
+            : String(answerValue ?? "");
         const found = pins.find(
-          (p) => p.text.toLowerCase() === answerValue.toLowerCase() || p.id === answerValue
+          (p) =>
+            p.text.toLowerCase() === valStr.toLowerCase() || p.id === valStr,
         );
         if (found) {
           restored[pinId] = found;
@@ -336,7 +371,7 @@ export const DiagramPlayer: React.FC<
         delay: 150,
         tolerance: 6,
       },
-    })
+    }),
   );
 
   const isAnswered = submittedAnswer !== undefined;
@@ -485,7 +520,7 @@ export const DiagramPlayer: React.FC<
   // Selected label object for indicator
   const selectedLabel = useMemo(
     () => pins.find((p) => p.id === selectedLabelId) || null,
-    [pins, selectedLabelId]
+    [pins, selectedLabelId],
   );
 
   return (
@@ -510,7 +545,10 @@ export const DiagramPlayer: React.FC<
           </h3>
           <p className="flex items-center gap-1.5 text-xs font-bold text-slate-400">
             <Crosshair className="w-4 h-4 text-duo-blue" />
-            <span>Seret kartu label ke titik target, atau ketuk label lalu ketuk titik pin</span>
+            <span>
+              Seret kartu label ke titik target, atau ketuk label lalu ketuk
+              titik pin
+            </span>
           </p>
         </div>
 
@@ -562,7 +600,8 @@ export const DiagramPlayer: React.FC<
                 isCorrect={
                   isAnswered
                     ? attached
-                      ? attached.text.trim().toLowerCase() === pin.text.trim().toLowerCase()
+                      ? attached.text.trim().toLowerCase() ===
+                        pin.text.trim().toLowerCase()
                       : false
                     : null
                 }
@@ -581,7 +620,9 @@ export const DiagramPlayer: React.FC<
             className="w-full mt-3 p-2.5 rounded-2xl bg-duo-blue-light/60 border border-duo-blue/30 flex items-center justify-between text-duo-blue-border text-xs font-bold px-4"
           >
             <span>
-              Label terpilih: <b className="text-duo-dark underline">{selectedLabel.text}</b>. Ketuk titik target pin pada gambar di atas untuk menancapkannya.
+              Label terpilih:{" "}
+              <b className="text-duo-dark underline">{selectedLabel.text}</b>.
+              Ketuk titik target pin pada gambar di atas untuk menancapkannya.
             </span>
             <button
               type="button"
@@ -606,7 +647,9 @@ export const DiagramPlayer: React.FC<
 
           <div className="flex flex-wrap justify-center items-center gap-2.5 sm:gap-3 p-5 sm:p-6 bg-slate-50/90 border-2 border-slate-200 border-b-4 rounded-3xl min-h-[96px] w-full shadow-xs">
             {trayLabels.map((label) => {
-              const isAttached = Object.values(placements).some((p) => p.id === label.id);
+              const isAttached = Object.values(placements).some(
+                (p) => p.id === label.id,
+              );
               const isSelected = selectedLabelId === label.id;
 
               return (
@@ -634,7 +677,7 @@ export const DiagramPlayer: React.FC<
             onClick={handleSubmit}
             className="py-4 text-lg font-black tracking-wider shadow-md"
           >
-            {isAnswered ? 'Jawaban Terkirim' : 'Periksa Jawaban'}
+            {isAnswered ? "Jawaban Terkirim" : "Periksa Jawaban"}
           </TactileButton>
         </div>
 
@@ -644,28 +687,34 @@ export const DiagramPlayer: React.FC<
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             className={cn(
-              'mt-6 p-4 sm:p-5 rounded-2xl border-2 flex items-center gap-3.5 w-full text-left',
+              "mt-6 p-4 sm:p-5 rounded-2xl border-2 flex items-center gap-3.5 w-full text-left",
               isCorrect
-                ? 'bg-duo-green-light/60 border-duo-green text-duo-dark'
-                : 'bg-duo-red-light/60 border-duo-red text-duo-dark'
+                ? "bg-duo-green-light/60 border-duo-green text-duo-dark"
+                : "bg-duo-red-light/60 border-duo-red text-duo-dark",
             )}
           >
             <div
               className={cn(
-                'w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-xs',
-                isCorrect ? 'bg-duo-green text-white' : 'bg-duo-red text-white'
+                "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-xs",
+                isCorrect ? "bg-duo-green text-white" : "bg-duo-red text-white",
               )}
             >
-              {isCorrect ? <Check className="w-6 h-6 stroke-[3]" /> : <Sparkles className="w-5 h-5 text-white" />}
+              {isCorrect ? (
+                <Check className="w-6 h-6 stroke-[3]" />
+              ) : (
+                <Sparkles className="w-5 h-5 text-white" />
+              )}
             </div>
             <div>
               <h4 className="text-xs font-black uppercase tracking-wider">
-                {isCorrect ? 'Semua Label Terpasang Tepat!' : 'Posisi Label Belum Tepat'}
+                {isCorrect
+                  ? "Semua Label Terpasang Tepat!"
+                  : "Posisi Label Belum Tepat"}
               </h4>
               <p className="text-sm font-bold mt-0.5">
                 {isCorrect
-                  ? 'Luar biasa! Seluruh label bagian diagram berhasil dipasangkan dengan akurat.'
-                  : 'Cermati kembali bagian-bagian diagram dan coba periksa posisi pin yang berwarna merah.'}
+                  ? "Luar biasa! Seluruh label bagian diagram berhasil dipasangkan dengan akurat."
+                  : "Cermati kembali bagian-bagian diagram dan coba periksa posisi pin yang berwarna merah."}
               </p>
             </div>
           </motion.div>

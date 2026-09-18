@@ -68,12 +68,18 @@ export const AnagramPlayer: React.FC<
     }));
 
     if (submittedAnswer) {
-      // If already answered, align according to submittedAnswer
-      const answerChars = submittedAnswer.toUpperCase().split("");
+      // If already answered, align according to submittedAnswer safely
+      let answerStr = "";
+      if (typeof submittedAnswer === "string") {
+        answerStr = submittedAnswer;
+      } else if (Array.isArray(submittedAnswer as any)) {
+        answerStr = (submittedAnswer as any[]).join("");
+      }
+      const answerChars: string[] = answerStr.toUpperCase().split("");
       const pool = [...initialTiles];
       const arranged: AnagramTile[] = [];
 
-      answerChars.forEach((c) => {
+      answerChars.forEach((c: string) => {
         const foundIdx = pool.findIndex((p) => p.letter === c);
         if (foundIdx !== -1) {
           arranged.push(pool[foundIdx]!);

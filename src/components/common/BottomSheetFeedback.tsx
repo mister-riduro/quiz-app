@@ -1,9 +1,16 @@
-import React, { useEffect, useMemo, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Check, X, ArrowRight, Sparkles, AlertCircle } from 'lucide-react';
-import confetti from 'canvas-confetti';
-import { useSoundEffect } from '@/hooks/useSoundEffect';
-import { cn } from '@/utils/cn';
+import React, { useEffect, useMemo, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Check,
+  X,
+  ArrowRight,
+  Sparkles,
+  AlertCircle,
+  KeyRound,
+} from "lucide-react";
+import confetti from "canvas-confetti";
+import { useSoundEffect } from "@/hooks/useSoundEffect";
+import { cn } from "@/utils/cn";
 
 export interface BottomSheetFeedbackProps {
   isOpen: boolean;
@@ -17,18 +24,18 @@ export interface BottomSheetFeedbackProps {
 }
 
 const CORRECT_TITLES = [
-  'Luar Biasa!',
-  'Hebat Sekali!',
-  'Pekerjaan Mengagumkan!',
-  'Tepat Sekali!',
-  'Fantastis!',
+  "Luar Biasa!",
+  "Hebat Sekali!",
+  "Pekerjaan Mengagumkan!",
+  "Tepat Sekali!",
+  "Fantastis!",
 ];
 
 const WRONG_TITLES = [
-  'Jawaban Belum Tepat',
-  'Perhatikan Kembali!',
-  'Hampir Saja!',
-  'Jangan Menyerah!',
+  "Jawaban Belum Tepat",
+  "Perhatikan Kembali!",
+  "Hampir Saja!",
+  "Jangan Menyerah!",
 ];
 
 export const BottomSheetFeedback: React.FC<BottomSheetFeedbackProps> = ({
@@ -59,7 +66,7 @@ export const BottomSheetFeedback: React.FC<BottomSheetFeedbackProps> = ({
           particleCount: 70,
           spread: 80,
           origin: { y: 0.8 },
-          colors: ['#58CC02', '#22C55E', '#1CB0F6', '#FFC800', '#FF4B4B'],
+          colors: ["#58CC02", "#22C55E", "#1CB0F6", "#FFC800", "#FF4B4B"],
         });
       } catch (err) {
         // Safe fallback if canvas is not available
@@ -71,18 +78,18 @@ export const BottomSheetFeedback: React.FC<BottomSheetFeedbackProps> = ({
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (!isOpen) return;
-      if (e.key === 'Enter' || e.key === ' ') {
+      if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
         playTap();
         onAction();
       }
     },
-    [isOpen, onAction, playTap]
+    [isOpen, onAction, playTap],
   );
 
   useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
 
   const handleButtonClick = () => {
@@ -95,22 +102,22 @@ export const BottomSheetFeedback: React.FC<BottomSheetFeedbackProps> = ({
       {isOpen && (
         <motion.div
           key="bottom-sheet-feedback"
-          initial={{ y: '100%', opacity: 0 }}
+          initial={{ y: "100%", opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          exit={{ y: '100%', opacity: 0 }}
+          exit={{ y: "100%", opacity: 0 }}
           transition={{
-            type: 'spring',
+            type: "spring",
             damping: 24,
             stiffness: 280,
             mass: 0.8,
           }}
           className={cn(
-            'fixed bottom-0 left-0 right-0 z-50 select-none shadow-2xl',
+            "fixed bottom-0 left-0 right-0 z-50 select-none shadow-2xl",
             // Border & Background condition
             isCorrect
-              ? 'bg-[#D7FFB8] border-t-[4px] border-[#58A700] text-[#3C5A14]'
-              : 'bg-[#FFDFE0] border-t-[4px] border-[#EA2B2B] text-[#661B1B]',
-            className
+              ? "bg-[#D7FFB8] border-t-[4px] border-[#58A700] text-[#3C5A14]"
+              : "bg-[#FFDFE0] border-t-[4px] border-[#EA2B2B] text-[#661B1B]",
+            className,
           )}
           role="dialog"
           aria-modal="true"
@@ -130,7 +137,7 @@ export const BottomSheetFeedback: React.FC<BottomSheetFeedbackProps> = ({
                   }}
                   transition={{
                     duration: 0.75,
-                    ease: 'easeOut',
+                    ease: "easeOut",
                     times: [0, 0.25, 0.5, 0.75, 1],
                   }}
                   className="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl sm:rounded-3xl bg-white border-2 border-[#58A700]/30 shadow-md flex items-center justify-center shrink-0"
@@ -151,7 +158,7 @@ export const BottomSheetFeedback: React.FC<BottomSheetFeedbackProps> = ({
                   }}
                   transition={{
                     duration: 0.55,
-                    ease: 'easeInOut',
+                    ease: "easeInOut",
                   }}
                   className="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl sm:rounded-3xl bg-white border-2 border-[#EA2B2B]/30 shadow-md flex items-center justify-center shrink-0"
                 >
@@ -166,8 +173,8 @@ export const BottomSheetFeedback: React.FC<BottomSheetFeedbackProps> = ({
                 <div className="flex items-center gap-2 mb-1">
                   <h3
                     className={cn(
-                      'text-xl sm:text-2xl font-black tracking-tight leading-tight',
-                      isCorrect ? 'text-[#46A302]' : 'text-[#EA2B2B]'
+                      "text-xl sm:text-2xl font-black tracking-tight leading-tight",
+                      isCorrect ? "text-[#46A302]" : "text-[#EA2B2B]",
                     )}
                   >
                     {headerTitle}
@@ -184,13 +191,36 @@ export const BottomSheetFeedback: React.FC<BottomSheetFeedbackProps> = ({
                   </p>
                 )}
 
-                {/* Wrong State: Solution / Correction Explanation */}
-                {!isCorrect && solutionExplanation && (
-                  <div className="mt-1.5 flex items-start gap-1.5 text-xs sm:text-sm font-extrabold text-[#7F1D1D] bg-white/70 border border-[#EA2B2B]/25 rounded-xl px-3 py-1.5">
-                    <AlertCircle className="w-4 h-4 text-[#EA2B2B] shrink-0 mt-0.5" />
-                    <span>
-                      <strong className="font-black text-[#EA2B2B]">Koreksi:</strong> {solutionExplanation}
-                    </span>
+                {/* Solution / Correction Explanation */}
+                {solutionExplanation && (
+                  <div
+                    className={cn(
+                      "mt-2.5 flex items-start gap-2.5 text-xs sm:text-sm font-extrabold rounded-2xl p-3 sm:p-3.5 shadow-xs transition-all max-h-48 overflow-y-auto",
+                      isCorrect
+                        ? "text-[#20540C] bg-white/95 border-2 border-[#58CC02]/40"
+                        : "text-[#7F1D1D] bg-white/95 border-2 border-[#EA2B2B]/30",
+                    )}
+                  >
+                    {isCorrect ? (
+                      <KeyRound className="w-4 h-4 sm:w-5 sm:h-5 text-[#58A700] shrink-0 mt-0.5" />
+                    ) : (
+                      <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-[#EA2B2B] shrink-0 mt-0.5" />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <span
+                        className={cn(
+                          "font-black block uppercase text-[11px] tracking-wider mb-1",
+                          isCorrect ? "text-[#46A302]" : "text-[#EA2B2B]",
+                        )}
+                      >
+                        {isCorrect
+                          ? "Kunci Jawaban / Solusi:"
+                          : "Koreksi / Jawaban Benar:"}
+                      </span>
+                      <p className="text-slate-800 font-bold whitespace-pre-line leading-relaxed text-xs sm:text-sm">
+                        {solutionExplanation}
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
@@ -202,14 +232,16 @@ export const BottomSheetFeedback: React.FC<BottomSheetFeedbackProps> = ({
                 type="button"
                 onClick={handleButtonClick}
                 className={cn(
-                  'w-full sm:w-auto min-w-[180px] sm:min-w-[200px] py-3.5 sm:py-4 px-8 rounded-2xl font-black text-sm sm:text-base uppercase tracking-wider text-white shadow-md flex items-center justify-center gap-2 transition-all duration-100 cursor-pointer',
+                  "w-full sm:w-auto min-w-[180px] sm:min-w-[200px] py-3.5 sm:py-4 px-8 rounded-2xl font-black text-sm sm:text-base uppercase tracking-wider text-white shadow-md flex items-center justify-center gap-2 transition-all duration-100 cursor-pointer",
                   // 3D Tactile Button states
                   isCorrect
-                    ? 'bg-[#58CC02] border-b-4 border-[#58A700] hover:bg-[#61DC02] active:translate-y-1 active:border-b-0'
-                    : 'bg-[#FF4B4B] border-b-4 border-[#EA2B2B] hover:bg-[#FF5C5C] active:translate-y-1 active:border-b-0'
+                    ? "bg-[#58CC02] border-b-4 border-[#58A700] hover:bg-[#61DC02] active:translate-y-1 active:border-b-0"
+                    : "bg-[#FF4B4B] border-b-4 border-[#EA2B2B] hover:bg-[#FF5C5C] active:translate-y-1 active:border-b-0",
                 )}
               >
-                <span>{actionText || (isCorrect ? 'Lanjutkan' : 'Mengerti')}</span>
+                <span>
+                  {actionText || (isCorrect ? "Lanjutkan" : "Mengerti")}
+                </span>
                 <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 stroke-[3]" />
               </button>
             </div>
@@ -221,4 +253,3 @@ export const BottomSheetFeedback: React.FC<BottomSheetFeedbackProps> = ({
 };
 
 export default BottomSheetFeedback;
-

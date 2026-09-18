@@ -190,7 +190,11 @@ export const SpellWordPlayer: React.FC<
     }));
 
     // If pre-existing submitted answer is provided, map into slots
-    if (submittedAnswer && submittedAnswer.length > 0) {
+    if (
+      submittedAnswer &&
+      Array.isArray(submittedAnswer) &&
+      submittedAnswer.length > 0
+    ) {
       const initialSlots: (LetterItem | null)[] = new Array(targetLength).fill(
         null,
       );

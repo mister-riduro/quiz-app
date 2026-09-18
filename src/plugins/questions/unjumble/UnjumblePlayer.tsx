@@ -239,17 +239,23 @@ export const UnjumblePlayer: React.FC<
       const remaining = [...masterTokens];
       const arranged: UnjumbleTokenItem[] = [];
 
-      submittedAnswer.forEach((ansText) => {
+      submittedAnswer.forEach((item) => {
+        const strVal =
+          typeof item === "string"
+            ? item
+            : typeof item === "object" && (item as any)?.text
+              ? String((item as any).text)
+              : String(item ?? "");
         const foundIdx = remaining.findIndex(
-          (t) => t.text.trim().toLowerCase() === ansText.trim().toLowerCase(),
+          (t) => t.text.trim().toLowerCase() === strVal.trim().toLowerCase(),
         );
         if (foundIdx !== -1) {
           arranged.push(remaining[foundIdx]!);
           remaining.splice(foundIdx, 1);
         } else {
           arranged.push({
-            id: `external-${ansText}-${Math.random().toString(36).substr(2, 4)}`,
-            text: ansText,
+            id: `external-${strVal}-${Math.random().toString(36).substr(2, 4)}`,
+            text: strVal,
             originalIndex: -1,
           });
         }

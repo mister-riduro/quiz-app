@@ -1,52 +1,65 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Tag, RotateCcw, Frown, Award } from 'lucide-react';
-import { PlayerProps } from '@/plugins/core/types';
-import { HangmanContent, HangmanAnswer } from './types';
-import { useSoundEffect } from '@/hooks/useSoundEffect';
-import { cn } from '@/utils/cn';
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Heart, Tag, RotateCcw, Frown, Award } from "lucide-react";
+import { PlayerProps } from "@/plugins/core/types";
+import { HangmanContent, HangmanAnswer } from "./types";
+import { useSoundEffect } from "@/hooks/useSoundEffect";
+import { cn } from "@/utils/cn";
 
 // Vibrant Balloon Colors
 const BALLOON_COLORS = [
-  { main: '#FF4B4B', border: '#EA2B2B', highlight: '#FF8585' },
-  { main: '#1CB0F6', border: '#1899D6', highlight: '#70D4FF' },
-  { main: '#58CC02', border: '#46A302', highlight: '#88E83A' },
-  { main: '#FFC800', border: '#D4A500', highlight: '#FFE066' },
-  { main: '#A855F7', border: '#9333EA', highlight: '#C084FC' },
-  { main: '#FF9600', border: '#D97F00', highlight: '#FFB84D' },
+  { main: "#FF4B4B", border: "#EA2B2B", highlight: "#FF8585" },
+  { main: "#1CB0F6", border: "#1899D6", highlight: "#70D4FF" },
+  { main: "#58CC02", border: "#46A302", highlight: "#88E83A" },
+  { main: "#FFC800", border: "#D4A500", highlight: "#FFE066" },
+  { main: "#A855F7", border: "#9333EA", highlight: "#C084FC" },
+  { main: "#FF9600", border: "#D97F00", highlight: "#FFB84D" },
 ];
 
 const KEYBOARD_ROWS = [
-  ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
-  ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
-  ['Z', 'X', 'C', 'V', 'B', 'N', 'M'],
+  ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
+  ["A", "S", "D", "F", "G", "H", "J", "K", "L"],
+  ["Z", "X", "C", "V", "B", "N", "M"],
 ];
 
-export const HangmanPlayer: React.FC<PlayerProps<HangmanContent, HangmanAnswer>> = ({
-  content,
-  submittedAnswer,
-  onAnswerSubmit,
-  isEvaluating = false,
-}) => {
-  const { playTap, playCorrect, playWrong, playBalloonPop, playVictory } = useSoundEffect();
+export const HangmanPlayer: React.FC<
+  PlayerProps<HangmanContent, HangmanAnswer>
+> = ({ content, submittedAnswer, onAnswerSubmit, isEvaluating = false }) => {
+  const { playTap, playCorrect, playWrong, playBalloonPop, playVictory } =
+    useSoundEffect();
 
   const secretWord = useMemo(
-    () => (content.secretWord || 'INDONESIA').toUpperCase(),
-    [content.secretWord]
+    () => (content.secretWord || "INDONESIA").toUpperCase(),
+    [content.secretWord],
   );
   const maxLives = Math.min(6, Math.max(3, content.maxLives || 5));
   const category = content.category || content.hint;
 
   // Track guessed letters
-  const [guessedLetters, setGuessedLetters] = useState<string[]>([]);
+  const [guessedLetters, setGuessedLetters] = useState<string[]>(() => {
+    const ans = submittedAnswer as any;
+    if (Array.isArray(ans)) return ans;
+    if (ans && Array.isArray(ans.guessedLetters)) return ans.guessedLetters;
+    return [];
+  });
   const [poppedIndex, setPoppedIndex] = useState<number | null>(null);
   const [isShaking, setIsShaking] = useState(false);
+
+  // Sync guessed letters if submittedAnswer prop updates
+  useEffect(() => {
+    const ans = submittedAnswer as any;
+    if (Array.isArray(ans)) {
+      setGuessedLetters(ans);
+    } else if (ans && Array.isArray(ans.guessedLetters)) {
+      setGuessedLetters(ans.guessedLetters);
+    }
+  }, [submittedAnswer]);
 
   // Derive unique letters in secretWord (excluding spaces)
   const uniqueLetters = useMemo(() => {
     const set = new Set<string>();
     for (const char of secretWord) {
-      if (char >= 'A' && char <= 'Z') {
+      if (char >= "A" && char <= "Z") {
         set.add(char);
       }
     }
@@ -59,7 +72,9 @@ export const HangmanPlayer: React.FC<PlayerProps<HangmanContent, HangmanAnswer>>
   }, [guessedLetters, uniqueLetters]);
 
   const remainingLives = Math.max(0, maxLives - wrongGuesses.length);
-  const isWon = uniqueLetters.size > 0 && Array.from(uniqueLetters).every((l) => guessedLetters.includes(l));
+  const isWon =
+    uniqueLetters.size > 0 &&
+    Array.from(uniqueLetters).every((l) => guessedLetters.includes(l));
   const isLost = remainingLives <= 0;
   const isGameOver = isWon || isLost || submittedAnswer !== undefined;
 
@@ -76,7 +91,9 @@ export const HangmanPlayer: React.FC<PlayerProps<HangmanContent, HangmanAnswer>>
       if (isRightLetter) {
         playCorrect();
         // Check if this guess completed the word
-        const won = Array.from(uniqueLetters).every((l) => nextGuessed.includes(l));
+        const won = Array.from(uniqueLetters).every((l) =>
+          nextGuessed.includes(l),
+        );
         if (won) {
           playVictory();
           onAnswerSubmit({
@@ -87,7 +104,9 @@ export const HangmanPlayer: React.FC<PlayerProps<HangmanContent, HangmanAnswer>>
         }
       } else {
         // Wrong letter -> Balloon pops!
-        const nextWrongCount = nextGuessed.filter((l) => !uniqueLetters.has(l)).length;
+        const nextWrongCount = nextGuessed.filter(
+          (l) => !uniqueLetters.has(l),
+        ).length;
         setPoppedIndex(maxLives - nextWrongCount);
         setIsShaking(true);
         playBalloonPop();
@@ -119,7 +138,7 @@ export const HangmanPlayer: React.FC<PlayerProps<HangmanContent, HangmanAnswer>>
       playBalloonPop,
       playWrong,
       onAnswerSubmit,
-    ]
+    ],
   );
 
   // Physical keyboard listener
@@ -127,12 +146,12 @@ export const HangmanPlayer: React.FC<PlayerProps<HangmanContent, HangmanAnswer>>
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isGameOver || isEvaluating) return;
       const key = e.key.toUpperCase();
-      if (key >= 'A' && key <= 'Z') {
+      if (key >= "A" && key <= "Z") {
         handleGuess(key);
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleGuess, isGameOver, isEvaluating]);
 
   // Restart game for demo / player replay
@@ -170,10 +189,10 @@ export const HangmanPlayer: React.FC<PlayerProps<HangmanContent, HangmanAnswer>>
                 >
                   <Heart
                     className={cn(
-                      'w-4 h-4 sm:w-5 sm:h-5 transition-colors',
+                      "w-4 h-4 sm:w-5 sm:h-5 transition-colors",
                       hasHeart
-                        ? 'fill-duo-red text-duo-red drop-shadow-xs'
-                        : 'text-slate-300 fill-slate-200'
+                        ? "fill-duo-red text-duo-red drop-shadow-xs"
+                        : "text-slate-300 fill-slate-200",
                     )}
                   />
                 </motion.div>
@@ -205,7 +224,10 @@ export const HangmanPlayer: React.FC<PlayerProps<HangmanContent, HangmanAnswer>>
             const isJustPopped = poppedIndex === idx;
 
             return (
-              <div key={`balloon-${idx}`} className="relative flex flex-col items-center">
+              <div
+                key={`balloon-${idx}`}
+                className="relative flex flex-col items-center"
+              >
                 <AnimatePresence>
                   {isAlive ? (
                     <motion.div
@@ -217,11 +239,19 @@ export const HangmanPlayer: React.FC<PlayerProps<HangmanContent, HangmanAnswer>>
                       }}
                       exit={{ scale: 0, opacity: 0 }}
                       transition={{
-                        y: { repeat: Infinity, duration: 2.5 + floatDelay, ease: 'easeInOut' },
-                        rotate: { repeat: Infinity, duration: 3 + floatDelay, ease: 'easeInOut' },
+                        y: {
+                          repeat: Infinity,
+                          duration: 2.5 + floatDelay,
+                          ease: "easeInOut",
+                        },
+                        rotate: {
+                          repeat: Infinity,
+                          duration: 3 + floatDelay,
+                          ease: "easeInOut",
+                        },
                         scale: { duration: 0.25 },
                       }}
-                      className="relative w-10 h-13 sm:w-12 sm:h-15 rounded-full shadow-md flex items-center justify-center"
+                      className="relative w-10 h-14 sm:w-12 sm:h-16 rounded-full shadow-md flex items-center justify-center"
                       style={{
                         backgroundColor: color.main,
                         border: `2px solid ${color.border}`,
@@ -255,8 +285,8 @@ export const HangmanPlayer: React.FC<PlayerProps<HangmanContent, HangmanAnswer>>
                 {/* Balloon String connecting to mascot */}
                 <div
                   className={cn(
-                    'w-0.5 h-10 transition-opacity duration-300',
-                    isAlive ? 'bg-slate-400/80' : 'opacity-0'
+                    "w-0.5 h-10 transition-opacity duration-300",
+                    isAlive ? "bg-slate-400/80" : "opacity-0",
                   )}
                 />
               </div>
@@ -270,10 +300,14 @@ export const HangmanPlayer: React.FC<PlayerProps<HangmanContent, HangmanAnswer>>
             isWon
               ? { y: [0, -10, 0] }
               : isLost
-              ? { rotate: [-2, 2, -2] }
-              : { y: [0, -2, 0] }
+                ? { rotate: [-2, 2, -2] }
+                : { y: [0, -2, 0] }
           }
-          transition={{ repeat: Infinity, duration: isWon ? 0.6 : 2, ease: 'easeInOut' }}
+          transition={{
+            repeat: Infinity,
+            duration: isWon ? 0.6 : 2,
+            ease: "easeInOut",
+          }}
           className="relative z-10 flex flex-col items-center"
         >
           <svg
@@ -285,34 +319,73 @@ export const HangmanPlayer: React.FC<PlayerProps<HangmanContent, HangmanAnswer>>
             className="drop-shadow-md"
           >
             {/* Mascot Body */}
-            <circle cx="50" cy="55" r="38" fill={isLost ? '#94A3B8' : '#58CC02'} />
-            <circle cx="50" cy="55" r="38" stroke={isLost ? '#64748B' : '#46A302'} strokeWidth="4" />
+            <circle
+              cx="50"
+              cy="55"
+              r="38"
+              fill={isLost ? "#94A3B8" : "#58CC02"}
+            />
+            <circle
+              cx="50"
+              cy="55"
+              r="38"
+              stroke={isLost ? "#64748B" : "#46A302"}
+              strokeWidth="4"
+            />
 
             {/* Belly Patch */}
-            <ellipse cx="50" cy="62" rx="24" ry="20" fill={isLost ? '#CBD5E1' : '#D7FFB8'} />
+            <ellipse
+              cx="50"
+              cy="62"
+              rx="24"
+              ry="20"
+              fill={isLost ? "#CBD5E1" : "#D7FFB8"}
+            />
 
             {/* Cute Ears / Horns */}
             <path
               d="M26 28 C22 14 36 18 36 28 Z"
-              fill={isLost ? '#64748B' : '#46A302'}
+              fill={isLost ? "#64748B" : "#46A302"}
             />
             <path
               d="M74 28 C78 14 64 18 64 28 Z"
-              fill={isLost ? '#64748B' : '#46A302'}
+              fill={isLost ? "#64748B" : "#46A302"}
             />
 
             {/* Eyes */}
             {isWon ? (
               /* Star / Happy Eyes */
               <>
-                <path d="M32 46 Q38 40 44 46" stroke="#1E293B" strokeWidth="4" strokeLinecap="round" />
-                <path d="M56 46 Q62 40 68 46" stroke="#1E293B" strokeWidth="4" strokeLinecap="round" />
+                <path
+                  d="M32 46 Q38 40 44 46"
+                  stroke="#1E293B"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M56 46 Q62 40 68 46"
+                  stroke="#1E293B"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                />
               </>
             ) : isLost ? (
               /* Dizzy / Sad Eyes */
               <>
-                <circle cx="38" cy="46" r="5" stroke="#334155" strokeWidth="3" />
-                <circle cx="62" cy="46" r="5" stroke="#334155" strokeWidth="3" />
+                <circle
+                  cx="38"
+                  cy="46"
+                  r="5"
+                  stroke="#334155"
+                  strokeWidth="3"
+                />
+                <circle
+                  cx="62"
+                  cy="46"
+                  r="5"
+                  stroke="#334155"
+                  strokeWidth="3"
+                />
               </>
             ) : (
               /* Cheerful Big Eyes */
@@ -327,8 +400,22 @@ export const HangmanPlayer: React.FC<PlayerProps<HangmanContent, HangmanAnswer>>
             {/* Blush Cheeks */}
             {!isLost && (
               <>
-                <ellipse cx="28" cy="54" rx="5" ry="3" fill="#FF8585" opacity="0.6" />
-                <ellipse cx="72" cy="54" rx="5" ry="3" fill="#FF8585" opacity="0.6" />
+                <ellipse
+                  cx="28"
+                  cy="54"
+                  rx="5"
+                  ry="3"
+                  fill="#FF8585"
+                  opacity="0.6"
+                />
+                <ellipse
+                  cx="72"
+                  cy="54"
+                  rx="5"
+                  ry="3"
+                  fill="#FF8585"
+                  opacity="0.6"
+                />
               </>
             )}
 
@@ -337,9 +424,19 @@ export const HangmanPlayer: React.FC<PlayerProps<HangmanContent, HangmanAnswer>>
 
             {/* Smile / Mouth */}
             {isLost ? (
-              <path d="M44 68 Q50 62 56 68" stroke="#1E293B" strokeWidth="3" strokeLinecap="round" />
+              <path
+                d="M44 68 Q50 62 56 68"
+                stroke="#1E293B"
+                strokeWidth="3"
+                strokeLinecap="round"
+              />
             ) : (
-              <path d="M43 64 Q50 71 57 64" stroke="#1E293B" strokeWidth="3" strokeLinecap="round" />
+              <path
+                d="M43 64 Q50 71 57 64"
+                stroke="#1E293B"
+                strokeWidth="3"
+                strokeLinecap="round"
+              />
             )}
           </svg>
 
@@ -350,8 +447,8 @@ export const HangmanPlayer: React.FC<PlayerProps<HangmanContent, HangmanAnswer>>
 
       {/* 3. MYSTERY WORD DISPLAY WITH THICK UNDERLINES _ _ _ _ */}
       <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-3 py-3 px-4 mb-6 min-h-[64px] w-full">
-        {secretWord.split('').map((char, index) => {
-          if (char === ' ') {
+        {secretWord.split("").map((char, index) => {
+          if (char === " ") {
             return <div key={`char-${index}`} className="w-4 sm:w-6" />;
           }
 
@@ -362,20 +459,20 @@ export const HangmanPlayer: React.FC<PlayerProps<HangmanContent, HangmanAnswer>>
             <div
               key={`char-${index}`}
               className={cn(
-                'min-w-[36px] sm:min-w-[44px] h-12 sm:h-14 flex items-center justify-center font-black text-2xl sm:text-3xl transition-all',
-                'border-b-[4px] sm:border-b-[5px]',
+                "min-w-[36px] sm:min-w-[44px] h-12 sm:h-14 flex items-center justify-center font-black text-2xl sm:text-3xl transition-all",
+                "border-b-[4px] sm:border-b-[5px]",
                 isCorrectlyGuessed
-                  ? 'border-duo-green text-duo-dark'
+                  ? "border-duo-green text-duo-dark"
                   : isLost
-                  ? 'border-duo-red text-duo-red'
-                  : 'border-duo-dark/40 text-transparent'
+                    ? "border-duo-red text-duo-red"
+                    : "border-duo-dark/40 text-transparent",
               )}
             >
               {isRevealed ? (
                 <motion.span
                   initial={{ scale: 0.4, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 20 }}
                 >
                   {char}
                 </motion.span>
@@ -393,24 +490,30 @@ export const HangmanPlayer: React.FC<PlayerProps<HangmanContent, HangmanAnswer>>
           initial={{ opacity: 0, y: 10, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           className={cn(
-            'flex items-center justify-between p-4 rounded-2xl border-2 w-full mb-6 shadow-xs',
+            "flex items-center justify-between p-4 rounded-2xl border-2 w-full mb-6 shadow-xs",
             isWon
-              ? 'bg-duo-green-light/60 border-duo-green text-duo-dark'
-              : 'bg-duo-red-light/60 border-duo-red text-duo-dark'
+              ? "bg-duo-green-light/60 border-duo-green text-duo-dark"
+              : "bg-duo-red-light/60 border-duo-red text-duo-dark",
           )}
         >
           <div className="flex items-center gap-3">
             <div
               className={cn(
-                'w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0',
-                isWon ? 'bg-duo-green' : 'bg-duo-red'
+                "w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0",
+                isWon ? "bg-duo-green" : "bg-duo-red",
               )}
             >
-              {isWon ? <Award className="w-6 h-6" /> : <Frown className="w-6 h-6" />}
+              {isWon ? (
+                <Award className="w-6 h-6" />
+              ) : (
+                <Frown className="w-6 h-6" />
+              )}
             </div>
             <div>
               <h4 className="font-black text-sm uppercase tracking-wider">
-                {isWon ? 'Tebakan Hebat! Kamu Menang!' : 'Yah, Balon Telah Habis!'}
+                {isWon
+                  ? "Tebakan Hebat! Kamu Menang!"
+                  : "Yah, Balon Telah Habis!"}
               </h4>
               <p className="text-xs sm:text-sm font-semibold text-[#4B4B4B]">
                 {isWon
@@ -434,7 +537,10 @@ export const HangmanPlayer: React.FC<PlayerProps<HangmanContent, HangmanAnswer>>
       {/* 5. VIRTUAL ON-SCREEN KEYBOARD (QWERTY with minimum 44x44px touch targets) */}
       <div className="flex flex-col items-center gap-2 w-full pt-2">
         {KEYBOARD_ROWS.map((row, rowIdx) => (
-          <div key={`keyboard-row-${rowIdx}`} className="flex justify-center gap-1.5 sm:gap-2 w-full">
+          <div
+            key={`keyboard-row-${rowIdx}`}
+            className="flex justify-center gap-1.5 sm:gap-2 w-full"
+          >
             {row.map((letter) => {
               const isGuessed = guessedLetters.includes(letter);
               const isCorrectLetter = isGuessed && uniqueLetters.has(letter);
@@ -449,14 +555,14 @@ export const HangmanPlayer: React.FC<PlayerProps<HangmanContent, HangmanAnswer>>
                   onClick={() => handleGuess(letter)}
                   className={cn(
                     // Accessibility touch target minimum 44x44px
-                    'min-w-[32px] sm:min-w-[44px] min-h-[44px] sm:min-h-[48px] flex-1 max-w-[48px] rounded-xl font-black text-sm sm:text-base select-none transition-all flex items-center justify-center',
+                    "min-w-[32px] sm:min-w-[44px] min-h-[44px] sm:min-h-[48px] flex-1 max-w-[48px] rounded-xl font-black text-sm sm:text-base select-none transition-all flex items-center justify-center",
                     // Key States
                     !isGuessed &&
-                      'bg-white text-duo-dark border-2 border-slate-200 border-b-4 border-b-slate-300 hover:bg-slate-50 active:translate-y-0.5 active:border-b-2 shadow-xs cursor-pointer',
+                      "bg-white text-duo-dark border-2 border-slate-200 border-b-4 border-b-slate-300 hover:bg-slate-50 active:translate-y-0.5 active:border-b-2 shadow-xs cursor-pointer",
                     isCorrectLetter &&
-                      'bg-duo-green text-white border-2 border-duo-green-border border-b-2 shadow-none cursor-default opacity-95',
+                      "bg-duo-green text-white border-2 border-duo-green-border border-b-2 shadow-none cursor-default opacity-95",
                     isWrongLetter &&
-                      'bg-slate-200 text-slate-400 border-2 border-slate-300 border-b-2 shadow-none cursor-default opacity-50'
+                      "bg-slate-200 text-slate-400 border-2 border-slate-300 border-b-2 shadow-none cursor-default opacity-50",
                   )}
                 >
                   {letter}

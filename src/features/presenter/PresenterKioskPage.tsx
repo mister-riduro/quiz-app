@@ -15,18 +15,178 @@ import {
   SlidersHorizontal,
   ArrowLeft,
   Clock,
-  Sparkles,
+  Lightbulb,
 } from "lucide-react";
 import { Quiz } from "@/types/quiz";
+import { QuestionTypeEnum } from "@/types/database";
 import { BuilderQuestion } from "@/stores/builderStore";
 import { pluginRegistry } from "@/plugins/core/registry";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { DuoCard } from "@/components/ui/DuoCard";
 import { TactileButton } from "@/components/ui/TactileButton";
-import { BottomSheetFeedback } from "@/components/common/BottomSheetFeedback";
+import {
+  BottomSheetFeedback,
+  ErrorBoundary,
+  HintBottomSheet,
+} from "@/components/common";
 import { VictoryScreen } from "./VictoryScreen";
 import { useSoundEffect } from "@/hooks/useSoundEffect";
 import { cn } from "@/utils/cn";
+
+/**
+ * Helper to extract human-readable solution explanation and auto-fill payload
+ * for all 8 mini-game plugin types.
+ */
+function getQuestionSolution(question: BuilderQuestion | undefined): {
+  text: string;
+  autoAnswer: any;
+} {
+  if (!question || !question.content) {
+    return {
+      text: "Kunci jawaban telah dibuka oleh Guru.",
+      autoAnswer: null,
+    };
+  }
+
+  const content = question.content as any;
+  const qType = (question.type || "").toLowerCase().replace(/-/g, "_");
+
+  let text = "";
+  let autoAnswer: any = null;
+
+  // 1. True / False
+  if (
+    qType === "true_false" ||
+    content.correctAnswer !== undefined ||
+    content.isTrue !== undefined
+  ) {
+    const isTrueVal =
+      content.correctAnswer !== undefined
+        ? Boolean(content.correctAnswer)
+        : Boolean(content.isTrue);
+    text = `Jawaban yang Benar: ${isTrueVal ? "BENAR" : "SALAH"}`;
+    autoAnswer = isTrueVal;
+  }
+  // 2. Spell the Word
+  else if (qType === "spell_the_word") {
+    const word = (content.targetWord || "").trim().toUpperCase();
+    text = `Kata yang Tepat: "${word}"`;
+    autoAnswer = word.split("");
+  }
+  // 3. Anagram
+  else if (qType === "anagram") {
+    const word = (content.targetWord || "").trim().toUpperCase();
+    text = `Kata yang Tepat: "${word}"`;
+    autoAnswer = word;
+  }
+  // 4. Hangman
+  else if (qType === "hangman") {
+    const word = (content.secretWord || "").trim().toUpperCase();
+    text = `Kata Rahasia: "${word}"`;
+    const letters = Array.from(new Set(word.replace(/[^A-Z]/g, "").split("")));
+    autoAnswer = {
+      guessedLetters: letters,
+      isWon: true,
+      revealedWord: word,
+    };
+  }
+  // 5. Unjumble
+  else if (qType === "unjumble") {
+    const sentence =
+      content.fullSentence ||
+      (Array.isArray(content.tokens) ? content.tokens.join(" ") : "");
+    text = `Susunan Kalimat yang Benar: "${sentence}"`;
+    autoAnswer =
+      Array.isArray(content.tokens) && content.tokens.length > 0
+        ? content.tokens
+        : sentence.split(/\s+/).filter(Boolean);
+  }
+  // 6. Crossword
+  else if (qType === "crossword") {
+    const wordsList = Array.isArray(content.words) ? content.words : [];
+    if (wordsList.length > 0) {
+      const clues = wordsList
+        .map((w: any, idx: number) => {
+          const num = w.number || idx + 1;
+          const dir = w.direction === "ACROSS" ? "Mendatar" : "Menurun";
+          return `${num}. ${w.word} (${dir}: ${w.clue || ""})`;
+        })
+        .join("\n");
+      text = `Kunci Teka-Teki Silang:\n${clues}`;
+
+      // Build cell coordinate map
+      const cellAnswers: Record<string, string> = {};
+      wordsList.forEach((w: any) => {
+        if (w.word && w.startPos) {
+          const letters = (w.word || "").toUpperCase().split("");
+          letters.forEach((ch: string, i: number) => {
+            const row =
+              w.direction === "DOWN" ? w.startPos.row + i : w.startPos.row;
+            const col =
+              w.direction === "ACROSS" ? w.startPos.col + i : w.startPos.col;
+            cellAnswers[`${row}-${col}`] = ch;
+          });
+        }
+      });
+      autoAnswer = cellAnswers;
+    }
+  }
+  // 7. Wordsearch
+  else if (qType === "wordsearch") {
+    const wordsList = Array.isArray(content.words)
+      ? content.words
+          .map((w: any) => String(w).trim().toUpperCase())
+          .filter(Boolean)
+      : [];
+    text = `Daftar Kata yang Dicari:\n${wordsList.join(", ")}`;
+    autoAnswer = wordsList;
+  }
+  // 8. Labelled Diagram
+  else if (qType === "labelled_diagram") {
+    const labels = Array.isArray(content.labels) ? content.labels : [];
+    if (labels.length > 0) {
+      const pinList = labels
+        .map((l: any, i: number) => `Pin #${i + 1}: ${l.text}`)
+        .join("\n");
+      text = `Label Diagram yang Tepat:\n${pinList}`;
+
+      const pinAnswers: Record<string, string> = {};
+      labels.forEach((l: any) => {
+        pinAnswers[l.id] = l.text;
+      });
+      autoAnswer = pinAnswers;
+    }
+  }
+  // Generic fallbacks
+  else if (content.targetWord) {
+    const word = String(content.targetWord).trim().toUpperCase();
+    text = `Jawaban yang Tepat: "${word}"`;
+    autoAnswer = word;
+  } else if (content.secretWord) {
+    const word = String(content.secretWord).trim().toUpperCase();
+    text = `Jawaban yang Tepat: "${word}"`;
+    autoAnswer = word;
+  } else if (Array.isArray(content.words)) {
+    const list = content.words
+      .map((w: any) => (typeof w === "string" ? w : w.word))
+      .filter(Boolean)
+      .join(", ");
+    text = `Jawaban yang Tepat: ${list}`;
+    autoAnswer = content.words;
+  }
+
+  // Append explanation if provided
+  if (content.explanation && content.explanation.trim()) {
+    text = text
+      ? `${text}\n\nPenjelasan: ${content.explanation.trim()}`
+      : content.explanation.trim();
+  }
+
+  return {
+    text: text || "Kunci jawaban telah dibuka oleh Guru.",
+    autoAnswer,
+  };
+}
 
 export interface PresenterKioskPageProps {
   quiz?: Partial<Quiz>;
@@ -63,6 +223,11 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
   // Question evaluations: true, false, or undefined
   const [evaluations, setEvaluations] = useState<Record<string, boolean>>({});
 
+  // Unlocked questions by teacher mapped by question id
+  const [unlockedQuestions, setUnlockedQuestions] = useState<
+    Record<string, boolean>
+  >({});
+
   // BottomSheetFeedback State
   const [feedbackState, setFeedbackState] = useState<{
     isOpen: boolean;
@@ -74,6 +239,9 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
     isOpen: false,
     isCorrect: false,
   });
+
+  // Hint Bottom Sheet State (Opened on-demand via "Butuh Petunjuk?" button)
+  const [isHintOpen, setIsHintOpen] = useState(false);
 
   // Quiz completed state & timer
   const [isCompleted, setIsCompleted] = useState(false);
@@ -89,13 +257,24 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
   // Active question object
   const activeQuestion = questions[currentIndex] || questions[0];
 
-  // Resolve plugin for active question
+  // Normalize question type (e.g. true-false -> true_false)
+  const normalizedType = useMemo(() => {
+    if (!activeQuestion?.type) return "true_false" as QuestionTypeEnum;
+    return activeQuestion.type.replace(/-/g, "_") as QuestionTypeEnum;
+  }, [activeQuestion?.type]);
+
+  // Resolve plugin for active question with fallback
   const activePlugin = useMemo(() => {
-    if (activeQuestion && pluginRegistry.hasPlugin(activeQuestion.type)) {
-      return pluginRegistry.getPlugin(activeQuestion.type);
+    if (activeQuestion) {
+      if (pluginRegistry.hasPlugin(activeQuestion.type)) {
+        return pluginRegistry.getPlugin(activeQuestion.type);
+      }
+      if (pluginRegistry.hasPlugin(normalizedType)) {
+        return pluginRegistry.getPlugin(normalizedType);
+      }
     }
     return pluginRegistry.getAllPlugins()[0];
-  }, [activeQuestion]);
+  }, [activeQuestion, normalizedType]);
 
   const isGlobalTimer = (quiz?.timerMode || "global") === "global";
   const globalTotalSeconds = quiz?.globalTimeLimitSeconds ?? 7200;
@@ -118,8 +297,9 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
   // Active time left to display
   const timeLeft = isGlobalTimer ? globalTimeLeft : questionTimeLeft;
 
-  // Reset per-question timer when question index changes
+  // Reset per-question timer and hint state when question index changes
   useEffect(() => {
+    setIsHintOpen(false);
     if (!isGlobalTimer) {
       setQuestionTimeLeft(activeQuestion?.timeLimitSeconds ?? 30);
     }
@@ -196,9 +376,9 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
 
     if (isGlobal) {
       if (hrs > 0) {
-        return `Global: ${hrs}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+        return `${hrs}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
       }
-      return `Global: ${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+      return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
     }
 
     if (mins > 0) {
@@ -252,6 +432,10 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
         playWrong();
       }
 
+      const { text: solutionText } = getQuestionSolution(activeQuestion);
+
+      setIsHintOpen(false);
+
       // Show bottom sheet feedback
       setFeedbackState({
         isOpen: true,
@@ -260,10 +444,7 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
           ? "Luar Biasa! Jawaban Tepat!"
           : "Jawaban Belum Tepat!",
         message: validation.feedbackMessage,
-        solutionExplanation: !isCorrect
-          ? activeQuestion.content?.explanation ||
-            "Pelajari kembali petunjuk untuk memahami konsep ini."
-          : undefined,
+        solutionExplanation: !isCorrect ? solutionText : undefined,
       });
     },
     [activeQuestion, activePlugin, playVictory, playWrong],
@@ -303,30 +484,23 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
     playPop();
     if (!activeQuestion) return;
 
-    let solutionText = "Kunci jawaban dibuka oleh Guru.";
-    if (activeQuestion.content?.explanation) {
-      solutionText = activeQuestion.content.explanation;
-    } else if (activeQuestion.content?.isTrue !== undefined) {
-      solutionText = `Pernyataan ini bernilai: ${activeQuestion.content.isTrue ? "BENAR" : "SALAH"}`;
-    } else if (activeQuestion.content?.targetWord) {
-      solutionText = `Kata yang tepat adalah: "${activeQuestion.content.targetWord}"`;
-    } else if (activeQuestion.content?.words) {
-      const wordsList = Array.isArray(activeQuestion.content.words)
-        ? activeQuestion.content.words
-            .map((w: any) => (typeof w === "string" ? w : w.word))
-            .filter(Boolean)
-            .join(", ")
-        : "";
-      if (wordsList) {
-        solutionText = `Daftar kata: ${wordsList}`;
-      }
+    setIsHintOpen(false);
+
+    const { text: solutionText, autoAnswer } =
+      getQuestionSolution(activeQuestion);
+
+    // Auto-fill answer so the player component visually reflects the correct solution
+    if (autoAnswer !== null && autoAnswer !== undefined) {
+      setAnswers((prev) => ({ ...prev, [activeQuestion.id]: autoAnswer }));
     }
 
     setEvaluations((prev) => ({ ...prev, [activeQuestion.id]: true }));
+    setUnlockedQuestions((prev) => ({ ...prev, [activeQuestion.id]: true }));
+
     setFeedbackState({
       isOpen: true,
       isCorrect: true,
-      title: "Kunci Jawaban Dibuka (Mode Guru)",
+      title: "Kunci Jawaban Dibuka 🔑",
       message:
         "Guru telah membuka kunci jawaban untuk dibahas bersama di kelas.",
       solutionExplanation: solutionText,
@@ -338,6 +512,8 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
     playTap();
     setAnswers({});
     setEvaluations({});
+    setUnlockedQuestions({});
+    setIsHintOpen(false);
     setCurrentIndex(0);
     setIsCompleted(false);
     setStartTime(Date.now());
@@ -361,23 +537,74 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
     return questions.reduce((sum, q) => sum + (q.points || 100), 0);
   }, [questions]);
 
+  // Effective media URL (supporting images / diagrams from all storage locations)
   const effectiveMediaUrl =
-    activeQuestion?.mediaUrl || activeQuestion?.content?.mediaUrl;
-  const promptText =
-    (activeQuestion?.titlePrompt &&
-    activeQuestion.titlePrompt !== "Tuliskan pertanyaan kuis di sini..."
-      ? activeQuestion.titlePrompt
-      : activeQuestion?.content?.statement) ||
-    activeQuestion?.titlePrompt ||
-    activeQuestion?.content?.statement ||
-    "Pertanyaan Kuis";
+    activeQuestion?.mediaUrl ||
+    activeQuestion?.content?.mediaUrl ||
+    activeQuestion?.content?.imageUrl ||
+    activeQuestion?.content?.image_url ||
+    "";
 
-  const isDiagram = activeQuestion?.type === "labelled_diagram";
+  // Default question prompt per plugin type
+  const getDefaultPromptForType = (type?: string): string => {
+    const norm = (type || "").replace(/-/g, "_");
+    switch (norm) {
+      case "true_false":
+        return "Tentukan apakah pernyataan ini Benar atau Salah!";
+      case "spell_the_word":
+        return "Susun huruf-huruf menjadi kata yang tepat!";
+      case "anagram":
+        return "Susun kembali huruf acak menjadi kata yang benar!";
+      case "hangman":
+        return "Tebak kata rahasia dengan memilih huruf yang tepat!";
+      case "crossword":
+        return "Isi teka-teki silang dengan petunjuk kata yang tersedia!";
+      case "wordsearch":
+        return "Temukan semua kata tersembunyi di dalam matriks!";
+      case "labelled_diagram":
+        return "Pasangkan label ke titik diagram yang sesuai!";
+      case "unjumble":
+        return "Susun balok kata menjadi susunan kalimat yang utuh!";
+      default:
+        return "Selesaikan tantangan kuis interaktif berikut!";
+    }
+  };
+
+  // Robust promptText resolution: never blank, never raw placeholder
+  const promptText = useMemo(() => {
+    const rawPrompt = activeQuestion?.titlePrompt?.trim();
+    const isPlaceholderPrompt =
+      !rawPrompt ||
+      rawPrompt === "Tuliskan pertanyaan kuis di sini..." ||
+      rawPrompt.toLowerCase() === "pertanyaan kuis" ||
+      rawPrompt.toLowerCase() === "pertanyaan baru";
+
+    if (!isPlaceholderPrompt) {
+      return rawPrompt;
+    }
+
+    // Fallback to question content specific text
+    const content = activeQuestion?.content;
+    if (content) {
+      if (typeof content.statement === "string" && content.statement.trim()) {
+        return content.statement.trim();
+      }
+      if (typeof content.category === "string" && content.category.trim()) {
+        return `Kategori: ${content.category.trim()}`;
+      }
+      if (typeof content.hint === "string" && content.hint.trim()) {
+        return content.hint.trim();
+      }
+    }
+
+    return getDefaultPromptForType(activeQuestion?.type);
+  }, [activeQuestion]);
+
+  const isDiagram = normalizedType === "labelled_diagram";
   const hasMedia = Boolean(effectiveMediaUrl && !isDiagram);
   const hintText = activeQuestion?.content?.hint;
   const isWidePlugin =
-    activeQuestion?.type === "wordsearch" ||
-    activeQuestion?.type === "crossword";
+    normalizedType === "wordsearch" || normalizedType === "crossword";
   const leftColClass = isWidePlugin
     ? "md:col-span-4 lg:col-span-4"
     : "md:col-span-5 lg:col-span-5";
@@ -386,11 +613,23 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
     : "md:col-span-7 lg:col-span-7";
 
   const playerContent = useMemo(() => {
-    if (!activeQuestion?.content) return activeQuestion?.content;
+    const rawContent =
+      activeQuestion?.content && typeof activeQuestion.content === "object"
+        ? activeQuestion.content
+        : {};
+
+    const statementMatches = Boolean(
+      rawContent.statement &&
+      promptText.trim().toLowerCase() ===
+        rawContent.statement.trim().toLowerCase(),
+    );
+
     return {
-      ...activeQuestion.content,
+      ...rawContent,
+      hint: undefined, // Hint is controlled via Presenter's "Butuh Petunjuk?" button & bottom sheet
       _hideMedia: hasMedia,
-      _hideStatement: Boolean(promptText && promptText !== "Pertanyaan Kuis"),
+      _hideStatement: statementMatches,
+      _hideHint: true,
     };
   }, [activeQuestion?.content, hasMedia, promptText]);
 
@@ -506,14 +745,14 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
       </header>
 
       {/* 2. MAIN HORIZONTAL STAGE: DYNAMIC QUESTION & PLAYER RENDERER */}
-      <main className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-5 md:p-6 lg:p-8 pb-28 flex flex-col justify-center items-center">
-        <div className="w-full max-w-7xl mx-auto my-auto">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-10 xl:gap-12 items-center">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 lg:p-8 pb-32">
+        <div className="w-full max-w-7xl mx-auto min-h-full flex flex-col justify-center py-2">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8 xl:gap-12 items-center">
             {/* LEFT COLUMN: Badges, Big Prompt Text, and Large Supporting Image */}
             <div
               className={cn(
                 leftColClass,
-                "flex flex-col justify-center gap-4 text-left",
+                "flex flex-col justify-center gap-3 sm:gap-4 text-left",
               )}
             >
               {/* Badges: Quiz Title, Plugin, Points, Live Timer */}
@@ -553,21 +792,59 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
                 {promptText}
               </h2>
 
-              {/* Educational Hint Badge (if present) */}
+              {/* Educational Hint Button (Opens Bottom Sheet Modal) */}
               {hintText && (
-                <div className="inline-flex items-center gap-2 px-3.5 py-2 bg-amber-50 border-2 border-amber-200 text-amber-800 rounded-2xl font-bold text-xs sm:text-sm">
-                  <Sparkles className="w-4 h-4 shrink-0 text-amber-600" />
-                  <span>Petunjuk: {hintText}</span>
-                </div>
+                <motion.button
+                  type="button"
+                  whileHover={{ scale: 1.03, y: -2 }}
+                  whileTap={{ scale: 0.96, y: 2 }}
+                  onClick={() => {
+                    playPop();
+                    setIsHintOpen(true);
+                  }}
+                  className="inline-flex items-center gap-2 px-3.5 py-2 bg-amber-50 hover:bg-amber-100/90 border-2 border-amber-300 border-b-4 border-b-amber-400 hover:border-b-amber-500 text-amber-900 rounded-2xl font-black text-xs sm:text-sm cursor-pointer shadow-xs active:border-b-2 active:translate-y-0.5 transition-all w-fit select-none"
+                  title="Klik untuk membuka petunjuk soal"
+                >
+                  <div className="w-5 h-5 rounded-lg bg-amber-400 text-white flex items-center justify-center shadow-2xs shrink-0">
+                    <Lightbulb className="w-3.5 h-3.5 stroke-[2.5]" />
+                  </div>
+                  <span>Butuh Petunjuk?</span>
+                </motion.button>
               )}
 
-              {/* Large Supporting Image / Diagram (Huge & Prominent for Kids) */}
+              {/* Teacher Unlocked Answer Card (High visibility on stage for classroom discussion) */}
+              {unlockedQuestions[activeQuestion?.id] && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  className="p-4 sm:p-5 bg-gradient-to-br from-emerald-50 to-green-50/80 border-2 border-[#58CC02]/50 rounded-3xl flex items-start gap-3.5 shadow-sm"
+                >
+                  <div className="w-10 h-10 rounded-2xl bg-[#58CC02] text-white flex items-center justify-center font-black shrink-0 shadow-xs mt-0.5">
+                    <KeyRound className="w-5 h-5 stroke-[2.5]" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <h4 className="text-xs font-black uppercase text-[#46A302] tracking-wider">
+                        Kunci Jawaban & Pembahasan
+                      </h4>
+                      <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-[#58CC02]/20 text-[#28570E] font-extrabold">
+                        Mode Guru
+                      </span>
+                    </div>
+                    <p className="text-xs sm:text-sm font-black text-slate-800 whitespace-pre-line leading-relaxed">
+                      {getQuestionSolution(activeQuestion).text}
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Large Supporting Image / Diagram (Responsive for Classroom Layout) */}
               {hasMedia && (
-                <div className="w-full rounded-3xl overflow-hidden border-4 border-slate-200 shadow-md bg-white p-2.5 flex items-center justify-center transition-all">
+                <div className="w-full rounded-3xl overflow-hidden border-4 border-slate-200 shadow-md bg-white p-2 sm:p-2.5 flex items-center justify-center transition-all">
                   <img
                     src={effectiveMediaUrl}
                     alt="Media Soal"
-                    className="w-full max-h-[320px] sm:max-h-[380px] md:max-h-[420px] lg:max-h-[480px] object-contain rounded-2xl"
+                    className="w-full max-h-[190px] sm:max-h-[220px] md:max-h-[250px] lg:max-h-[270px] object-contain rounded-2xl"
                   />
                 </div>
               )}
@@ -598,14 +875,17 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
                 "flex flex-col justify-center items-center w-full",
               )}
             >
-              <AnimatePresence mode="wait">
+              <ErrorBoundary
+                key={`error-boundary-${currentIndex}-${activeQuestion?.id}`}
+                fallbackTitle="Komponen Soal Mengalami Kendala"
+                fallbackMessage="Terjadi kendala saat menampilkan soal ini. Ketuk tombol di bawah untuk memuat ulang."
+              >
                 {activePlugin && activeQuestion && (
                   <motion.div
-                    key={activeQuestion.id}
-                    initial={{ opacity: 0, scale: 0.98, y: 10 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.98, y: -10 }}
-                    transition={{ duration: 0.22, ease: "easeOut" }}
+                    key={`player-${currentIndex}-${activeQuestion.id}`}
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.18, ease: "easeOut" }}
                     className="w-full flex justify-center"
                   >
                     <activePlugin.PlayerComponent
@@ -618,7 +898,7 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
                     />
                   </motion.div>
                 )}
-              </AnimatePresence>
+              </ErrorBoundary>
             </div>
           </div>
         </div>
@@ -698,10 +978,26 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
                 type="button"
                 onClick={handleUnlockAnswer}
                 title="Buka Kunci Jawaban untuk Seluruh Kelas"
-                className="px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 border-2 border-amber-300 text-amber-800 font-black text-xs flex items-center gap-1.5 transition-all active:scale-95 shadow-2xs cursor-pointer"
+                className={cn(
+                  "px-3 py-2 rounded-xl border-2 font-black text-xs flex items-center gap-1.5 transition-all active:scale-95 shadow-2xs cursor-pointer",
+                  unlockedQuestions[activeQuestion?.id]
+                    ? "bg-emerald-50 hover:bg-emerald-100 border-emerald-400 text-emerald-800"
+                    : "bg-amber-50 hover:bg-amber-100 border-amber-300 text-amber-800",
+                )}
               >
-                <KeyRound className="w-3.5 h-3.5 text-amber-600" />
-                <span className="hidden sm:inline">Buka Kunci Jawaban</span>
+                <KeyRound
+                  className={cn(
+                    "w-3.5 h-3.5",
+                    unlockedQuestions[activeQuestion?.id]
+                      ? "text-emerald-600"
+                      : "text-amber-600",
+                  )}
+                />
+                <span className="hidden sm:inline">
+                  {unlockedQuestions[activeQuestion?.id]
+                    ? "Lihat Kunci Jawaban"
+                    : "Buka Kunci Jawaban"}
+                </span>
                 <span className="sm:hidden">Kunci</span>
               </button>
 
@@ -751,7 +1047,14 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
         }
       />
 
-      {/* 5. SPECTACULAR VICTORY CELEBRATION SCREEN */}
+      {/* 5. DEDICATED HINT BOTTOM SHEET MODAL */}
+      <HintBottomSheet
+        isOpen={isHintOpen}
+        hint={hintText}
+        onClose={() => setIsHintOpen(false)}
+      />
+
+      {/* 6. SPECTACULAR VICTORY CELEBRATION SCREEN */}
       <AnimatePresence>
         {isCompleted && (
           <VictoryScreen
