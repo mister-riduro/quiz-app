@@ -11,8 +11,7 @@ import {
   DragEndEvent,
   DragStartEvent,
 } from "@dnd-kit/core";
-import { motion } from "framer-motion";
-import { HelpCircle, RotateCcw, Check, Sparkles } from "lucide-react";
+import { HelpCircle, RotateCcw } from "lucide-react";
 import { PlayerProps } from "@/plugins/core/types";
 import { SpellWordContent, SpellWordAnswer } from "./types";
 import { TileToken, TileTokenState } from "@/components/ui/TileToken";
@@ -526,43 +525,6 @@ export const SpellWordPlayer: React.FC<
             {isAnswered ? "Jawaban Terkirim" : "Periksa Jawaban"}
           </TactileButton>
         </div>
-
-        {/* Post-submission Feedback Banner */}
-        {isAnswered && (
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={cn(
-              "mt-6 p-4 sm:p-5 rounded-2xl border-2 flex items-center gap-3.5 w-full text-left",
-              isCorrect
-                ? "bg-duo-green-light/60 border-duo-green text-duo-dark"
-                : "bg-duo-red-light/60 border-duo-red text-duo-dark",
-            )}
-          >
-            <div
-              className={cn(
-                "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-xs",
-                isCorrect ? "bg-duo-green text-white" : "bg-duo-red text-white",
-              )}
-            >
-              {isCorrect ? (
-                <Check className="w-6 h-6 stroke-[3]" />
-              ) : (
-                <Sparkles className="w-5 h-5 text-white" />
-              )}
-            </div>
-            <div>
-              <h4 className="text-xs font-black uppercase tracking-wider">
-                {isCorrect ? "Susunan Huruf Sempurna!" : "Kata Belum Tepat"}
-              </h4>
-              <p className="text-sm font-bold mt-0.5">
-                {isCorrect
-                  ? `Luar biasa! Kamu berhasil menyusun kata "${targetWord}".`
-                  : `Kunci kata yang benar adalah: ${targetWord}.`}
-              </p>
-            </div>
-          </motion.div>
-        )}
 
         {/* Drag Overlay when moving a tile */}
         <DragOverlay>

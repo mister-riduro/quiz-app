@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, Tag, RotateCcw, Frown, Award } from "lucide-react";
+import { Heart, Tag } from "lucide-react";
 import { PlayerProps } from "@/plugins/core/types";
 import { HangmanContent, HangmanAnswer } from "./types";
 import { useSoundEffect } from "@/hooks/useSoundEffect";
@@ -25,7 +25,7 @@ const KEYBOARD_ROWS = [
 export const HangmanPlayer: React.FC<
   PlayerProps<HangmanContent, HangmanAnswer>
 > = ({ content, submittedAnswer, onAnswerSubmit, isEvaluating = false }) => {
-  const { playTap, playCorrect, playWrong, playBalloonPop, playVictory } =
+  const { playCorrect, playWrong, playBalloonPop, playVictory } =
     useSoundEffect();
 
   const secretWord = useMemo(
@@ -153,14 +153,6 @@ export const HangmanPlayer: React.FC<
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleGuess, isGameOver, isEvaluating]);
-
-  // Restart game for demo / player replay
-  const handleRestart = () => {
-    playTap();
-    setGuessedLetters([]);
-    setPoppedIndex(null);
-    setIsShaking(false);
-  };
 
   return (
     <div className="flex flex-col items-center w-full max-w-xl mx-auto py-3 px-2 select-none">
@@ -483,56 +475,6 @@ export const HangmanPlayer: React.FC<
           );
         })}
       </div>
-
-      {/* 4. GAME OVER FEEDBACK BANNER */}
-      {isGameOver && (
-        <motion.div
-          initial={{ opacity: 0, y: 10, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          className={cn(
-            "flex items-center justify-between p-4 rounded-2xl border-2 w-full mb-6 shadow-xs",
-            isWon
-              ? "bg-duo-green-light/60 border-duo-green text-duo-dark"
-              : "bg-duo-red-light/60 border-duo-red text-duo-dark",
-          )}
-        >
-          <div className="flex items-center gap-3">
-            <div
-              className={cn(
-                "w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0",
-                isWon ? "bg-duo-green" : "bg-duo-red",
-              )}
-            >
-              {isWon ? (
-                <Award className="w-6 h-6" />
-              ) : (
-                <Frown className="w-6 h-6" />
-              )}
-            </div>
-            <div>
-              <h4 className="font-black text-sm uppercase tracking-wider">
-                {isWon
-                  ? "Tebakan Hebat! Kamu Menang!"
-                  : "Yah, Balon Telah Habis!"}
-              </h4>
-              <p className="text-xs sm:text-sm font-semibold text-[#4B4B4B]">
-                {isWon
-                  ? `Kamu sukses menyelamatkan balon dan menebak "${secretWord}".`
-                  : `Kata rahasia yang tepat adalah: "${secretWord}".`}
-              </p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleRestart}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-slate-200 rounded-xl text-xs font-black text-duo-dark hover:bg-slate-50 transition-colors shrink-0 ml-2"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span>Main Lagi</span>
-          </button>
-        </motion.div>
-      )}
 
       {/* 5. VIRTUAL ON-SCREEN KEYBOARD (QWERTY with minimum 44x44px touch targets) */}
       <div className="flex flex-col items-center gap-2 w-full pt-2">

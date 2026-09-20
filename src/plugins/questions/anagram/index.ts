@@ -1,38 +1,38 @@
-import { Shuffle } from 'lucide-react';
-import { QuestionPlugin } from '@/plugins/core/types';
-import { AnagramContent, AnagramAnswer } from './types';
-import { AnagramEditor } from './AnagramEditor';
-import { AnagramPlayer } from './AnagramPlayer';
+import { Shuffle } from "lucide-react";
+import { QuestionPlugin } from "@/plugins/core/types";
+import { AnagramContent, AnagramAnswer } from "./types";
+import { AnagramEditor } from "./AnagramEditor";
+import { AnagramPlayer } from "./AnagramPlayer";
 
-export * from './types';
-export * from './AnagramEditor';
-export * from './AnagramPlayer';
+export * from "./types";
+export * from "./AnagramEditor";
+export * from "./AnagramPlayer";
 
 export const defaultAnagramContent: AnagramContent = {
-  targetWord: 'MATAHARI',
-  hint: 'Bintang raksasa di pusat tata surya yang menerangi Bumi di siang hari.',
+  targetWord: "MATAHARI",
+  hint: "",
 };
 
 export const validateAnagramAnswer = (
   content: AnagramContent,
-  answer: AnagramAnswer
+  answer: AnagramAnswer,
 ): { isCorrect: boolean; feedbackMessage?: string } => {
-  const studentWord = (answer || '').trim().toUpperCase();
-  const target = (content.targetWord || '').trim().toUpperCase();
+  const studentWord = (answer || "").trim().toUpperCase();
+  const target = (content.targetWord || "").trim().toUpperCase();
   const isCorrect = studentWord === target;
 
   return {
     isCorrect,
     feedbackMessage: isCorrect
-      ? 'Luar biasa! Anagram berhasil dipecahkan dengan sempurna.'
+      ? "Luar biasa! Anagram berhasil dipecahkan dengan sempurna."
       : content.hint
-      ? `Kurang tepat. Petunjuk: ${content.hint}`
-      : `Kurang tepat. Kata yang benar adalah: ${target}.`,
+        ? `Kurang tepat. Petunjuk: ${content.hint}`
+        : `Kurang tepat. Kata yang benar adalah: ${target}.`,
   };
 };
 
 export const sanitizeAnagramForPlayer = (
-  content: AnagramContent
+  content: AnagramContent,
 ): Partial<AnagramContent> => {
   return {
     targetWord: content.targetWord,
@@ -42,9 +42,10 @@ export const sanitizeAnagramForPlayer = (
 };
 
 export const anagramPlugin: QuestionPlugin<AnagramContent, AnagramAnswer> = {
-  type: 'anagram',
-  title: 'Anagram',
-  description: 'Tukar dan susun kembali kartu huruf acak dengan animasi pegas magnetik.',
+  type: "anagram",
+  title: "Anagram",
+  description:
+    "Tukar dan susun kembali kartu huruf acak dengan animasi pegas magnetik.",
   icon: Shuffle,
   defaultContent: defaultAnagramContent,
   EditorComponent: AnagramEditor,
@@ -54,4 +55,3 @@ export const anagramPlugin: QuestionPlugin<AnagramContent, AnagramAnswer> = {
 };
 
 export default anagramPlugin;
-

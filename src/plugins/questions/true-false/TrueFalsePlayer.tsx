@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Check, X, Sparkles } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { PlayerProps } from "@/plugins/core/types";
 import { TrueFalseContent, TrueFalseAnswer } from "./types";
 import { useSoundEffect } from "@/hooks/useSoundEffect";
@@ -141,28 +141,6 @@ export const TrueFalsePlayer: React.FC<
           </span>
         </motion.button>
       </div>
-
-      {/* 4. Optional Post-Answer Educational Explanation Banner */}
-      {isAnswered && content.explanation && (
-        <motion.div
-          initial={{ opacity: 0, y: 12, scale: 0.96 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.3, ease: "easeOut" }}
-          className="mt-6 sm:mt-8 p-4 sm:p-5 bg-slate-50 border-2 border-slate-200 rounded-2xl w-full flex items-start gap-3.5 text-left"
-        >
-          <div className="w-9 h-9 rounded-xl bg-duo-yellow-light border border-duo-yellow-border text-duo-yellow-border flex items-center justify-center shrink-0">
-            <Sparkles className="w-5 h-5" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider mb-1">
-              Fakta / Penjelasan:
-            </h4>
-            <p className="text-sm sm:text-base font-bold text-duo-dark leading-relaxed">
-              {content.explanation}
-            </p>
-          </div>
-        </motion.div>
-      )}
     </div>
   );
 };

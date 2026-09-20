@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Header } from "@/components/layout/Header";
 import { TactileButton } from "@/components/ui/TactileButton";
 import { TileToken, TileTokenState } from "@/components/ui/TileToken";
@@ -40,15 +40,63 @@ import {
   Gamepad2,
 } from "lucide-react";
 
+const PRESENTER_SESSION_KEY = "eduplay_presenter_session";
+
+function getSavedPresenterSession(): {
+  hostedQuiz: Quiz;
+  hostedQuestions: BuilderQuestion[];
+  presenterOrigin: "dashboard" | "builder";
+} | null {
+  try {
+    const raw = sessionStorage.getItem(PRESENTER_SESSION_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return null;
+}
+
+function savePresenterSession(
+  hostedQuiz: Quiz,
+  hostedQuestions: BuilderQuestion[],
+  presenterOrigin: "dashboard" | "builder",
+) {
+  try {
+    sessionStorage.setItem(
+      PRESENTER_SESSION_KEY,
+      JSON.stringify({ hostedQuiz, hostedQuestions, presenterOrigin }),
+    );
+  } catch (e) {}
+}
+
+function clearPresenterSession() {
+  try {
+    sessionStorage.removeItem(PRESENTER_SESSION_KEY);
+  } catch (e) {}
+}
+
 export function App() {
-  const [appMode, setAppMode] = useState<
-    "dashboard" | "builder" | "showcase" | "presenter"
-  >("dashboard");
-  const [hostedQuiz, setHostedQuiz] = useState<Quiz | null>(null);
-  const [hostedQuestions, setHostedQuestions] = useState<BuilderQuestion[]>([]);
+  const initialPresenterSession = useMemo(() => getSavedPresenterSession(), []);
+
+  const [hostedQuiz, setHostedQuiz] = useState<Quiz | null>(
+    () => initialPresenterSession?.hostedQuiz || null,
+  );
+  const [hostedQuestions, setHostedQuestions] = useState<BuilderQuestion[]>(
+    () => initialPresenterSession?.hostedQuestions || [],
+  );
   const [presenterOrigin, setPresenterOrigin] = useState<
     "dashboard" | "builder"
-  >("dashboard");
+  >(() => initialPresenterSession?.presenterOrigin || "dashboard");
+
+  const [appMode, setAppMode] = useState<
+    "dashboard" | "builder" | "showcase" | "presenter"
+  >(() => {
+    const hash = window.location.hash.replace("#", "");
+    if (hash === "presenter" && initialPresenterSession?.hostedQuiz) {
+      return "presenter";
+    }
+    if (hash === "builder") return "builder";
+    if (hash === "showcase") return "showcase";
+    return "dashboard";
+  });
   const [currentStep, setCurrentStep] = useState(3);
   const [totalSteps] = useState(6);
   const [streak] = useState(4);
@@ -156,8 +204,20 @@ export function App() {
       } else if (hash === "showcase") {
         setAppMode("showcase");
       } else if (hash === "presenter") {
-        setAppMode("dashboard");
-        window.history.replaceState({ appMode: "dashboard" }, "", "#dashboard");
+        const saved = getSavedPresenterSession();
+        if (saved && saved.hostedQuiz) {
+          setHostedQuiz(saved.hostedQuiz);
+          setHostedQuestions(saved.hostedQuestions || []);
+          setPresenterOrigin(saved.presenterOrigin || "dashboard");
+          setAppMode("presenter");
+        } else {
+          setAppMode("dashboard");
+          window.history.replaceState(
+            { appMode: "dashboard" },
+            "",
+            "#dashboard",
+          );
+        }
       } else {
         setAppMode("dashboard");
         window.history.replaceState({ appMode: "dashboard" }, "", "#dashboard");
@@ -190,7 +250,15 @@ export function App() {
         if (currentHash === "builder") {
           setAppMode("builder");
         } else if (currentHash === "presenter") {
-          setAppMode("presenter");
+          const saved = getSavedPresenterSession();
+          if (saved && saved.hostedQuiz) {
+            setHostedQuiz(saved.hostedQuiz);
+            setHostedQuestions(saved.hostedQuestions || []);
+            setPresenterOrigin(saved.presenterOrigin || "dashboard");
+            setAppMode("presenter");
+          } else {
+            setAppMode("dashboard");
+          }
         } else if (currentHash === "showcase") {
           setAppMode("showcase");
         } else {
@@ -288,6 +356,7 @@ export function App() {
         questions={hostedQuestions.length > 0 ? hostedQuestions : undefined}
         onExit={() => {
           playTap();
+          clearPresenterSession();
           const target =
             presenterOrigin === "builder" ? "builder" : "dashboard";
           navigateToMode(target);
@@ -309,7 +378,7 @@ export function App() {
           }}
           onPreview={(previewQuiz, previewQuestions) => {
             playVictory();
-            setHostedQuiz({
+            const quizPayload: Quiz = {
               id: previewQuiz.id || "preview-quiz",
               teacherId: previewQuiz.teacherId || user?.id || "teacher-me",
               title: previewQuiz.title || "Pratinjau Kuis",
@@ -321,9 +390,11 @@ export function App() {
               questionsCount: previewQuestions.length,
               timerMode: previewQuiz.timerMode,
               globalTimeLimitSeconds: previewQuiz.globalTimeLimitSeconds,
-            });
+            };
+            setHostedQuiz(quizPayload);
             setHostedQuestions(previewQuestions);
             setPresenterOrigin("builder");
+            savePresenterSession(quizPayload, previewQuestions, "builder");
             navigateToMode("presenter");
           }}
         />
@@ -536,6 +607,7 @@ export function App() {
             setHostedQuiz(quiz);
             setHostedQuestions(questions);
             setPresenterOrigin("dashboard");
+            savePresenterSession(quiz, questions, "dashboard");
             navigateToMode("presenter");
           }}
           onCreateQuiz={async (quizData) => {

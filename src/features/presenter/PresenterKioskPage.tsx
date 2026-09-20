@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   X,
@@ -43,7 +49,7 @@ function getQuestionSolution(question: BuilderQuestion | undefined): {
 } {
   if (!question || !question.content) {
     return {
-      text: "Kunci jawaban telah dibuka oleh Guru.",
+      text: "Kunci jawaban belum ditentukan.",
       autoAnswer: null,
     };
   }
@@ -183,9 +189,40 @@ function getQuestionSolution(question: BuilderQuestion | undefined): {
   }
 
   return {
-    text: text || "Kunci jawaban telah dibuka oleh Guru.",
+    text: text || "Kunci jawaban belum ditentukan.",
     autoAnswer,
   };
+}
+
+interface KioskSessionData {
+  currentIndex?: number;
+  answers?: Record<string, any>;
+  evaluations?: Record<string, boolean>;
+  unlockedQuestions?: Record<string, boolean>;
+  isCompleted?: boolean;
+  startTime?: number;
+  globalTimeLeft?: number;
+  globalSavedAt?: number;
+  questionTimers?: Record<string, { timeLeft: number; savedAt: number }>;
+}
+
+function getKioskSession(key: string): KioskSessionData | null {
+  try {
+    const raw = sessionStorage.getItem(key);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return null;
+}
+
+function updateKioskSession(
+  key: string,
+  updater: (prev: KioskSessionData) => KioskSessionData,
+) {
+  try {
+    const prev = getKioskSession(key) || {};
+    const updated = updater(prev);
+    sessionStorage.setItem(key, JSON.stringify(updated));
+  } catch (e) {}
 }
 
 export interface PresenterKioskPageProps {
@@ -204,6 +241,11 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
   const { playTap, playPop, playVictory, playWrong, isMuted, toggleMute } =
     useSoundEffect();
 
+  const sessionKey = useMemo(
+    () => (quiz?.id ? `eduplay_kiosk_${quiz.id}` : "eduplay_kiosk_active"),
+    [quiz?.id],
+  );
+
   // Active questions list
   const questions = useMemo<BuilderQuestion[]>(() => {
     if (passedQuestions && passedQuestions.length > 0) {
@@ -212,21 +254,45 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
     return [];
   }, [passedQuestions]);
 
-  // Current active question index
-  const [currentIndex, setCurrentIndex] = useState(
-    Math.min(initialQuestionIndex, Math.max(0, questions.length - 1)),
-  );
+  // Current active question index (restores from session storage on refresh)
+  const [currentIndex, setCurrentIndex] = useState(() => {
+    const saved = getKioskSession(sessionKey);
+    if (
+      saved &&
+      typeof saved.currentIndex === "number" &&
+      saved.currentIndex >= 0 &&
+      passedQuestions &&
+      saved.currentIndex < passedQuestions.length
+    ) {
+      return saved.currentIndex;
+    }
+    return Math.min(
+      initialQuestionIndex,
+      Math.max(0, (passedQuestions?.length || 1) - 1),
+    );
+  });
 
   // Student submitted answers mapped by question id
-  const [answers, setAnswers] = useState<Record<string, any>>({});
+  const [answers, setAnswers] = useState<Record<string, any>>(() => {
+    const saved = getKioskSession(sessionKey);
+    return saved?.answers || {};
+  });
 
   // Question evaluations: true, false, or undefined
-  const [evaluations, setEvaluations] = useState<Record<string, boolean>>({});
+  const [evaluations, setEvaluations] = useState<Record<string, boolean>>(
+    () => {
+      const saved = getKioskSession(sessionKey);
+      return saved?.evaluations || {};
+    },
+  );
 
   // Unlocked questions by teacher mapped by question id
   const [unlockedQuestions, setUnlockedQuestions] = useState<
     Record<string, boolean>
-  >({});
+  >(() => {
+    const saved = getKioskSession(sessionKey);
+    return saved?.unlockedQuestions || {};
+  });
 
   // BottomSheetFeedback State
   const [feedbackState, setFeedbackState] = useState<{
@@ -244,8 +310,14 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
   const [isHintOpen, setIsHintOpen] = useState(false);
 
   // Quiz completed state & timer
-  const [isCompleted, setIsCompleted] = useState(false);
-  const [startTime, setStartTime] = useState<number>(() => Date.now());
+  const [isCompleted, setIsCompleted] = useState<boolean>(() => {
+    const saved = getKioskSession(sessionKey);
+    return saved?.isCompleted || false;
+  });
+  const [startTime, setStartTime] = useState<number>(() => {
+    const saved = getKioskSession(sessionKey);
+    return saved?.startTime || Date.now();
+  });
   const [durationSeconds, setDurationSeconds] = useState<number>(0);
 
   // Fullscreen state
@@ -256,6 +328,10 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
 
   // Active question object
   const activeQuestion = questions[currentIndex] || questions[0];
+  const activeQuestionRef = useRef(activeQuestion);
+  useEffect(() => {
+    activeQuestionRef.current = activeQuestion;
+  }, [activeQuestion]);
 
   // Normalize question type (e.g. true-false -> true_false)
   const normalizedType = useMemo(() => {
@@ -285,27 +361,87 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
     ? globalTotalSeconds
     : currentQuestionSeconds;
 
-  // Global countdown timer state (runs continuously across all questions)
-  const [globalTimeLeft, setGlobalTimeLeft] =
-    useState<number>(globalTotalSeconds);
+  // Global countdown timer state (runs continuously across all questions, persisted on refresh)
+  const [globalTimeLeft, setGlobalTimeLeft] = useState<number>(() => {
+    if (globalTotalSeconds <= 0) return 0;
+    const saved = getKioskSession(sessionKey);
+    if (
+      saved &&
+      typeof saved.globalTimeLeft === "number" &&
+      saved.globalSavedAt
+    ) {
+      const elapsed = Math.floor((Date.now() - saved.globalSavedAt) / 1000);
+      return Math.max(0, saved.globalTimeLeft - elapsed);
+    }
+    return globalTotalSeconds;
+  });
 
-  // Per-question countdown timer state (resets on question change)
-  const [questionTimeLeft, setQuestionTimeLeft] = useState<number>(
-    currentQuestionSeconds,
-  );
+  // Per-question countdown timer state (resets on question change, persisted on refresh)
+  const [questionTimeLeft, setQuestionTimeLeft] = useState<number>(() => {
+    const activeQ = questions[currentIndex] || questions[0];
+    if (!activeQ) return 30;
+    const total = activeQ.timeLimitSeconds ?? 30;
+    if (total <= 0) return 0;
+    const saved = getKioskSession(sessionKey);
+    const qSaved = saved?.questionTimers?.[activeQ.id];
+    if (qSaved && typeof qSaved.timeLeft === "number" && qSaved.savedAt) {
+      const elapsed = Math.floor((Date.now() - qSaved.savedAt) / 1000);
+      return Math.max(0, qSaved.timeLeft - elapsed);
+    }
+    return total;
+  });
 
   // Active time left to display
   const timeLeft = isGlobalTimer ? globalTimeLeft : questionTimeLeft;
 
-  // Reset per-question timer and hint state when question index changes
+  // Sync core kiosk state changes into sessionStorage
+  useEffect(() => {
+    updateKioskSession(sessionKey, (prev) => ({
+      ...prev,
+      currentIndex,
+      answers,
+      evaluations,
+      unlockedQuestions,
+      isCompleted,
+      startTime,
+    }));
+  }, [
+    currentIndex,
+    answers,
+    evaluations,
+    unlockedQuestions,
+    isCompleted,
+    startTime,
+    sessionKey,
+  ]);
+
+  // Reset per-question timer and hint state when question index changes, preserving ongoing question timer if revisited
   useEffect(() => {
     setIsHintOpen(false);
-    if (!isGlobalTimer) {
-      setQuestionTimeLeft(activeQuestion?.timeLimitSeconds ?? 30);
+    if (!isGlobalTimer && activeQuestion) {
+      const total = activeQuestion.timeLimitSeconds ?? 30;
+      if (total <= 0) {
+        setQuestionTimeLeft(0);
+      } else {
+        const saved = getKioskSession(sessionKey);
+        const qSaved = saved?.questionTimers?.[activeQuestion.id];
+        if (qSaved && typeof qSaved.timeLeft === "number" && qSaved.savedAt) {
+          const elapsed = Math.floor((Date.now() - qSaved.savedAt) / 1000);
+          setQuestionTimeLeft(Math.max(0, qSaved.timeLeft - elapsed));
+        } else {
+          setQuestionTimeLeft(total);
+        }
+      }
     }
-  }, [currentIndex, isGlobalTimer, activeQuestion?.timeLimitSeconds]);
+  }, [
+    currentIndex,
+    isGlobalTimer,
+    activeQuestion?.id,
+    activeQuestion?.timeLimitSeconds,
+    sessionKey,
+  ]);
 
-  // Global timer countdown effect (continuous across the entire quiz)
+  // Global timer countdown effect (continuous across the entire quiz, saving remaining time on each tick)
   useEffect(() => {
     if (!isGlobalTimer || globalTotalSeconds <= 0 || isCompleted) return;
 
@@ -315,23 +451,39 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
           clearInterval(timer);
           playWrong();
           setIsCompleted(true);
+          const curQuestion = activeQuestionRef.current;
+          const { text: solutionText } = getQuestionSolution(curQuestion);
+          if (curQuestion) {
+            setEvaluations((e) => ({ ...e, [curQuestion.id]: false }));
+          }
           setFeedbackState({
             isOpen: true,
             isCorrect: false,
             title: "Waktu Kuis Habis! ⏰",
             message: `Batas waktu keseluruhan kuis (${Math.round(globalTotalSeconds / 60)} menit) telah berakhir.`,
-            solutionExplanation: "Sesi kuis tatap muka telah selesai.",
+            solutionExplanation: solutionText,
           });
+          updateKioskSession(sessionKey, (s) => ({
+            ...s,
+            globalTimeLeft: 0,
+            globalSavedAt: Date.now(),
+          }));
           return 0;
         }
-        return prev - 1;
+        const nextVal = prev - 1;
+        updateKioskSession(sessionKey, (s) => ({
+          ...s,
+          globalTimeLeft: nextVal,
+          globalSavedAt: Date.now(),
+        }));
+        return nextVal;
       });
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isGlobalTimer, globalTotalSeconds, isCompleted, playWrong]);
+  }, [isGlobalTimer, globalTotalSeconds, isCompleted, playWrong, sessionKey]);
 
-  // Per-question timer countdown effect (resets per question)
+  // Per-question timer countdown effect (resets per question, saving remaining time on each tick)
   useEffect(() => {
     if (
       isGlobalTimer ||
@@ -343,19 +495,41 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
 
     const timer = setInterval(() => {
       setQuestionTimeLeft((prev) => {
+        const curQuestion = activeQuestionRef.current;
         if (prev <= 1) {
           clearInterval(timer);
           playWrong();
+          const { text: solutionText } = getQuestionSolution(curQuestion);
+          if (curQuestion) {
+            setEvaluations((e) => ({ ...e, [curQuestion.id]: false }));
+            updateKioskSession(sessionKey, (s) => ({
+              ...s,
+              questionTimers: {
+                ...(s.questionTimers || {}),
+                [curQuestion.id]: { timeLeft: 0, savedAt: Date.now() },
+              },
+            }));
+          }
           setFeedbackState({
             isOpen: true,
             isCorrect: false,
             title: "Waktu Habis! ⏰",
             message: "Waktu menjawab untuk soal ini telah habis.",
-            solutionExplanation: "Silakan lanjutkan ke soal berikutnya.",
+            solutionExplanation: solutionText,
           });
           return 0;
         }
-        return prev - 1;
+        const nextVal = prev - 1;
+        if (curQuestion) {
+          updateKioskSession(sessionKey, (s) => ({
+            ...s,
+            questionTimers: {
+              ...(s.questionTimers || {}),
+              [curQuestion.id]: { timeLeft: nextVal, savedAt: Date.now() },
+            },
+          }));
+        }
+        return nextVal;
       });
     }, 1000);
 
@@ -366,10 +540,16 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
     feedbackState.isOpen,
     isCompleted,
     playWrong,
+    sessionKey,
   ]);
 
-  const formatTimerBadge = (seconds: number, isGlobal: boolean) => {
-    if (seconds <= 0) return "Tanpa Batas";
+  const formatTimerBadge = (
+    seconds: number,
+    isGlobal: boolean,
+    totalLimit: number,
+  ) => {
+    if (totalLimit <= 0) return "Tanpa Batas";
+    if (seconds <= 0) return "Waktu Habis";
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
@@ -510,6 +690,9 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
   // Reset quiz
   const handleRestartQuiz = () => {
     playTap();
+    try {
+      sessionStorage.removeItem(sessionKey);
+    } catch (e) {}
     setAnswers({});
     setEvaluations({});
     setUnlockedQuestions({});
@@ -519,6 +702,20 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
     setStartTime(Date.now());
     setDurationSeconds(0);
     setFeedbackState({ isOpen: false, isCorrect: false });
+    if (!isGlobalTimer) {
+      setQuestionTimeLeft(questions[0]?.timeLimitSeconds ?? 30);
+    } else {
+      setGlobalTimeLeft(globalTotalSeconds);
+    }
+  };
+
+  // Exit presenter with session cleanup
+  const handleExit = () => {
+    playTap();
+    try {
+      sessionStorage.removeItem(sessionKey);
+    } catch (e) {}
+    onExit();
   };
 
   // Correct questions count
@@ -654,13 +851,9 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
             variant="blue"
             size="md"
             icon={<ArrowLeft className="w-4 h-4" />}
-            onClick={() => {
-              playTap();
-              onExit();
-            }}
-            className="mt-2"
+            onClick={handleExit}
           >
-            Kembali
+            Kembali ke Beranda
           </TactileButton>
         </DuoCard>
       </div>
@@ -675,10 +868,7 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
           {/* Exit Button */}
           <button
             type="button"
-            onClick={() => {
-              playTap();
-              onExit();
-            }}
+            onClick={handleExit}
             title="Keluar dari Mode Presenter"
             className="w-10 h-10 rounded-2xl bg-slate-100 hover:bg-slate-200 border-2 border-slate-200 text-slate-700 flex items-center justify-center transition-all shrink-0 active:scale-95 cursor-pointer shadow-xs"
           >
@@ -746,13 +936,13 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
 
       {/* 2. MAIN HORIZONTAL STAGE: DYNAMIC QUESTION & PLAYER RENDERER */}
       <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 lg:p-8 pb-32">
-        <div className="w-full max-w-7xl mx-auto min-h-full flex flex-col justify-center py-2">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8 xl:gap-12 items-center">
+        <div className="w-full max-w-7xl mx-auto min-h-full flex flex-col justify-start pt-2 sm:pt-4 pb-2">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8 xl:gap-12 items-start">
             {/* LEFT COLUMN: Badges, Big Prompt Text, and Large Supporting Image */}
             <div
               className={cn(
                 leftColClass,
-                "flex flex-col justify-center gap-3 sm:gap-4 text-left",
+                "flex flex-col justify-start gap-3 sm:gap-4 text-left",
               )}
             >
               {/* Badges: Quiz Title, Plugin, Points, Live Timer */}
@@ -775,20 +965,31 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
                     "text-xs sm:text-sm font-black uppercase px-3 py-1 rounded-xl flex items-center gap-1.5 border transition-all",
                     effectiveTimeLimit <= 0
                       ? "bg-slate-100 text-slate-600 border-slate-200"
-                      : timeLeft <= 10
-                        ? "bg-red-100 text-duo-red border-red-300 animate-pulse font-black shadow-xs"
-                        : isGlobalTimer
-                          ? "bg-blue-50 text-duo-blue border-blue-200"
-                          : "bg-emerald-50 text-duo-green border-emerald-200",
+                      : timeLeft <= 0
+                        ? "bg-red-100 text-duo-red border-red-300 font-black shadow-xs animate-pulse"
+                        : timeLeft <= 10
+                          ? "bg-red-100 text-duo-red border-red-300 animate-pulse font-black shadow-xs"
+                          : isGlobalTimer
+                            ? "bg-blue-50 text-duo-blue border-blue-200"
+                            : "bg-emerald-50 text-duo-green border-emerald-200",
                   )}
                 >
-                  <Clock className="w-4 h-4" />
-                  {formatTimerBadge(timeLeft, isGlobalTimer)}
+                  <Clock className="w-4 h-4 shrink-0" />
+                  <span className="text-[11px] sm:text-xs font-bold tracking-wider opacity-85">
+                    Sisa Waktu:
+                  </span>
+                  <span className="font-black">
+                    {formatTimerBadge(
+                      timeLeft,
+                      isGlobalTimer,
+                      effectiveTimeLimit,
+                    )}
+                  </span>
                 </span>
               </div>
 
               {/* Big Question Prompt Text (Large & High Contrast for Kids / Projectors) */}
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-[38px] font-black text-duo-dark leading-tight tracking-tight">
+              <h2 className="text-lg sm:text-xl lg:text-2xl xl:text-[36px] font-black text-duo-dark leading-tight tracking-tight">
                 {promptText}
               </h2>
 
@@ -872,7 +1073,7 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
             <div
               className={cn(
                 rightColClass,
-                "flex flex-col justify-center items-center w-full",
+                "flex flex-col justify-start items-center w-full",
               )}
             >
               <ErrorBoundary
@@ -1065,7 +1266,7 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
             maxScore={maxScore}
             durationSeconds={durationSeconds}
             onPlayAgain={handleRestartQuiz}
-            onExitDashboard={onExit}
+            onExitDashboard={handleExit}
           />
         )}
       </AnimatePresence>

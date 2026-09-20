@@ -692,14 +692,16 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
                     />
                   </div>
 
-                  {/* Media Uploader (Auto WebP Compression) */}
-                  <ImageUploader
-                    value={activeQuestion.mediaUrl}
-                    onChange={(url) =>
-                      updateQuestion(activeQuestionIndex, { mediaUrl: url })
-                    }
-                    label="Media Gambar / Diagram Pendukung (Opsional)"
-                  />
+                  {/* Media Uploader (Auto WebP Compression) - hidden for labelled_diagram because DiagramEditor has its own dedicated canvas uploader */}
+                  {activeQuestion.type !== "labelled_diagram" && (
+                    <ImageUploader
+                      value={activeQuestion.mediaUrl}
+                      onChange={(url) =>
+                        updateQuestion(activeQuestionIndex, { mediaUrl: url })
+                      }
+                      label="Media Gambar / Diagram Pendukung (Opsional)"
+                    />
+                  )}
 
                   {/* Dynamic Plugin Editor Component */}
                   {currentPlugin?.EditorComponent && (

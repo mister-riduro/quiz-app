@@ -1,4 +1,4 @@
-import { CrosswordContent, CrosswordWord, CrosswordAnswer } from './types';
+import { CrosswordContent, CrosswordWord, CrosswordAnswer } from "./types";
 
 export interface CrosswordGridCell {
   row: number;
@@ -30,10 +30,14 @@ export function getWordCells(word: CrosswordWord): Array<{
   char: string;
   index: number;
 }> {
-  const letters = (word.word || '').toUpperCase().split('');
+  const letters = (word.word || "").toUpperCase().split("");
   return letters.map((char, index) => {
-    const row = word.direction === 'DOWN' ? word.startPos.row + index : word.startPos.row;
-    const col = word.direction === 'ACROSS' ? word.startPos.col + index : word.startPos.col;
+    const row =
+      word.direction === "DOWN" ? word.startPos.row + index : word.startPos.row;
+    const col =
+      word.direction === "ACROSS"
+        ? word.startPos.col + index
+        : word.startPos.col;
     return { row, col, char, index };
   });
 }
@@ -43,14 +47,20 @@ export function getWordCells(word: CrosswordWord): Array<{
  */
 export function isWordOutOfBounds(
   word: CrosswordWord,
-  gridSize: { rows: number; cols: number }
+  gridSize: { rows: number; cols: number },
 ): boolean {
-  const len = (word.word || '').length;
+  const len = (word.word || "").length;
   if (word.startPos.row < 0 || word.startPos.col < 0) return true;
-  if (word.direction === 'ACROSS') {
-    return word.startPos.row >= gridSize.rows || word.startPos.col + len > gridSize.cols;
+  if (word.direction === "ACROSS") {
+    return (
+      word.startPos.row >= gridSize.rows ||
+      word.startPos.col + len > gridSize.cols
+    );
   } else {
-    return word.startPos.row + len > gridSize.rows || word.startPos.col >= gridSize.cols;
+    return (
+      word.startPos.row + len > gridSize.rows ||
+      word.startPos.col >= gridSize.cols
+    );
   }
 }
 
@@ -60,7 +70,7 @@ export function isWordOutOfBounds(
  */
 export function buildCrosswordGridMap(
   gridSize: { rows: number; cols: number },
-  words: CrosswordWord[]
+  words: CrosswordWord[],
 ): {
   cellMap: Map<string, CrosswordGridCell>;
   collisionCount: number;
@@ -96,16 +106,16 @@ export function buildCrosswordGridMap(
         if (!existing.wordIds.includes(word.id)) {
           existing.wordIds.push(word.id);
         }
-        if (word.direction === 'ACROSS') existing.acrossWordId = word.id;
-        if (word.direction === 'DOWN') existing.downWordId = word.id;
+        if (word.direction === "ACROSS") existing.acrossWordId = word.id;
+        if (word.direction === "DOWN") existing.downWordId = word.id;
       } else {
         cellMap.set(key, {
           row,
           col,
           char,
           wordIds: [word.id],
-          acrossWordId: word.direction === 'ACROSS' ? word.id : undefined,
-          downWordId: word.direction === 'DOWN' ? word.id : undefined,
+          acrossWordId: word.direction === "ACROSS" ? word.id : undefined,
+          downWordId: word.direction === "DOWN" ? word.id : undefined,
         });
       }
     });
@@ -128,7 +138,9 @@ export function buildCrosswordGridMap(
  * Starting cells are sorted reading-order (row then col).
  * Words sharing the exact same start cell share the same number.
  */
-export function renumberCrosswordWords(words: CrosswordWord[]): CrosswordWord[] {
+export function renumberCrosswordWords(
+  words: CrosswordWord[],
+): CrosswordWord[] {
   // Group by starting position
   const startPosMap = new Map<string, CrosswordWord[]>();
   words.forEach((w) => {
@@ -140,8 +152,8 @@ export function renumberCrosswordWords(words: CrosswordWord[]): CrosswordWord[] 
 
   // Sort unique start positions in reading order
   const sortedKeys = Array.from(startPosMap.keys()).sort((a, b) => {
-    const [rA, cA] = a.split('_').map(Number);
-    const [rB, cB] = b.split('_').map(Number);
+    const [rA, cA] = a.split("_").map(Number);
+    const [rB, cB] = b.split("_").map(Number);
     if (rA !== rB) return rA - rB;
     return cA - cB;
   });
@@ -173,12 +185,17 @@ export function renumberCrosswordWords(words: CrosswordWord[]): CrosswordWord[] 
 export function getNextCellInWord(
   word: CrosswordWord,
   currentRow: number,
-  currentCol: number
+  currentCol: number,
 ): { row: number; col: number } | null {
   const cells = getWordCells(word);
-  const currentIndex = cells.findIndex((c) => c.row === currentRow && c.col === currentCol);
+  const currentIndex = cells.findIndex(
+    (c) => c.row === currentRow && c.col === currentCol,
+  );
   if (currentIndex >= 0 && currentIndex < cells.length - 1) {
-    return { row: cells[currentIndex + 1].row, col: cells[currentIndex + 1].col };
+    return {
+      row: cells[currentIndex + 1].row,
+      col: cells[currentIndex + 1].col,
+    };
   }
   return null;
 }
@@ -189,12 +206,17 @@ export function getNextCellInWord(
 export function getPrevCellInWord(
   word: CrosswordWord,
   currentRow: number,
-  currentCol: number
+  currentCol: number,
 ): { row: number; col: number } | null {
   const cells = getWordCells(word);
-  const currentIndex = cells.findIndex((c) => c.row === currentRow && c.col === currentCol);
+  const currentIndex = cells.findIndex(
+    (c) => c.row === currentRow && c.col === currentCol,
+  );
   if (currentIndex > 0) {
-    return { row: cells[currentIndex - 1].row, col: cells[currentIndex - 1].col };
+    return {
+      row: cells[currentIndex - 1].row,
+      col: cells[currentIndex - 1].col,
+    };
   }
   return null;
 }
@@ -202,25 +224,32 @@ export function getPrevCellInWord(
 /**
  * Checks if all letters of a word are filled in the answer.
  */
-export function isWordFilled(word: CrosswordWord, answer: CrosswordAnswer): boolean {
+export function isWordFilled(
+  word: CrosswordWord,
+  answer: CrosswordAnswer,
+): boolean {
   const cells = getWordCells(word);
   return cells.every((c) => {
     const val = answer[coordKey(c.row, c.col)];
-    return typeof val === 'string' && val.trim().length > 0;
+    return typeof val === "string" && val.trim().length > 0;
   });
 }
 
 /**
  * Reconstructs the student's entered word from the answer grid.
  */
-export function getStudentWord(word: CrosswordWord, answer: CrosswordAnswer): string {
+export function getStudentWord(
+  word: CrosswordWord,
+  answer: CrosswordAnswer,
+): string {
   const cells = getWordCells(word);
   return cells
     .map((c) => {
-      const val = answer[coordKey(c.row, c.col)] || answer[`${c.row},${c.col}`] || '';
+      const val =
+        answer[coordKey(c.row, c.col)] || answer[`${c.row},${c.col}`] || "";
       return val.trim().toUpperCase();
     })
-    .join('');
+    .join("");
 }
 
 /**
@@ -233,43 +262,43 @@ export const defaultCrosswordContent: CrosswordContent = {
     {
       id: 1,
       number: 1,
-      direction: 'ACROSS',
-      word: 'BUMI',
-      clue: 'Planet ketiga dari Matahari tempat tinggal umat manusia',
+      direction: "ACROSS",
+      word: "BUMI",
+      clue: "Planet ketiga dari Matahari tempat tinggal umat manusia",
       startPos: { row: 1, col: 1 },
     },
     {
       id: 2,
       number: 1,
-      direction: 'DOWN',
-      word: 'BULAN',
-      clue: 'Satelit alami Bumi yang tampak bersinar indah di malam hari',
+      direction: "DOWN",
+      word: "BULAN",
+      clue: "Satelit alami Bumi yang tampak bersinar indah di malam hari",
       startPos: { row: 1, col: 1 },
     },
     {
       id: 3,
       number: 2,
-      direction: 'DOWN',
-      word: 'MAUT',
-      clue: 'Kematian atau batas akhir dari kehidupan fana',
+      direction: "DOWN",
+      word: "MAUT",
+      clue: "Kematian atau batas akhir dari kehidupan fana",
       startPos: { row: 1, col: 3 },
     },
     {
       id: 4,
       number: 3,
-      direction: 'ACROSS',
-      word: 'LAUT',
-      clue: 'Hamparan air asin yang sangat luas di permukaan bumi',
+      direction: "ACROSS",
+      word: "LAUT",
+      clue: "Hamparan air asin yang sangat luas di permukaan bumi",
       startPos: { row: 3, col: 1 },
     },
     {
       id: 5,
       number: 4,
-      direction: 'ACROSS',
-      word: 'NADA',
-      clue: 'Bunyi beraturan yang memiliki tinggi nada atau frekuensi tertentu dalam musik',
+      direction: "ACROSS",
+      word: "NADA",
+      clue: "Bunyi beraturan yang memiliki tinggi nada atau frekuensi tertentu dalam musik",
       startPos: { row: 5, col: 1 },
     },
   ],
-  hint: 'Isi kotak teka-teki silang mendatar dan menurun sesuai petunjuk.',
+  hint: "",
 };

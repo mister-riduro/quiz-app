@@ -4,9 +4,8 @@
 
 export interface AnagramContent {
   targetWord: string;
-  hint: string;
+  hint?: string;
   mediaUrl?: string;
 }
 
 export type AnagramAnswer = string;
-

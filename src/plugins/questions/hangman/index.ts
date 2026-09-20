@@ -1,34 +1,40 @@
-import { Gamepad2 } from 'lucide-react';
-import { QuestionPlugin } from '@/plugins/core/types';
-import { HangmanContent, HangmanAnswer } from './types';
-import { HangmanEditor } from './HangmanEditor';
-import { HangmanPlayer } from './HangmanPlayer';
+import { Gamepad2 } from "lucide-react";
+import { QuestionPlugin } from "@/plugins/core/types";
+import { HangmanContent, HangmanAnswer } from "./types";
+import { HangmanEditor } from "./HangmanEditor";
+import { HangmanPlayer } from "./HangmanPlayer";
 
-export * from './types';
-export * from './HangmanEditor';
-export * from './HangmanPlayer';
+export * from "./types";
+export * from "./HangmanEditor";
+export * from "./HangmanPlayer";
 
 export const defaultHangmanContent: HangmanContent = {
-  secretWord: 'INDONESIA',
-  category: 'Geografi & Negara',
-  hint: 'Negara kepulauan terbesar di dunia dengan semboyan Bhinneka Tunggal Ika.',
+  secretWord: "INDONESIA",
+  category: "",
+  hint: "",
   maxLives: 5,
 };
 
 export const validateHangmanAnswer = (
   content: HangmanContent,
-  answer: HangmanAnswer
+  answer: HangmanAnswer,
 ): { isCorrect: boolean; feedbackMessage?: string } => {
-  const secret = (content.secretWord || '').toUpperCase().trim();
+  const secret = (content.secretWord || "").toUpperCase().trim();
   let isWon = false;
 
-  if (typeof answer === 'string') {
+  if (typeof answer === "string") {
     isWon = answer.toUpperCase().trim() === secret;
-  } else if (typeof answer === 'object' && answer !== null && 'isWon' in answer) {
+  } else if (
+    typeof answer === "object" &&
+    answer !== null &&
+    "isWon" in answer
+  ) {
     isWon = !!answer.isWon;
   } else if (Array.isArray(answer)) {
     const guessedSet = new Set(answer.map((l) => l.toUpperCase()));
-    isWon = secret.split('').every((char) => char === ' ' || guessedSet.has(char));
+    isWon = secret
+      .split("")
+      .every((char) => char === " " || guessedSet.has(char));
   }
 
   return {
@@ -40,7 +46,7 @@ export const validateHangmanAnswer = (
 };
 
 export const sanitizeHangmanForPlayer = (
-  content: HangmanContent
+  content: HangmanContent,
 ): Partial<HangmanContent> => {
   return {
     category: content.category,
@@ -51,9 +57,10 @@ export const sanitizeHangmanForPlayer = (
 };
 
 export const hangmanPlugin: QuestionPlugin<HangmanContent, HangmanAnswer> = {
-  type: 'hangman',
-  title: 'Hangman Balon',
-  description: 'Tebak kata ramah anak dengan maskot balon warna-warni dan 3D on-screen keyboard.',
+  type: "hangman",
+  title: "Hangman Balon",
+  description:
+    "Tebak kata ramah anak dengan maskot balon warna-warni dan 3D on-screen keyboard.",
   icon: Gamepad2,
   defaultContent: defaultHangmanContent,
   EditorComponent: HangmanEditor,
@@ -63,4 +70,3 @@ export const hangmanPlugin: QuestionPlugin<HangmanContent, HangmanAnswer> = {
 };
 
 export default hangmanPlugin;
-

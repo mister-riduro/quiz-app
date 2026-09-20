@@ -6,14 +6,7 @@ import React, {
   useCallback,
 } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  HelpCircle,
-  Check,
-  Sparkles,
-  RotateCcw,
-  Search,
-  CheckCircle2,
-} from "lucide-react";
+import { HelpCircle, Check, RotateCcw, Search } from "lucide-react";
 import { PlayerProps } from "@/plugins/core/types";
 import { WordsearchContent, WordsearchAnswer } from "./types";
 import { TactileButton } from "@/components/ui/TactileButton";
@@ -578,45 +571,6 @@ export const WordsearchPlayer: React.FC<
             : `Periksa Jawaban (${foundWords.length}/${targetWords.length} Kata)`}
         </TactileButton>
       </div>
-
-      {/* Post-submission Educational Feedback Banner */}
-      {isCorrect !== undefined && isCorrect !== null && (
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          className={cn(
-            "mt-6 p-4 sm:p-5 rounded-2xl border-2 flex items-center gap-3.5 w-full text-left",
-            isCorrect
-              ? "bg-duo-green-light/60 border-duo-green text-duo-dark"
-              : "bg-duo-red-light/60 border-duo-red text-duo-dark",
-          )}
-        >
-          <div
-            className={cn(
-              "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-xs",
-              isCorrect ? "bg-duo-green text-white" : "bg-duo-red text-white",
-            )}
-          >
-            {isCorrect ? (
-              <CheckCircle2 className="w-6 h-6 stroke-[2.5]" />
-            ) : (
-              <Sparkles className="w-5 h-5 text-white" />
-            )}
-          </div>
-          <div>
-            <h4 className="text-xs font-black uppercase tracking-wider">
-              {isCorrect
-                ? "Semua Kata Berhasil Ditemukan!"
-                : "Pencarian Belum Lengkap"}
-            </h4>
-            <p className="text-sm font-bold mt-0.5">
-              {isCorrect
-                ? `Luar biasa! Kamu berhasil menemukan seluruh ${targetWords.length} kata yang bersembunyi dalam kotak.`
-                : `Kamu menemukan ${foundWords.length} dari ${targetWords.length} kata. Masih ada kata yang belum terlacak!`}
-            </p>
-          </div>
-        </motion.div>
-      )}
     </div>
   );
 };

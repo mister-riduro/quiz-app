@@ -17,7 +17,7 @@ export const defaultWordsearchContent: WordsearchContent = {
   words: initialWords,
   gridSize: 10,
   allowDiagonal: false,
-  hint: "Temukan nama-nama hewan mamalia dan peliharaan yang bersembunyi di dalam matriks.",
+  hint: "",
   grid: initialGrid.grid,
   placements: initialGrid.placements,
 };

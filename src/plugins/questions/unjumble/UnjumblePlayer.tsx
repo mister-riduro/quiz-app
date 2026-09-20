@@ -18,14 +18,8 @@ import {
   rectSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  HelpCircle,
-  RotateCcw,
-  Check,
-  Sparkles,
-  MoveHorizontal,
-} from "lucide-react";
+import { AnimatePresence } from "framer-motion";
+import { HelpCircle, RotateCcw, MoveHorizontal } from "lucide-react";
 import { PlayerProps } from "@/plugins/core/types";
 import { UnjumbleContent, UnjumbleAnswer, UnjumbleTokenItem } from "./types";
 import { TactileButton } from "@/components/ui/TactileButton";
@@ -576,45 +570,6 @@ export const UnjumblePlayer: React.FC<
             {isAnswered ? "Jawaban Terkirim" : "Periksa Jawaban"}
           </TactileButton>
         </div>
-
-        {/* Post-submission Educational Feedback Banner */}
-        {isAnswered && (
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={cn(
-              "mt-6 p-4 sm:p-5 rounded-2xl border-2 flex items-center gap-3.5 w-full text-left",
-              isCorrect
-                ? "bg-duo-green-light/60 border-duo-green text-duo-dark"
-                : "bg-duo-red-light/60 border-duo-red text-duo-dark",
-            )}
-          >
-            <div
-              className={cn(
-                "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-xs",
-                isCorrect ? "bg-duo-green text-white" : "bg-duo-red text-white",
-              )}
-            >
-              {isCorrect ? (
-                <Check className="w-6 h-6 stroke-[3]" />
-              ) : (
-                <Sparkles className="w-5 h-5 text-white" />
-              )}
-            </div>
-            <div>
-              <h4 className="text-xs font-black uppercase tracking-wider">
-                {isCorrect
-                  ? "Kalimat Berhasil Disusun Sempurna!"
-                  : "Susunan Kalimat Belum Tepat"}
-              </h4>
-              <p className="text-sm font-bold mt-0.5">
-                {isCorrect
-                  ? "Luar biasa! Seluruh balok kata berada pada posisi yang tepat."
-                  : `Kalimat yang benar adalah: "${content.fullSentence || targetTokens.join(" ")}"`}
-              </p>
-            </div>
-          </motion.div>
-        )}
 
         {/* Drag Overlay when moving a word tile */}
         <DragOverlay>
