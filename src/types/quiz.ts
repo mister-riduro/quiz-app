@@ -7,7 +7,8 @@ export type QuestionType =
   | "true_false"
   | "labelled_diagram"
   | "unjumble"
-  | "hangman";
+  | "hangman"
+  | "multiple_choice";
 
 export interface BaseQuestionContent {
   prompt: string;

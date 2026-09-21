@@ -1,12 +1,13 @@
-import { trueFalsePlugin } from './true-false';
-import { spellWordPlugin } from './spell-the-word';
-import { anagramPlugin } from './anagram';
-import { hangmanPlugin } from './hangman';
-import { crosswordPlugin } from './crossword';
-import { wordsearchPlugin } from './wordsearch';
-import { labelledDiagramPlugin } from './labelled-diagram';
-import { unjumblePlugin } from './unjumble';
-import { pluginRegistry } from '@/plugins/core/registry';
+import { trueFalsePlugin } from "./true-false";
+import { spellWordPlugin } from "./spell-the-word";
+import { anagramPlugin } from "./anagram";
+import { hangmanPlugin } from "./hangman";
+import { crosswordPlugin } from "./crossword";
+import { wordsearchPlugin } from "./wordsearch";
+import { labelledDiagramPlugin } from "./labelled-diagram";
+import { unjumblePlugin } from "./unjumble";
+import { multipleChoicePlugin } from "./multiple-choice";
+import { pluginRegistry } from "@/plugins/core/registry";
 
 // 1. TRUE OR FALSE
 export { trueFalsePlugin };
@@ -32,8 +33,11 @@ export { labelledDiagramPlugin };
 // 8. UNJUMBLE
 export { unjumblePlugin };
 
+// 9. MULTIPLE CHOICE
+export { multipleChoicePlugin };
+
 /**
- * Register all 8 plugins into the singleton registry
+ * Register all plugins into the singleton registry
  */
 export function registerAllQuestionPlugins() {
   pluginRegistry.registerPlugin(trueFalsePlugin);
@@ -44,4 +48,5 @@ export function registerAllQuestionPlugins() {
   pluginRegistry.registerPlugin(wordsearchPlugin);
   pluginRegistry.registerPlugin(labelledDiagramPlugin);
   pluginRegistry.registerPlugin(unjumblePlugin);
+  pluginRegistry.registerPlugin(multipleChoicePlugin);
 }

@@ -14,7 +14,8 @@ export type QuestionTypeEnum =
   | "true_false"
   | "labelled_diagram"
   | "unjumble"
-  | "hangman";
+  | "hangman"
+  | "multiple_choice";
 
 export interface DatabaseProfile {
   id: string;

@@ -8,6 +8,7 @@ import { crosswordPlugin } from "@/plugins/questions/crossword";
 import { wordsearchPlugin } from "@/plugins/questions/wordsearch";
 import { labelledDiagramPlugin } from "@/plugins/questions/labelled-diagram";
 import { unjumblePlugin } from "@/plugins/questions/unjumble";
+import { multipleChoicePlugin } from "@/plugins/questions/multiple-choice";
 
 /**
  * Singleton Registry for decoupled question engine plugins
@@ -103,3 +104,4 @@ pluginRegistry.registerPlugin(crosswordPlugin);
 pluginRegistry.registerPlugin(wordsearchPlugin);
 pluginRegistry.registerPlugin(labelledDiagramPlugin);
 pluginRegistry.registerPlugin(unjumblePlugin);
+pluginRegistry.registerPlugin(multipleChoicePlugin);

@@ -163,6 +163,40 @@ function getQuestionSolution(question: BuilderQuestion | undefined): {
       autoAnswer = pinAnswers;
     }
   }
+  // 9. Multiple Choice
+  else if (qType === "multiple_choice") {
+    const options = Array.isArray(content.options) ? content.options : [];
+    const correctIds: string[] =
+      Array.isArray(content.correctOptionIds) &&
+      content.correctOptionIds.length > 0
+        ? content.correctOptionIds
+        : content.correctOptionId
+          ? [content.correctOptionId]
+          : [];
+
+    const correctList = options
+      .map((opt: any, idx: number) => ({ opt, idx }))
+      .filter(({ opt }: any) => correctIds.includes(opt.id));
+
+    if (correctList.length > 1) {
+      const items = correctList
+        .map(
+          ({ opt, idx }: any) =>
+            `${String.fromCharCode(65 + idx)}. ${opt.text}`,
+        )
+        .join("\n");
+      text = `Jawaban yang Benar (${correctList.length} opsi):\n${items}`;
+      autoAnswer = correctIds;
+    } else if (correctList.length === 1) {
+      const { opt, idx } = correctList[0];
+      const letter = String.fromCharCode(65 + idx);
+      text = `Jawaban yang Benar: ${letter}. ${opt.text}`;
+      autoAnswer = opt.id;
+    } else {
+      text = `Jawaban yang Benar: ${content.correctAnswer || "Belum ditentukan"}`;
+      autoAnswer = content.correctOptionId || null;
+    }
+  }
   // Generic fallbacks
   else if (content.targetWord) {
     const word = String(content.targetWord).trim().toUpperCase();
@@ -762,6 +796,8 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
         return "Pasangkan label ke titik diagram yang sesuai!";
       case "unjumble":
         return "Susun balok kata menjadi susunan kalimat yang utuh!";
+      case "multiple_choice":
+        return "Pilihlah salah satu jawaban yang paling tepat!";
       default:
         return "Selesaikan tantangan kuis interaktif berikut!";
     }
