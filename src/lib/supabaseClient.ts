@@ -1,13 +1,23 @@
 import { createClient } from "@supabase/supabase-js";
 import { Database } from "@/types/database";
 
-const supabaseUrl =
-  import.meta.env?.VITE_SUPABASE_URL ||
-  "https://placeholder-eduplay.supabase.co";
-const supabasePublishableKey =
+const rawUrl = import.meta.env?.VITE_SUPABASE_URL || "";
+const rawKey =
   import.meta.env?.VITE_PUBLISHABLE_KEY ||
   import.meta.env?.VITE_SUPABASE_ANON_KEY ||
-  "placeholder-anon-key";
+  "";
+
+export const isSupabaseConfigured = Boolean(
+  rawUrl &&
+  rawKey &&
+  !rawUrl.includes("placeholder-eduplay") &&
+  !rawUrl.includes("your-project-id") &&
+  !rawKey.includes("placeholder") &&
+  !rawKey.includes("your-publishable-key"),
+);
+
+const supabaseUrl = rawUrl || "https://placeholder-eduplay.supabase.co";
+const supabasePublishableKey = rawKey || "placeholder-anon-key";
 
 /**
  * Typed Supabase Client instance bound to EduPlay's PostgreSQL database schema

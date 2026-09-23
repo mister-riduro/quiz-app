@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { LoginPage } from "./LoginPage";
 import { RegisterPage } from "./RegisterPage";
+import { ForgotPasswordPage } from "./ForgotPasswordPage";
 import { useSoundEffect } from "@/hooks/useSoundEffect";
 import { X } from "lucide-react";
 
 export interface AuthModalProps {
   isOpen: boolean;
-  initialView?: "login" | "register";
+  initialView?: "login" | "register" | "forgot-password";
   onClose: () => void;
   onSuccess?: () => void;
 }
@@ -17,7 +18,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onClose,
   onSuccess,
 }) => {
-  const [view, setView] = useState<"login" | "register">(initialView);
+  const [view, setView] = useState<"login" | "register" | "forgot-password">(
+    initialView,
+  );
   const { playTap, playPop, playVictory } = useSoundEffect();
 
   useEffect(() => {
@@ -73,9 +76,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               playPop();
               setView("register");
             }}
+            onNavigateToForgotPassword={() => {
+              playPop();
+              setView("forgot-password");
+            }}
+          />
+        ) : view === "register" ? (
+          <RegisterPage
+            onSuccess={() => {
+              playVictory();
+              onSuccess?.();
+              onClose();
+            }}
+            onNavigateToLogin={() => {
+              playPop();
+              setView("login");
+            }}
           />
         ) : (
-          <RegisterPage
+          <ForgotPasswordPage
             onSuccess={() => {
               playVictory();
               onSuccess?.();

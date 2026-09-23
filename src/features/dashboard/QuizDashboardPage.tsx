@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { DuoCard } from "@/components/ui/DuoCard";
-import { TactileButton } from "@/components/ui/TactileButton";
 import { QuizCard } from "./components/QuizCard";
 import { EmptyState } from "./components/EmptyState";
 import { CreateQuizModal } from "./components/CreateQuizModal";
@@ -10,15 +9,15 @@ import { useAuthStore } from "@/stores/authStore";
 import { useQuizStore } from "@/stores/quizStore";
 import { useSoundEffect } from "@/hooks/useSoundEffect";
 import {
-  Plus,
   Search,
   BookOpen,
-  Sparkles,
   Cloud,
   CloudOff,
   RefreshCw,
   Globe,
   CheckCircle2,
+  LayoutGrid,
+  List,
 } from "lucide-react";
 import { generateUUID } from "@/utils/uuid";
 
@@ -31,6 +30,9 @@ export interface QuizDashboardPageProps {
     description: string;
   }) => void;
   onEditQuiz?: (quiz: Quiz) => void;
+  isCreateModalOpen?: boolean;
+  onOpenCreateModal?: () => void;
+  onCloseCreateModal?: () => void;
 }
 
 type FilterTab = "all" | "published" | "draft";
@@ -39,6 +41,9 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
   onHostQuiz,
   onCreateQuiz,
   onEditQuiz,
+  isCreateModalOpen: controlledIsCreateModalOpen,
+  onOpenCreateModal,
+  onCloseCreateModal,
 }) => {
   const {
     quizzes,
@@ -60,8 +65,33 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
   );
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [internalCreateModalOpen, setInternalCreateModalOpen] = useState(false);
+  const isCreateModalOpen =
+    controlledIsCreateModalOpen !== undefined
+      ? controlledIsCreateModalOpen
+      : internalCreateModalOpen;
+
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // View Mode: 'list' (default requested) vs 'grid'
+  const [viewMode, setViewMode] = useState<"grid" | "list">(() => {
+    try {
+      const saved = localStorage.getItem("eduplay_quiz_view_mode");
+      return saved === "grid" ? "grid" : "list";
+    } catch {
+      return "list";
+    }
+  });
+
+  const handleSetViewMode = (mode: "grid" | "list") => {
+    playTap();
+    setViewMode(mode);
+    try {
+      localStorage.setItem("eduplay_quiz_view_mode", mode);
+    } catch {
+      // ignore localStorage quota/restriction
+    }
+  };
 
   const { profile, user } = useAuthStore();
   const { playTap, playPop, playWrong, playVictory } = useSoundEffect();
@@ -71,16 +101,28 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
   }, [fetchCommunityQuizzes]);
 
   // Handlers for quiz operations
-  const handleCreateNew = () => {
+  const handleOpenCreateModal = () => {
     playTap();
-    setIsCreateModalOpen(true);
+    if (onOpenCreateModal) {
+      onOpenCreateModal();
+    } else {
+      setInternalCreateModalOpen(true);
+    }
+  };
+
+  const handleCloseCreateModal = () => {
+    if (onCloseCreateModal) {
+      onCloseCreateModal();
+    } else {
+      setInternalCreateModalOpen(false);
+    }
   };
 
   const handleModalSubmit = async (
     data: { title: string; category: string; description: string },
     openEditor: boolean,
   ) => {
-    setIsCreateModalOpen(false);
+    handleCloseCreateModal();
     const newQuizId = generateUUID();
 
     // Save to quizStore as draft (syncs to Supabase if logged in)
@@ -199,9 +241,6 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
 
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-black uppercase text-duo-green tracking-wider inline-flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5" /> Studio Pengajar
-              </span>
               {profile?.school_name && (
                 <span className="text-xs font-bold text-slate-400">
                   • {profile.school_name}
@@ -213,8 +252,7 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
               Selamat Datang, {teacherName}! 👋
             </h1>
             <p className="text-xs sm:text-sm font-semibold text-[#777777] mt-1">
-              Kelola materi kuis kelas dan mulai sesi presentasi di depan
-              proyektor / tablet.
+              Ayo buat sesuatu yang bagus!
             </p>
 
             {/* Supabase Cloud Connection Status */}
@@ -255,19 +293,6 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
               </button>
             </div>
           </div>
-        </div>
-
-        {/* Action Button: Buat Kuis Baru */}
-        <div className="shrink-0">
-          <TactileButton
-            variant="green"
-            size="lg"
-            icon={<Plus className="w-5 h-5 stroke-[3]" />}
-            onClick={handleCreateNew}
-            className="w-full sm:w-auto px-7 py-3.5 text-base tracking-wide font-black shadow-md"
-          >
-            Buat Kuis Baru
-          </TactileButton>
         </div>
       </DuoCard>
 
@@ -345,7 +370,7 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
                 }}
                 className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
                   activeTab === "published"
-                    ? "bg-duo-green text-white shadow-sm border-b-2 border-b-duo-green-border"
+                    ? "bg-white text-duo-dark shadow-sm border-b-2 border-b-slate-300"
                     : "text-[#777777] hover:text-duo-dark"
                 }`}
               >
@@ -360,7 +385,7 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
                 }}
                 className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
                   activeTab === "draft"
-                    ? "bg-duo-yellow text-duo-dark shadow-sm border-b-2 border-b-duo-yellow-border"
+                    ? "bg-white text-duo-dark shadow-sm border-b-2 border-b-slate-300"
                     : "text-[#777777] hover:text-duo-dark"
                 }`}
               >
@@ -393,7 +418,7 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
             </div>
           ) : filteredQuizzes.length === 0 ? (
             <EmptyState
-              onCreateQuiz={handleCreateNew}
+              onCreateQuiz={handleOpenCreateModal}
               title={searchQuery ? "Kuis Tidak Ditemukan" : undefined}
               description={
                 searchQuery
@@ -408,13 +433,48 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
                   <BookOpen className="w-4 h-4 text-duo-blue" />
                   Daftar Kuis Kelas ({filteredQuizzes.length})
                 </h2>
+
+                {/* View Mode Switcher (Grid vs List) */}
+                <div className="flex items-center p-1 bg-slate-200/80 rounded-xl gap-1 border border-slate-300/50">
+                  <button
+                    type="button"
+                    onClick={() => handleSetViewMode("list")}
+                    title="Tampilan List (Baris)"
+                    className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                      viewMode === "list"
+                        ? "bg-white text-duo-dark shadow-xs border-b-2 border-b-slate-300"
+                        : "text-[#777777] hover:text-duo-dark"
+                    }`}
+                  >
+                    <List className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSetViewMode("grid")}
+                    title="Tampilan Grid (Kartu)"
+                    className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                      viewMode === "grid"
+                        ? "bg-white text-duo-dark shadow-xs border-b-2 border-b-slate-300"
+                        : "text-[#777777] hover:text-duo-dark"
+                    }`}
+                  >
+                    <LayoutGrid className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div
+                className={
+                  viewMode === "grid"
+                    ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                    : "flex flex-col gap-3"
+                }
+              >
                 {filteredQuizzes.map((quiz) => (
                   <QuizCard
                     key={quiz.id}
                     quiz={quiz}
+                    viewMode={viewMode}
                     onHost={(q) => {
                       if (onHostQuiz) onHostQuiz(q);
                       else alert(`Memulai mode Host Kiosk untuk: "${q.title}"`);
@@ -491,14 +551,49 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
                   <Globe className="w-4 h-4 text-duo-blue" />
                   Kuis Publik Komunitas ({filteredCommunityQuizzes.length})
                 </h2>
+
+                {/* View Mode Switcher (Grid vs List) */}
+                <div className="flex items-center p-1 bg-slate-200/80 rounded-xl gap-1 border border-slate-300/50">
+                  <button
+                    type="button"
+                    onClick={() => handleSetViewMode("list")}
+                    title="Tampilan List (Baris)"
+                    className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                      viewMode === "list"
+                        ? "bg-white text-duo-dark shadow-xs border-b-2 border-b-slate-300"
+                        : "text-[#777777] hover:text-duo-dark"
+                    }`}
+                  >
+                    <List className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSetViewMode("grid")}
+                    title="Tampilan Grid (Kartu)"
+                    className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                      viewMode === "grid"
+                        ? "bg-white text-duo-dark shadow-xs border-b-2 border-b-slate-300"
+                        : "text-[#777777] hover:text-duo-dark"
+                    }`}
+                  >
+                    <LayoutGrid className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div
+                className={
+                  viewMode === "grid"
+                    ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                    : "flex flex-col gap-3"
+                }
+              >
                 {filteredCommunityQuizzes.map((quiz) => (
                   <QuizCard
                     key={quiz.id}
                     quiz={quiz}
                     isCommunity={true}
+                    viewMode={viewMode}
                     onHost={(q) => {
                       if (onHostQuiz) onHostQuiz(q);
                       else alert(`Memulai mode Host Kiosk untuk: "${q.title}"`);
@@ -515,7 +610,7 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
       {/* Create Quiz Modal Dialog */}
       <CreateQuizModal
         isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
+        onClose={handleCloseCreateModal}
         onSubmit={handleModalSubmit}
       />
     </div>

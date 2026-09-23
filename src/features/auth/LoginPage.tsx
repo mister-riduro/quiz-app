@@ -8,11 +8,13 @@ import { Sparkles, Mail, Lock, Eye, EyeOff, AlertCircle } from "lucide-react";
 export interface LoginPageProps {
   onSuccess?: () => void;
   onNavigateToRegister?: () => void;
+  onNavigateToForgotPassword?: () => void;
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({
   onSuccess,
   onNavigateToRegister,
+  onNavigateToForgotPassword,
 }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -122,6 +124,21 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                 )}
               </button>
             </div>
+            {onNavigateToForgotPassword && (
+              <div className="flex justify-end mt-1.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    playTap();
+                    clearError();
+                    onNavigateToForgotPassword();
+                  }}
+                  className="text-xs font-bold text-duo-blue hover:underline cursor-pointer"
+                >
+                  Lupa kata sandi?
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Submit Button */}

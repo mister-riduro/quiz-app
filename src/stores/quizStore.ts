@@ -17,6 +17,44 @@ export interface StoredQuiz extends Quiz {
 
 export type SyncStatus = "synced" | "syncing" | "offline" | "error";
 
+/**
+ * Helper to identify mock or legacy demo quizzes
+ */
+export const isMockQuiz = (
+  quiz: Partial<StoredQuiz> | null | undefined,
+): boolean => {
+  if (!quiz || !quiz.id) return true;
+  // Legacy sample IDs: quiz-1, quiz-2, quiz-3, or any quiz-*
+  if (typeof quiz.id === "string" && quiz.id.startsWith("quiz-")) return true;
+  // Non-UUID IDs
+  if (!isValidUUID(quiz.id)) return true;
+  // Mock dummy teachers
+  if (quiz.teacherId === "teacher-1" || quiz.teacherId === "teacher-me")
+    return true;
+  return false;
+};
+
+// Immediate cleanup of legacy mock quizzes from browser localStorage on script load
+try {
+  const STORAGE_KEY = "eduplay-quizzes-storage";
+  const raw =
+    typeof localStorage !== "undefined"
+      ? localStorage.getItem(STORAGE_KEY)
+      : null;
+  if (raw) {
+    const data = JSON.parse(raw);
+    if (Array.isArray(data?.state?.quizzes)) {
+      const filtered = data.state.quizzes.filter(
+        (q: StoredQuiz) => !isMockQuiz(q),
+      );
+      data.state.quizzes = filtered;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+  }
+} catch {
+  // safe fallback
+}
+
 export interface QuizStoreState {
   quizzes: StoredQuiz[];
   communityQuizzes: StoredQuiz[];
@@ -39,6 +77,7 @@ export interface QuizStoreState {
   duplicateQuiz: (id: string, teacherId?: string) => Promise<string | null>;
   togglePublish: (id: string) => Promise<void>;
   getQuizById: (id: string) => StoredQuiz | undefined;
+  clearAllMockQuizzes: () => void;
 }
 
 export const useQuizStore = create<QuizStoreState>()(
@@ -61,37 +100,32 @@ export const useQuizStore = create<QuizStoreState>()(
             const cloudQuizzes =
               await quizService.fetchTeacherQuizzes(targetTeacherId);
 
-            // Merge cloud quizzes with any purely local drafts
-            set((state) => {
-              const cloudIds = new Set(cloudQuizzes.map((q) => q.id));
-              const localDrafts = state.quizzes.filter(
-                (q) => !cloudIds.has(q.id),
-              );
-
-              return {
-                quizzes: [...cloudQuizzes, ...localDrafts],
-                isLoading: false,
-                syncStatus: "synced",
-                errorMessage: null,
-              };
+            // Cloud quizzes are the authentic quizzes for the logged-in teacher
+            set({
+              quizzes: cloudQuizzes,
+              isLoading: false,
+              syncStatus: "synced",
+              errorMessage: null,
             });
           } else {
-            // Guest mode
-            set({
+            // Guest mode: purge any mock quizzes from state
+            set((state) => ({
+              quizzes: state.quizzes.filter((q) => !isMockQuiz(q)),
               isLoading: false,
               syncStatus: "offline",
-            });
+            }));
           }
         } catch (err: any) {
           console.warn(
             "[useQuizStore] Cloud fetch failed, continuing with local storage:",
             err.message,
           );
-          set({
+          set((state) => ({
+            quizzes: state.quizzes.filter((q) => !isMockQuiz(q)),
             isLoading: false,
             syncStatus: "offline",
             errorMessage: err.message || "Gagal menyinkronkan dengan Supabase",
-          });
+          }));
         }
       },
 
@@ -318,11 +352,45 @@ export const useQuizStore = create<QuizStoreState>()(
           get().communityQuizzes.find((q) => q.id === id)
         );
       },
+
+      clearAllMockQuizzes: () => {
+        set((state) => ({
+          quizzes: state.quizzes.filter((q) => !isMockQuiz(q)),
+        }));
+        try {
+          const STORAGE_KEY = "eduplay-quizzes-storage";
+          const raw =
+            typeof localStorage !== "undefined"
+              ? localStorage.getItem(STORAGE_KEY)
+              : null;
+          if (raw) {
+            const data = JSON.parse(raw);
+            if (Array.isArray(data?.state?.quizzes)) {
+              data.state.quizzes = data.state.quizzes.filter(
+                (q: StoredQuiz) => !isMockQuiz(q),
+              );
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            }
+          }
+        } catch {
+          // ignore
+        }
+      },
     }),
     {
       name: "eduplay-quizzes-storage",
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ quizzes: state.quizzes }),
+      version: 2,
+      migrate: (persistedState: any) => {
+        const currentQuizzes = (persistedState?.quizzes || []) as StoredQuiz[];
+        return {
+          ...persistedState,
+          quizzes: currentQuizzes.filter((q) => !isMockQuiz(q)),
+        };
+      },
+      partialize: (state) => ({
+        quizzes: state.quizzes.filter((q) => !isMockQuiz(q)),
+      }),
     },
   ),
 );

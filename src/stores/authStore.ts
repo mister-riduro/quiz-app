@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { User, Session } from "@supabase/supabase-js";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase, isSupabaseConfigured } from "@/lib/supabaseClient";
 import { DatabaseProfile } from "@/types/database";
 
 export interface AuthState {
@@ -20,6 +20,8 @@ export interface AuthState {
     schoolName?: string,
   ) => Promise<boolean>;
   signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<boolean>;
+  updatePassword: (newPassword: string) => Promise<boolean>;
   initialize: () => Promise<void>;
   clearError: () => void;
   fetchProfile: (userId: string) => Promise<DatabaseProfile | null>;
@@ -54,6 +56,12 @@ function translateAuthError(errorMsg: string): string {
     lower.includes("failed to fetch")
   ) {
     return "Koneksi jaringan terputus. Silakan periksa koneksi internet Anda.";
+  }
+  if (
+    lower.includes("err_name_not_resolved") ||
+    lower.includes("placeholder-eduplay")
+  ) {
+    return "URL Supabase belum dikonfigurasi di berkas .env. Silakan lengkapi VITE_SUPABASE_URL dengan kredensial proyek Supabase Anda.";
   }
   if (lower.includes("email not confirmed")) {
     return "Email Anda belum dikonfirmasi. Silakan periksa tautan di kotak masuk email Anda.";
@@ -198,6 +206,77 @@ export const useAuthStore = create<AuthState>()(
           return true;
         } catch (err: unknown) {
           const msg = err instanceof Error ? err.message : "Registrasi gagal";
+          set({ error: translateAuthError(msg), isLoading: false });
+          return false;
+        }
+      },
+
+      resetPassword: async (email: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          if (!isSupabaseConfigured) {
+            console.warn(
+              "[EduPlay Auth] Supabase belum dikonfigurasi di file .env. Menjalankan simulasi reset password.",
+            );
+            await new Promise((resolve) => setTimeout(resolve, 600));
+            set({ isLoading: false, error: null });
+            return true;
+          }
+
+          const redirectTo = `${window.location.origin}/#reset-password`;
+          const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo,
+          });
+
+          if (error) {
+            set({
+              error: translateAuthError(error.message),
+              isLoading: false,
+            });
+            return false;
+          }
+
+          set({ isLoading: false, error: null });
+          return true;
+        } catch (err: unknown) {
+          const msg =
+            err instanceof Error
+              ? err.message
+              : "Gagal mengirim email reset kata sandi";
+          set({ error: translateAuthError(msg), isLoading: false });
+          return false;
+        }
+      },
+
+      updatePassword: async (newPassword: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          if (!isSupabaseConfigured) {
+            console.warn(
+              "[EduPlay Auth] Supabase belum dikonfigurasi di file .env. Menjalankan simulasi update password.",
+            );
+            await new Promise((resolve) => setTimeout(resolve, 600));
+            set({ isLoading: false, error: null });
+            return true;
+          }
+
+          const { error } = await supabase.auth.updateUser({
+            password: newPassword,
+          });
+
+          if (error) {
+            set({
+              error: translateAuthError(error.message),
+              isLoading: false,
+            });
+            return false;
+          }
+
+          set({ isLoading: false, error: null });
+          return true;
+        } catch (err: unknown) {
+          const msg =
+            err instanceof Error ? err.message : "Gagal memperbarui kata sandi";
           set({ error: translateAuthError(msg), isLoading: false });
           return false;
         }

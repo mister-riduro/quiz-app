@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { Header } from "@/components/layout/Header";
+import { NavigationDrawer } from "@/components/layout/NavigationDrawer";
 import { TactileButton } from "@/components/ui/TactileButton";
 import { TileToken, TileTokenState } from "@/components/ui/TileToken";
 import { DuoCard } from "@/components/ui/DuoCard";
@@ -11,13 +12,18 @@ import { pluginRegistry } from "@/plugins/core/registry";
 import { sampleQuestionPlugin } from "@/plugins/questions/_sample";
 import { useSoundEffect } from "@/hooks/useSoundEffect";
 import { useAuthStore } from "@/stores/authStore";
-import { AuthModal, LoginPage, RegisterPage } from "@/features/auth";
+import {
+  AuthModal,
+  LoginPage,
+  RegisterPage,
+  ForgotPasswordPage,
+} from "@/features/auth";
 import { QuizDashboardPage } from "@/features/dashboard";
 import { QuizBuilderPage } from "@/features/builder";
 import { PresenterKioskPage } from "@/features/presenter";
 import { Quiz } from "@/types/quiz";
 import { useBuilderStore, BuilderQuestion } from "@/stores/builderStore";
-import { useQuizStore } from "@/stores/quizStore";
+import { useQuizStore, isMockQuiz } from "@/stores/quizStore";
 import { generateUUID } from "@/utils/uuid";
 import { ImageUploader } from "@/components/common/ImageUploader";
 import {
@@ -36,8 +42,6 @@ import {
   Box,
   LogOut,
   ShieldCheck,
-  LayoutDashboard,
-  Gamepad2,
 } from "lucide-react";
 
 const PRESENTER_SESSION_KEY = "eduplay_presenter_session";
@@ -49,7 +53,14 @@ function getSavedPresenterSession(): {
 } | null {
   try {
     const raw = sessionStorage.getItem(PRESENTER_SESSION_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const session = JSON.parse(raw);
+      if (session?.hostedQuiz && isMockQuiz(session.hostedQuiz)) {
+        sessionStorage.removeItem(PRESENTER_SESSION_KEY);
+        return null;
+      }
+      return session;
+    }
   } catch (e) {}
   return null;
 }
@@ -103,6 +114,7 @@ export function App() {
   const [score, setScore] = useState(320);
   const [isBtnLoading, setIsBtnLoading] = useState(false);
   const [registryErrorMsg, setRegistryErrorMsg] = useState<string | null>(null);
+  const [isCreateQuizModalOpen, setIsCreateQuizModalOpen] = useState(false);
 
   // Auth studio tab/modal state
   const [authView, setAuthView] = useState<"none" | "login" | "register">(
@@ -133,7 +145,15 @@ export function App() {
     isLoading: isAuthLoading,
   } = useAuthStore();
   const { fetchQuizzes } = useQuizStore();
-  const [authMode, setAuthMode] = useState<"login" | "register">("login");
+  const [authMode, setAuthMode] = useState<
+    "login" | "register" | "forgot-password" | "reset-password"
+  >(() => {
+    const hash = window.location.hash.replace("#", "");
+    if (hash === "reset-password") return "reset-password";
+    if (hash === "forgot-password") return "forgot-password";
+    if (hash === "register") return "register";
+    return "login";
+  });
   const [guestPreview, setGuestPreview] = useState(false);
 
   // Navigation helper to sync appMode and browser history
@@ -147,7 +167,9 @@ export function App() {
   };
 
   // Switch auth tab without polluting history stack
-  const switchAuthMode = (mode: "login" | "register") => {
+  const switchAuthMode = (
+    mode: "login" | "register" | "forgot-password" | "reset-password",
+  ) => {
     playPop();
     window.history.replaceState({ authMode: mode }, "", `#${mode}`);
     setAuthMode(mode);
@@ -225,6 +247,10 @@ export function App() {
     } else {
       if (hash === "register") {
         setAuthMode("register");
+      } else if (hash === "forgot-password") {
+        setAuthMode("forgot-password");
+      } else if (hash === "reset-password") {
+        setAuthMode("reset-password");
       } else {
         setAuthMode("login");
         window.history.replaceState({ authMode: "login" }, "", "#login");
@@ -240,6 +266,8 @@ export function App() {
         if (
           currentHash === "login" ||
           currentHash === "register" ||
+          currentHash === "forgot-password" ||
+          currentHash === "reset-password" ||
           !currentHash
         ) {
           window.history.pushState({ appMode: "dashboard" }, "", "#dashboard");
@@ -427,33 +455,35 @@ export function App() {
       <div className="min-h-screen bg-duo-bg flex flex-col justify-between text-duo-dark">
         <Header subtitle="Studio Kuis Interaktif Pembelajaran Tatap Muka" />
         <div className="flex-1 max-w-md w-full mx-auto p-4 sm:p-6 flex flex-col justify-center my-6">
-          {/* Toggle Tab: Masuk vs Daftar Guru */}
-          <div className="flex bg-slate-200/80 p-1.5 rounded-2xl gap-1 border border-slate-300/50 mb-4 self-center">
-            <button
-              type="button"
-              onClick={() => switchAuthMode("login")}
-              className={`px-5 py-2 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
-                authMode === "login"
-                  ? "bg-white text-duo-dark shadow-sm border-b-2 border-b-slate-300"
-                  : "text-[#777777] hover:text-duo-dark"
-              }`}
-            >
-              Masuk Guru
-            </button>
-            <button
-              type="button"
-              onClick={() => switchAuthMode("register")}
-              className={`px-5 py-2 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
-                authMode === "register"
-                  ? "bg-duo-green text-white shadow-sm border-b-2 border-b-duo-green-border"
-                  : "text-[#777777] hover:text-duo-dark"
-              }`}
-            >
-              Daftar Akun Guru
-            </button>
-          </div>
+          {/* Toggle Tab: Masuk vs Daftar Guru (hidden during forgot/reset password) */}
+          {authMode !== "forgot-password" && authMode !== "reset-password" && (
+            <div className="flex bg-slate-200/80 p-1.5 rounded-2xl gap-1 border border-slate-300/50 mb-4 self-center">
+              <button
+                type="button"
+                onClick={() => switchAuthMode("login")}
+                className={`px-5 py-2 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
+                  authMode === "login"
+                    ? "bg-white text-duo-dark shadow-sm border-b-2 border-b-slate-300"
+                    : "text-[#777777] hover:text-duo-dark"
+                }`}
+              >
+                Masuk Guru
+              </button>
+              <button
+                type="button"
+                onClick={() => switchAuthMode("register")}
+                className={`px-5 py-2 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
+                  authMode === "register"
+                    ? "bg-white text-duo-dark shadow-sm border-b-2 border-b-slate-300"
+                    : "text-[#777777] hover:text-duo-dark"
+                }`}
+              >
+                Daftar Akun Guru
+              </button>
+            </div>
+          )}
 
-          {authMode === "login" ? (
+          {authMode === "login" && (
             <LoginPage
               onSuccess={() => {
                 playVictory();
@@ -468,8 +498,14 @@ export function App() {
                 playTap();
                 switchAuthMode("register");
               }}
+              onNavigateToForgotPassword={() => {
+                playTap();
+                switchAuthMode("forgot-password");
+              }}
             />
-          ) : (
+          )}
+
+          {authMode === "register" && (
             <RegisterPage
               onSuccess={() => {
                 playVictory();
@@ -479,6 +515,21 @@ export function App() {
                   "#dashboard",
                 );
                 setAppMode("dashboard");
+              }}
+              onNavigateToLogin={() => {
+                playTap();
+                switchAuthMode("login");
+              }}
+            />
+          )}
+
+          {(authMode === "forgot-password" ||
+            authMode === "reset-password") && (
+            <ForgotPasswordPage
+              isRecoveryMode={authMode === "reset-password"}
+              onSuccess={() => {
+                playVictory();
+                switchAuthMode("login");
               }}
               onNavigateToLogin={() => {
                 playTap();
@@ -510,96 +561,33 @@ export function App() {
     );
   }
 
-  // 5. MAIN DASHBOARD & SHOWCASE CONTAINER
+  // 5. MAIN DASHBOARD & SHOWCASE CONTAINER WITH LEFT NAVIGATION DRAWER
   return (
-    <div className="min-h-screen flex flex-col bg-duo-bg text-duo-dark selection:bg-duo-green-light selection:text-duo-green-border">
-      {/* Top Header */}
-      <Header />
-
-      {/* Navigation Switcher Bar (Dashboard vs Lab Showcase) */}
-      <div className="bg-white border-b-2 border-slate-200 sticky top-[73px] z-30 shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between">
-          <div className="flex items-center gap-2 py-2">
-            <button
-              type="button"
-              onClick={() => {
-                playPop();
-                navigateToMode("dashboard");
-              }}
-              className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all cursor-pointer ${
-                appMode === "dashboard"
-                  ? "bg-duo-green text-white shadow-sm border-b-2 border-b-duo-green-border"
-                  : "text-[#777777] hover:text-duo-dark hover:bg-slate-100"
-              }`}
-            >
-              <LayoutDashboard className="w-4 h-4" />
-              Dashboard Guru
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                playPop();
-                navigateToMode("showcase");
-              }}
-              className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all cursor-pointer ${
-                appMode === "showcase"
-                  ? "bg-duo-blue text-white shadow-sm border-b-2 border-b-duo-blue-border"
-                  : "text-[#777777] hover:text-duo-dark hover:bg-slate-100"
-              }`}
-            >
-              <Gamepad2 className="w-4 h-4" />
-              Lab Showcase & Komponen
-            </button>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {user ? (
-              <div className="flex items-center gap-2">
-                <div className="hidden sm:flex flex-col text-right">
-                  <span className="text-xs font-black text-duo-dark leading-tight">
-                    {profile?.full_name || user.email?.split("@")[0]}
-                  </span>
-                  {profile?.school_name && (
-                    <span className="text-[10px] font-bold text-slate-400 leading-tight">
-                      {profile.school_name}
-                    </span>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={handleSignOut}
-                  className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-duo-red text-xs font-black border border-slate-200 transition-colors cursor-pointer flex items-center gap-1"
-                >
-                  <LogOut className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Keluar</span>
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Badge variant="gray" className="text-[10px]">
-                  Mode Tamu
-                </Badge>
-                <button
-                  type="button"
-                  onClick={() => {
-                    playTap();
-                    setGuestPreview(false);
-                    switchAuthMode("login");
-                  }}
-                  className="text-xs font-black text-duo-green hover:underline cursor-pointer"
-                >
-                  Masuk Guru
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
+    <NavigationDrawer
+      currentMode={appMode === "showcase" ? "showcase" : "dashboard"}
+      onNavigate={(mode) => navigateToMode(mode)}
+      onCreateQuiz={() => {
+        playTap();
+        if (appMode !== "dashboard") {
+          navigateToMode("dashboard");
+        }
+        setIsCreateQuizModalOpen(true);
+      }}
+      user={user}
+      profile={profile}
+      onSignOut={handleSignOut}
+      onSignInPrompt={() => {
+        playTap();
+        setGuestPreview(false);
+        switchAuthMode("login");
+      }}
+    >
       {/* RENDER VIEW ACCORDING TO APP MODE */}
       {appMode === "dashboard" && (
         <QuizDashboardPage
+          isCreateModalOpen={isCreateQuizModalOpen}
+          onOpenCreateModal={() => setIsCreateQuizModalOpen(true)}
+          onCloseCreateModal={() => setIsCreateQuizModalOpen(false)}
           onHostQuiz={(quiz) => {
             playVictory();
             const stored = useQuizStore.getState().getQuizById(quiz.id);
@@ -1130,7 +1118,7 @@ export function App() {
           setAuthView("none");
         }}
       />
-    </div>
+    </NavigationDrawer>
   );
 }
 

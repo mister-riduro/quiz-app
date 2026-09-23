@@ -4,6 +4,41 @@ Semua perubahan penting pada proyek **EduPlay Quiz Studio** didokumentasikan dal
 
 Format berkas ini mengacu pada [Keep a Changelog](https://keepachangelog.com/id/1.0.0/) dan mengikuti kaidah [Semantic Versioning](https://semver.org/lang/id/).
 
+## [1.2.0] - 2026-09-23
+
+### Ditambahkan (Added)
+
+- **Left Navigation Drawer pada Dashboard (`NavigationDrawer.tsx`)**:
+  - Mengubah sistem tata letak navigasi Dashboard dari bar horizontal atas menjadi **Left Navigation Drawer (Sidebar Samping Kiri)** permanen bertema Duolingo pada layar desktop/tablet (`lg:flex fixed inset-y-0 left-0`).
+  - **Penyelarasan Visual Menu Aktif**: Menyesuaikan highlight item menu aktif agar tidak terlalu mencolok (_less prominent_), menggunakan warna latar hijau muda lembut (`#E5FAD2`) berpadu dengan garis tepi (_stroke_) hijau yang sedikit lebih gelap (`#A2E865`) serta bevel taktil bawah (`#85D641`), menghadirkan nuansa yang tenang, seimbang, dan ramah di mata.
+  - **Pemusatan Aksi Buat Kuis**: Menghapus tombol duplikat "Buat Kuis Baru" pada kartu sambutan selamat datang di [`QuizDashboardPage`](file:///d:/Project/quiz-app/src/features/dashboard/QuizDashboardPage.tsx), dan memusatkannya pada tombol di drawer samping dengan perilaku yang identik (membuka dialog formulir [`CreateQuizModal`](file:///d:/Project/quiz-app/src/features/dashboard/components/CreateQuizModal.tsx) untuk mengatur judul, kategori, dan deskripsi kuis).
+  - **Dukungan Responsif Mobile**: Pada layar ponsel/tablet sempit, drawer dapat dibuka secara mulus dari samping kiri melalui tombol menu hamburger di header atas dengan backdrop interaktif dan animasi pegas (_spring physics_).
+  - **Isolasi Penuh Presenter Kiosk**: Mode proyektor kelas (`PresenterKioskPage`) tetap 100% _full-screen standalone_ tanpa ada drawer, sidebar, ataupun offset layout, menjaga fokus panggung proyektor kelas.
+- **Fitur Lupa Kata Sandi / Pemulihan Akun Pengajar (`ForgotPasswordPage.tsx`)**:
+  - Menghadirkan alur pemulihan kata sandi bagi guru yang lupa kata sandi akunnya via Supabase Auth (`resetPasswordForEmail`).
+  - Menyediakan formulir permintaan tautan reset kata sandi dengan validasi email dan notifikasi konfirmasi ramah pengguna.
+  - Menyediakan formulir penetapan kata sandi baru (`updateUser`) dengan validasi keamanan minimal 6 karakter dan konfirmasi kata sandi saat guru membuka tautan pemulihan.
+  - Mengintegrasikan tautan "Lupa kata sandi?" langsung di bawah input kata sandi pada [`LoginPage.tsx`](file:///d:/Project/quiz-app/src/features/auth/LoginPage.tsx) serta di dalam [`AuthModal.tsx`](file:///d:/Project/quiz-app/src/features/auth/AuthModal.tsx).
+- **Mode Simulasi & Deteksi Konfigurasi Supabase (`isSupabaseConfigured`)**:
+  - Mengatasi kendala kegagalan DNS (`net::ERR_NAME_NOT_RESOLVED`) saat berkas `.env` belum diisi atau masih menggunakan domain placeholder.
+  - Mengaktifkan simulasi pengujian lokal pada alur Lupa Kata Sandi sehingga pengembang dapat langsung menguji permintaan pemulihan hingga penetapan kata sandi baru secara mulus.
+
+### Diubah (Changed)
+
+- **Segmented Tab Filter Dashboard Menggunakan Status Aktif Putih Bersih**:
+  - Menyeragamkan status terpilih (_selected state_) pada tab filter kuis (_Semua_, _Dipublikasikan_, _Draft_) di [`QuizDashboardPage`](file:///d:/Project/quiz-app/src/features/dashboard/QuizDashboardPage.tsx) menjadi warna putih bersih bertema Duolingo (`bg-white text-duo-dark shadow-sm border-b-2 border-b-slate-300`) untuk seluruh opsi, menggantikan highlight warna hijau/kuning sebelumnya agar visual dashboard lebih tenang, seragam, dan rapi.
+  - Menerapkan konsistensi serupa pada tab segmented switch autentikasi (_Masuk Guru_ vs _Daftar Akun Guru_) di [`App.tsx`](file:///d:/Project/quiz-app/src/App.tsx).
+- **Tampilan List View & View Switcher (Grid vs List) pada Dashboard**:
+  - Menghadirkan format tampilan **List View** untuk daftar kuis kelas dan katalog komunitas di [`QuizCard.tsx`](file:///d:/Project/quiz-app/src/features/dashboard/components/QuizCard.tsx) dan [`QuizDashboardPage.tsx`](file:///d:/Project/quiz-app/src/features/dashboard/QuizDashboardPage.tsx). Kuis ditampilkan dalam baris horizontal yang ringkas dan efisien: thumbnail sampul kompak di sisi kiri, metadata lencana (_Dipublikasikan/Draft, Kategori, Jumlah Butir Soal, Guru_) serta judul dan deskripsi di tengah, dan tombol aksi (_Host / Mainkan, Edit, Menu Opsi_) di sisi kanan.
+  - Menyediakan tombol pemilih tampilan taktil (**View Mode Switcher**) dengan ikon Grid (`LayoutGrid`) dan List (`List`) bertema Duolingo di samping judul daftar kuis, dengan preferensi tersimpan otomatis di `localStorage` (`eduplay_quiz_view_mode`) dan secara default aktif pada mode **List**.
+  - Mengatur posisi menu dropdown opsi kuis ("...") agar konsisten terbuka ke atas card (`bottom-full mb-2`) dengan penataan konteks tumpukan (_stacking context_) `z-40`/`z-50`, sehingga menu tampil utuh dan tidak terpotong atau tertutup oleh baris kuis lainnya.
+
+### Dihapus (Removed)
+
+- **Pembersihan Seluruh Kuis Mock / Sampel Bawaan**:
+  - Menghapus seluruh kuis tiruan / data sampel demo bawaan (`quiz-1`, `quiz-2`, draf mock lawas) dari penyimpanan browser (`localStorage`).
+  - Mengintegrasikan fungsi pendeteksi dan pembersihan otomatis (`isMockQuiz` serta migrasi skema penyimpanan Zustand) untuk memastikan daftar kuis di Dashboard bersih dan sepenuhnya bersumber dari database Supabase pengguna atau kuis nyata yang dibuat oleh pengajar.
+
 ---
 
 ## [1.1.0] - 2026-09-20
