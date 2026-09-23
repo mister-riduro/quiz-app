@@ -216,7 +216,6 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
   const teacherName =
     profile?.full_name ||
     (user?.email ? user.email.split("@")[0] : "Guru Hebat");
-  const teacherInitial = teacherName ? teacherName[0]?.toUpperCase() : "G";
 
   return (
     <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 md:p-8 flex flex-col gap-6">
@@ -226,28 +225,7 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
         className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-6 sm:p-8 bg-white"
       >
         <div className="flex items-center gap-4">
-          {/* Avatar Profil */}
-          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-gradient-to-br from-duo-green to-[#46A302] border-4 border-duo-green-border text-white flex items-center justify-center font-black text-2xl sm:text-3xl shadow-md shrink-0">
-            {profile?.avatar_url ? (
-              <img
-                src={profile.avatar_url}
-                alt={teacherName}
-                className="w-full h-full rounded-3xl object-cover"
-              />
-            ) : (
-              <span>{teacherInitial}</span>
-            )}
-          </div>
-
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              {profile?.school_name && (
-                <span className="text-xs font-bold text-slate-400">
-                  • {profile.school_name}
-                </span>
-              )}
-            </div>
-
             <h1 className="text-2xl sm:text-3xl font-black text-duo-dark tracking-tight">
               Selamat Datang, {teacherName}! 👋
             </h1>
