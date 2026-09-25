@@ -411,7 +411,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
               <div className="flex items-center gap-2 mb-1">
                 <CheckCircle2 className="w-4 h-4 text-duo-green" />
                 <span className="font-extrabold text-sm text-duo-dark">
-                  Gambar Berhasil Dioptimasi
+                  Gambar Berhasil Diunggah
                 </span>
               </div>
 
@@ -439,35 +439,29 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
                     )
                   </span>
                 </div>
-              ) : (
-                <p className="text-xs font-semibold text-[#777777]">
-                  Format WebP siap ditayangkan pada proyektor dan tablet kelas.
-                </p>
-              )}
+              ) : null}
             </div>
 
             {/* Action Buttons: Ganti, Hapus, and Quick Paste Hint */}
             <div className="flex flex-wrap items-center justify-between gap-3 mt-4 pt-3 border-t border-slate-100">
               <div className="flex items-center gap-2">
-                <TactileButton
+                <button
                   type="button"
-                  variant="outline"
-                  size="sm"
-                  icon={<RefreshCw className="w-3.5 h-3.5" />}
                   onClick={handleTriggerBrowse}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-600 hover:text-duo-dark text-xs font-bold transition-all cursor-pointer active:translate-y-0.5"
                 >
-                  Ganti Gambar
-                </TactileButton>
+                  <RefreshCw className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Ganti Gambar</span>
+                </button>
 
-                <TactileButton
+                <button
                   type="button"
-                  variant="red"
-                  size="sm"
-                  icon={<Trash2 className="w-3.5 h-3.5" />}
                   onClick={handleRemoveImage}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 hover:border-rose-200 bg-white hover:bg-rose-50/50 text-slate-500 hover:text-duo-red text-xs font-bold transition-all cursor-pointer active:translate-y-0.5"
                 >
-                  Hapus
-                </TactileButton>
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Hapus</span>
+                </button>
               </div>
 
               <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-400 bg-slate-50 px-2.5 py-1 rounded-xl border border-slate-200">

@@ -40,6 +40,7 @@ export interface BuilderState {
   updateQuestion: (index: number, data: Partial<BuilderQuestion>) => void;
   updateActiveQuestionContent: (content: any) => void;
   removeQuestion: (index: number) => void;
+  duplicateQuestion: (index: number) => void;
   reorderQuestions: (startIndex: number, endIndex: number) => void;
   setActiveQuestionIndex: (index: number) => void;
   saveQuiz: () => Promise<boolean>;
@@ -70,7 +71,7 @@ const createInitialQuestion = (
     id: generateUUID(),
     type,
     orderIndex,
-    titlePrompt: "Tuliskan pertanyaan kuis di sini...",
+    titlePrompt: "",
     mediaUrl: "",
     content: defaultContent,
     points: 100,
@@ -195,6 +196,31 @@ export const useBuilderStore = create<BuilderState>()(
           return {
             questions: filtered,
             activeQuestionIndex: Math.max(0, nextActiveIndex),
+            isDirty: true,
+          };
+        }),
+
+      duplicateQuestion: (index: number) =>
+        set((state) => {
+          const source = state.questions[index];
+          if (!source) return state;
+          const duplicated: BuilderQuestion = {
+            ...source,
+            id: generateUUID(),
+            titlePrompt: source.titlePrompt
+              ? `${source.titlePrompt} (Salinan)`
+              : "",
+            content: JSON.parse(JSON.stringify(source.content || {})),
+          };
+          const newQuestions = [...state.questions];
+          newQuestions.splice(index + 1, 0, duplicated);
+          const reindexed = newQuestions.map((q, idx) => ({
+            ...q,
+            orderIndex: idx,
+          }));
+          return {
+            questions: reindexed,
+            activeQuestionIndex: index + 1,
             isDirty: true,
           };
         }),

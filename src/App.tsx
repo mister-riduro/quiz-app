@@ -398,7 +398,7 @@ export function App() {
   // 2. DEDICATED FULL-SCREEN QUIZ BUILDER STUDIO PAGE (NOT A TAB)
   if (appMode === "builder") {
     return (
-      <div className="min-h-screen bg-duo-bg animate-in fade-in slide-in-from-right-4 duration-200">
+      <div className="h-screen w-screen overflow-hidden bg-duo-bg animate-in fade-in slide-in-from-right-4 duration-200">
         <QuizBuilderPage
           onBack={() => {
             playPop();

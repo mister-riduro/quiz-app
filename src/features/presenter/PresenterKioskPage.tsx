@@ -760,12 +760,12 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
   // Calculate total score
   const totalScore = useMemo(() => {
     return questions.reduce((sum, q) => {
-      return sum + (evaluations[q.id] ? q.points || 100 : 0);
+      return sum + (evaluations[q.id] ? (q.points ?? 100) : 0);
     }, 0);
   }, [questions, evaluations]);
 
   const maxScore = useMemo(() => {
-    return questions.reduce((sum, q) => sum + (q.points || 100), 0);
+    return questions.reduce((sum, q) => sum + (q.points ?? 100), 0);
   }, [questions]);
 
   // Effective media URL (supporting images / diagrams from all storage locations)
@@ -991,8 +991,17 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
                 <span className="text-xs sm:text-sm font-black uppercase px-3 py-1 rounded-xl bg-duo-blue/10 text-duo-blue border border-duo-blue/20">
                   {activePlugin?.title || "Mini-Game"}
                 </span>
-                <span className="text-xs sm:text-sm font-black uppercase px-3 py-1 rounded-xl bg-amber-50 text-amber-700 border border-amber-200">
-                  {activeQuestion?.points || 100} Poin
+                <span
+                  className={cn(
+                    "text-xs sm:text-sm font-black uppercase px-3 py-1 rounded-xl border",
+                    (activeQuestion?.points ?? 100) === 0
+                      ? "bg-slate-100 text-slate-600 border-slate-200"
+                      : "bg-amber-50 text-amber-700 border-amber-200",
+                  )}
+                >
+                  {(activeQuestion?.points ?? 100) === 0
+                    ? "Tanpa Poin"
+                    : `${activeQuestion?.points ?? 100} Poin`}
                 </span>
 
                 {/* Live Question / Global Timer Badge */}

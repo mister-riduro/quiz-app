@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { DuoCard } from "@/components/ui/DuoCard";
 import { TactileButton } from "@/components/ui/TactileButton";
+import { DuoDropdown } from "@/components/ui/DuoDropdown";
 import { useSoundEffect } from "@/hooks/useSoundEffect";
 import { X, Sparkles, BookOpen, Save, ArrowRight } from "lucide-react";
 
@@ -135,17 +136,18 @@ export const CreateQuizModal: React.FC<CreateQuizModalProps> = ({
                 <BookOpen className="w-3.5 h-3.5 text-duo-blue" />
                 Mata Pelajaran / Kategori
               </label>
-              <select
+              <DuoDropdown<string>
                 value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-50 border-2 border-duo-gray rounded-2xl font-bold text-sm text-duo-dark focus:bg-white focus:outline-none focus:border-duo-blue transition-all"
-              >
-                {CATEGORY_OPTIONS.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setCategory(val)}
+                options={CATEGORY_OPTIONS.map((cat) => ({
+                  value: cat,
+                  label: cat,
+                }))}
+                size="md"
+                triggerClassName="bg-slate-50 hover:bg-white"
+                menuHeader="Pilih Mata Pelajaran / Kategori:"
+                aria-label="Mata Pelajaran atau Kategori"
+              />
             </div>
 
             {/* Deskripsi Kuis (Opsional) */}

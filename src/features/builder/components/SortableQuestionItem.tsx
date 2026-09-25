@@ -4,7 +4,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { BuilderQuestion } from "@/stores/builderStore";
 import { pluginRegistry } from "@/plugins/core/registry";
 import { cn } from "@/utils/cn";
-import { GripVertical, Trash2, HelpCircle } from "lucide-react";
+import { GripVertical, Trash2, Copy } from "lucide-react";
 
 export interface SortableQuestionItemProps {
   question: BuilderQuestion;
@@ -12,6 +12,7 @@ export interface SortableQuestionItemProps {
   isActive: boolean;
   onSelect: () => void;
   onRemove: () => void;
+  onDuplicate?: () => void;
   canRemove: boolean;
   timerMode?: "global" | "per_question";
   globalSeconds?: number;
@@ -24,6 +25,7 @@ export const SortableQuestionItem = React.memo<SortableQuestionItemProps>(
     isActive,
     onSelect,
     onRemove,
+    onDuplicate,
     canRemove,
     timerMode = "global",
   }) => {
@@ -42,13 +44,10 @@ export const SortableQuestionItem = React.memo<SortableQuestionItemProps>(
       zIndex: isDragging ? 50 : undefined,
     };
 
-    // Get plugin icon if available
-    let PluginIcon: React.ComponentType<{ className?: string }> = HelpCircle;
+    // Get plugin title only (no icon as requested)
     let pluginTitle = "Soal";
     if (pluginRegistry.hasPlugin(question.type)) {
-      const plugin = pluginRegistry.getPlugin(question.type);
-      PluginIcon = plugin.icon;
-      pluginTitle = plugin.title;
+      pluginTitle = pluginRegistry.getPlugin(question.type).title;
     }
 
     return (
@@ -57,7 +56,7 @@ export const SortableQuestionItem = React.memo<SortableQuestionItemProps>(
         style={style}
         onClick={onSelect}
         className={cn(
-          "group relative flex items-center gap-2 p-2.5 rounded-xl border-2 transition-all cursor-pointer select-none bg-white",
+          "group relative flex items-start gap-2 p-2.5 rounded-xl border-2 transition-all cursor-pointer select-none bg-white",
           // Default State
           "border-slate-200 hover:border-slate-300 hover:shadow-sm",
           // Active State
@@ -72,16 +71,16 @@ export const SortableQuestionItem = React.memo<SortableQuestionItemProps>(
         <div
           {...attributes}
           {...listeners}
-          className="text-slate-300 hover:text-duo-dark cursor-grab active:cursor-grabbing p-1 -ml-1 shrink-0"
+          className="text-slate-300 hover:text-duo-dark cursor-grab active:cursor-grabbing p-1 -ml-1 mt-0.5 shrink-0"
           title="Geser untuk mengatur urutan"
         >
           <GripVertical className="w-4 h-4" />
         </div>
 
-        {/* Number Badge */}
+        {/* Left Column: Number Badge */}
         <span
           className={cn(
-            "w-6 h-6 rounded-lg text-xs font-black flex items-center justify-center shrink-0",
+            "w-6 h-6 rounded-lg text-xs font-black flex items-center justify-center shrink-0 mt-0.5",
             isActive
               ? "bg-duo-blue text-white"
               : "bg-slate-100 text-duo-dark group-hover:bg-slate-200",
@@ -90,48 +89,87 @@ export const SortableQuestionItem = React.memo<SortableQuestionItemProps>(
           {index + 1}
         </span>
 
-        {/* Type Icon & Info */}
-        <div className="flex-1 min-w-0 flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-duo-dark shrink-0">
-            <PluginIcon className="w-4 h-4 text-duo-blue" />
-          </div>
+        {/* Content Column: Type Name + Action Buttons, Prompt, and Points/Time below */}
+        <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+          {/* Top Row: Question Type & Actions Container (fill-container) */}
+          <div className="w-full flex items-center justify-between gap-1 min-h-[22px]">
+            <span className="block text-[10px] font-black uppercase text-slate-400 tracking-wider truncate">
+              {pluginTitle}
+            </span>
 
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between gap-1">
-              <span className="block text-[11px] font-black uppercase text-slate-400 truncate">
-                {pluginTitle}
-              </span>
-              {timerMode === "per_question" && (
-                <span
-                  className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md shrink-0 bg-slate-100 text-slate-500"
-                  title={`Durasi Soal: ${question.timeLimitSeconds ?? 30} Detik`}
+            {/* Actions: Duplicate & Delete (appear only on hover) */}
+            <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+              {onDuplicate && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDuplicate();
+                  }}
+                  className="w-5 h-5 rounded flex items-center justify-center text-slate-400 hover:text-duo-blue hover:bg-duo-blue-light/50 transition-all cursor-pointer"
+                  title="Duplikasi soal ini"
                 >
-                  {(question.timeLimitSeconds ?? 30) > 0
-                    ? `${question.timeLimitSeconds ?? 30}s`
-                    : "∞"}
-                </span>
+                  <Copy className="w-3.5 h-3.5" />
+                </button>
+              )}
+
+              {canRemove && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRemove();
+                  }}
+                  className="w-5 h-5 rounded flex items-center justify-center text-slate-400 hover:text-duo-red hover:bg-duo-red-light transition-all cursor-pointer"
+                  title="Hapus soal ini"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
               )}
             </div>
-            <p className="text-xs font-bold text-duo-dark truncate">
-              {question.titlePrompt || "Pertanyaan baru"}
-            </p>
+          </div>
+
+          {/* Question Prompt */}
+          <p
+            className={cn(
+              "text-xs truncate",
+              question.titlePrompt
+                ? "font-bold text-duo-dark"
+                : "font-medium text-slate-400 italic",
+            )}
+          >
+            {question.titlePrompt || "(Belum ada pertanyaan)"}
+          </p>
+
+          {/* Bottom Row: Points & Time Limit */}
+          <div className="flex items-center gap-1.5 pt-0.5">
+            <span
+              className={cn(
+                "text-[10px] font-extrabold px-1.5 py-0.5 rounded-md leading-none",
+                question.points === 0
+                  ? "bg-slate-100 text-slate-500"
+                  : "bg-amber-50 text-amber-700 border border-amber-200/60",
+              )}
+              title={
+                question.points === 0
+                  ? "Tanpa Poin"
+                  : `Nilai: ${question.points} Poin`
+              }
+            >
+              {question.points === 0 ? "Tanpa Poin" : `${question.points} Poin`}
+            </span>
+            {timerMode === "per_question" && (
+              <span
+                className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-500 leading-none"
+                title={`Durasi Soal: ${question.timeLimitSeconds ?? 30} Detik`}
+              >
+                {(question.timeLimitSeconds ?? 30) > 0
+                  ? `${question.timeLimitSeconds ?? 30}s`
+                  : "∞"}
+              </span>
+            )}
           </div>
         </div>
-
-        {/* Remove Button */}
-        {canRemove && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onRemove();
-            }}
-            className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-duo-red hover:bg-duo-red-light rounded-lg transition-all shrink-0"
-            title="Hapus soal ini"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
-        )}
       </div>
     );
   },
