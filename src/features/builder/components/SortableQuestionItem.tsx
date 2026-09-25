@@ -5,6 +5,7 @@ import { BuilderQuestion } from "@/stores/builderStore";
 import { pluginRegistry } from "@/plugins/core/registry";
 import { cn } from "@/utils/cn";
 import { GripVertical, Trash2, Copy } from "lucide-react";
+import { DuoMathRenderer } from "@/components/common/DuoMathRenderer";
 
 export interface SortableQuestionItemProps {
   question: BuilderQuestion;
@@ -130,7 +131,7 @@ export const SortableQuestionItem = React.memo<SortableQuestionItemProps>(
           </div>
 
           {/* Question Prompt */}
-          <p
+          <div
             className={cn(
               "text-xs truncate",
               question.titlePrompt
@@ -138,8 +139,12 @@ export const SortableQuestionItem = React.memo<SortableQuestionItemProps>(
                 : "font-medium text-slate-400 italic",
             )}
           >
-            {question.titlePrompt || "(Belum ada pertanyaan)"}
-          </p>
+            {question.titlePrompt ? (
+              <DuoMathRenderer content={question.titlePrompt} inlineOnly />
+            ) : (
+              "(Belum ada pertanyaan)"
+            )}
+          </div>
 
           {/* Bottom Row: Points & Time Limit */}
           <div className="flex items-center gap-1.5 pt-0.5">

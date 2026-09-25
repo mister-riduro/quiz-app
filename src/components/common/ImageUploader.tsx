@@ -481,7 +481,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         <div
           tabIndex={disabled ? -1 : 0}
           role="button"
-          aria-label="Upload gambar atau tekan Ctrl + V untuk paste"
+          aria-label="Pilih dari Perangkat atau Upload gambar atau tekan Ctrl + V untuk paste"
           onDragOver={onDragOver}
           onDragLeave={onDragLeave}
           onDrop={onDrop}
@@ -524,38 +524,16 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
               </div>
 
               <h4 className="text-base sm:text-lg font-black text-duo-dark tracking-tight">
-                Tarik & Lepaskan File Gambar di Sini
+                Pilih dari Perangkat atau Tarik File Gambar di Sini
               </h4>
               <p className="text-xs sm:text-sm font-semibold text-[#777777] mt-1 mb-4 max-w-sm">
-                Otomatis dikonversi ke WebP (maks. 1200px) untuk kecepatan
-                loading proyektor kelas
+                Maks ukuran 1200px & 5MB
               </p>
 
               {/* Action Choices: Button or Ctrl+V badge */}
-              <div className="flex flex-wrap items-center justify-center gap-2 mb-3">
-                <TactileButton
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="pointer-events-none border-2 border-duo-gray font-black text-xs"
-                >
-                  Pilih dari Perangkat
-                </TactileButton>
-
-                <span className="text-xs font-bold text-slate-400">atau</span>
-
-                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-duo-blue/10 border-2 border-duo-blue/30 text-xs font-black text-duo-blue shadow-2xs">
-                  <ClipboardPaste className="w-3.5 h-3.5 text-duo-blue" />
-                  <kbd className="font-mono bg-white px-1.5 py-0.5 rounded-md border border-duo-blue/30 text-[11px] font-black text-duo-dark shadow-2xs">
-                    {shortcutText}
-                  </kbd>
-                  <span>Tempel</span>
-                </div>
-              </div>
 
               <span className="text-[11px] font-bold text-slate-400">
                 Mendukung screenshot clipboard ({shortcutText}), JPG, PNG, WebP
-                (hingga 5 MB)
               </span>
             </>
           )}

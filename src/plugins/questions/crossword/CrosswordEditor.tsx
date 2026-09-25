@@ -532,7 +532,7 @@ export const CrosswordEditor: React.FC<EditorProps<CrosswordContent>> = ({
               {/* Word Input */}
               <div>
                 <label className="text-xs font-black uppercase text-slate-400 tracking-wider block mb-1.5">
-                  Kata Kunci (Jawaban Huruf Kapital)
+                  Kunci Jawaban (Huruf Kapital)
                 </label>
                 <input
                   type="text"

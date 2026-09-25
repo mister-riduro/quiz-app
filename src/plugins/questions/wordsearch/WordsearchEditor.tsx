@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Search,
   HelpCircle,
@@ -7,18 +7,15 @@ import {
   X,
   Eye,
   Info,
-} from 'lucide-react';
-import { EditorProps } from '@/plugins/core/types';
-import { WordsearchContent } from './types';
-import { DuoCard } from '@/components/ui/DuoCard';
-import { Badge } from '@/components/ui/Badge';
-import { TactileButton } from '@/components/ui/TactileButton';
-import {
-  generateWordsearchGrid,
-  PASTEL_PALETTES,
-} from './wordsearchGenerator';
-import { useSoundEffect } from '@/hooks/useSoundEffect';
-import { cn } from '@/utils/cn';
+} from "lucide-react";
+import { EditorProps } from "@/plugins/core/types";
+import { WordsearchContent } from "./types";
+import { DuoCard } from "@/components/ui/DuoCard";
+import { Badge } from "@/components/ui/Badge";
+import { TactileButton } from "@/components/ui/TactileButton";
+import { generateWordsearchGrid, PASTEL_PALETTES } from "./wordsearchGenerator";
+import { useSoundEffect } from "@/hooks/useSoundEffect";
+import { cn } from "@/utils/cn";
 
 export const WordsearchEditor: React.FC<EditorProps<WordsearchContent>> = ({
   value,
@@ -27,10 +24,13 @@ export const WordsearchEditor: React.FC<EditorProps<WordsearchContent>> = ({
 }) => {
   const { playTap, playPop } = useSoundEffect();
 
-  const words = useMemo(() => value?.words || ['KUCING', 'ANJING', 'BURUNG', 'KELINCI'], [value?.words]);
+  const words = useMemo(
+    () => value?.words || ["KUCING", "ANJING", "BURUNG", "KELINCI"],
+    [value?.words],
+  );
   const allowDiagonal = value?.allowDiagonal ?? false;
-  const hint = value?.hint || '';
-  const [newWordInput, setNewWordInput] = useState('');
+  const hint = value?.hint || "";
+  const [newWordInput, setNewWordInput] = useState("");
 
   // Re-generate grid whenever words or diagonal toggle changes, or when explicitly refreshed
   const handleRegenerateGrid = useCallback(
@@ -44,7 +44,7 @@ export const WordsearchEditor: React.FC<EditorProps<WordsearchContent>> = ({
         placements: generated.placements,
       });
     },
-    [value, onChange]
+    [value, onChange],
   );
 
   // Initialize grid if not yet generated
@@ -57,25 +57,28 @@ export const WordsearchEditor: React.FC<EditorProps<WordsearchContent>> = ({
   // Add new word
   const handleAddWord = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    const sanitized = newWordInput.trim().toUpperCase().replace(/[^A-Z]/g, '');
+    const sanitized = newWordInput
+      .trim()
+      .toUpperCase()
+      .replace(/[^A-Z]/g, "");
     if (!sanitized) return;
 
     if (sanitized.length < 2) {
-      alert('Kata minimal harus memiliki 2 huruf.');
+      alert("Kata minimal harus memiliki 2 huruf.");
       return;
     }
     if (sanitized.length > 10) {
-      alert('Kata tidak boleh lebih dari 10 huruf untuk grid 10x10.');
+      alert("Kata tidak boleh lebih dari 10 huruf untuk grid 10x10.");
       return;
     }
     if (words.includes(sanitized)) {
-      alert('Kata tersebut sudah ada dalam daftar.');
+      alert("Kata tersebut sudah ada dalam daftar.");
       return;
     }
 
     playPop();
     const updated = [...words, sanitized];
-    setNewWordInput('');
+    setNewWordInput("");
     handleRegenerateGrid(updated, allowDiagonal);
   };
 
@@ -137,7 +140,7 @@ export const WordsearchEditor: React.FC<EditorProps<WordsearchContent>> = ({
         <div className="flex items-center justify-between flex-wrap gap-2">
           <label className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-500">
             <Search className="w-4 h-4 text-duo-blue" />
-            <span>Daftar Kata Yang Harus Ditemukan (3–6 Kata)</span>
+            <span>Kunci Jawaban (3–6 Kata)</span>
           </label>
           <Badge variant="blue" className="text-[10px]">
             {words.length} Kata Terdaftar
@@ -151,7 +154,11 @@ export const WordsearchEditor: React.FC<EditorProps<WordsearchContent>> = ({
             return (
               <div
                 key={word}
-                style={{ backgroundColor: palette.bg, borderColor: palette.border, color: palette.text }}
+                style={{
+                  backgroundColor: palette.bg,
+                  borderColor: palette.border,
+                  color: palette.text,
+                }}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 font-black text-xs sm:text-sm shadow-xs select-none"
               >
                 <span>{word}</span>
@@ -171,7 +178,10 @@ export const WordsearchEditor: React.FC<EditorProps<WordsearchContent>> = ({
 
           {/* Add Word Input Field */}
           {!disabled && words.length < 8 && (
-            <form onSubmit={handleAddWord} className="inline-flex items-center gap-1.5">
+            <form
+              onSubmit={handleAddWord}
+              className="inline-flex items-center gap-1.5"
+            >
               <input
                 type="text"
                 value={newWordInput}
@@ -193,9 +203,7 @@ export const WordsearchEditor: React.FC<EditorProps<WordsearchContent>> = ({
 
         <p className="text-xs font-semibold text-[#777777] flex items-center gap-1.5">
           <Info className="w-3.5 h-3.5 text-duo-blue shrink-0" />
-          <span>
-            Hanya alfabet A-Z (maks. 10 huruf). Kata akan otomatis diselipkan ke dalam matriks grid $10 \times 10$.
-          </span>
+          <span>Hanya alfabet A-Z (maks. 10 huruf)</span>
         </p>
       </div>
 
@@ -214,7 +222,7 @@ export const WordsearchEditor: React.FC<EditorProps<WordsearchContent>> = ({
               Izinkan Penempatan Diagonal (Miring)
             </span>
             <span className="text-[11px] font-semibold text-slate-400">
-              Kata dapat tersusun horizontal (→), vertikal (↓), atau diagonal (↘/↗).
+              Kata juga dapat tersusun secara diagonal (↘/↗).
             </span>
           </div>
         </label>
@@ -236,7 +244,7 @@ export const WordsearchEditor: React.FC<EditorProps<WordsearchContent>> = ({
       <div className="flex flex-col gap-2">
         <label className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-500">
           <HelpCircle className="w-4 h-4 text-duo-green" />
-          <span>Petunjuk Soal / Tema Kata (Opsional)</span>
+          <span>Petunjuk Soal (Opsional)</span>
         </label>
         <textarea
           rows={2}
@@ -254,12 +262,9 @@ export const WordsearchEditor: React.FC<EditorProps<WordsearchContent>> = ({
           <div className="flex items-center gap-2">
             <Eye className="w-4 h-4 text-duo-yellow-border" />
             <h4 className="text-xs font-black uppercase tracking-wider text-slate-700">
-              Live Preview Matriks Grid (10 × 10)
+              Preview (10 × 10)
             </h4>
           </div>
-          <span className="text-xs font-bold text-slate-400">
-            Warna pastel menandai letak kata kunci tersembunyi
-          </span>
         </div>
 
         {/* Render 10x10 Matrix Grid */}
@@ -274,20 +279,24 @@ export const WordsearchEditor: React.FC<EditorProps<WordsearchContent>> = ({
                   <div
                     key={key}
                     style={{
-                      backgroundColor: highlight ? highlight.color : '#FFFFFF',
+                      backgroundColor: highlight ? highlight.color : "#FFFFFF",
                     }}
                     className={cn(
-                      'aspect-square rounded-lg sm:rounded-xl border flex items-center justify-center font-black select-none text-xs sm:text-base transition-colors shadow-2xs',
+                      "aspect-square rounded-lg sm:rounded-xl border flex items-center justify-center font-black select-none text-xs sm:text-base transition-colors shadow-2xs",
                       highlight
-                        ? 'border-slate-300 font-black text-duo-dark scale-[0.98]'
-                        : 'border-slate-200 text-slate-400 font-bold bg-white'
+                        ? "border-slate-300 font-black text-duo-dark scale-[0.98]"
+                        : "border-slate-200 text-slate-400 font-bold bg-white",
                     )}
-                    title={highlight ? `Bagian dari: ${highlight.word}` : `Huruf acak (${rIdx + 1}, ${cIdx + 1})`}
+                    title={
+                      highlight
+                        ? `Bagian dari: ${highlight.word}`
+                        : `Huruf acak (${rIdx + 1}, ${cIdx + 1})`
+                    }
                   >
                     {char}
                   </div>
                 );
-              })
+              }),
             )}
           </div>
         </div>
@@ -308,7 +317,7 @@ export const WordsearchEditor: React.FC<EditorProps<WordsearchContent>> = ({
                 >
                   <span>{p.word}</span>
                   <span className="opacity-75 font-semibold text-[10px]">
-                    ({isDiag ? 'Diagonal ↗' : isVert ? 'Vertikal ↓' : 'Horizontal →'})
+                    ({isDiag ? "Diagonal" : isVert ? "Vertikal" : "Horizontal"})
                   </span>
                 </div>
               );

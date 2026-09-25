@@ -5,6 +5,7 @@ import { PlayerProps } from "@/plugins/core/types";
 import { TrueFalseContent, TrueFalseAnswer } from "./types";
 import { useSoundEffect } from "@/hooks/useSoundEffect";
 import { cn } from "@/utils/cn";
+import { DuoMathRenderer } from "@/components/common/DuoMathRenderer";
 
 export const TrueFalsePlayer: React.FC<
   PlayerProps<TrueFalseContent, TrueFalseAnswer>
@@ -35,11 +36,14 @@ export const TrueFalsePlayer: React.FC<
       )}
 
       {/* 2. Statement Text (Large: text-2xl font-bold text-center) */}
-      {!(content as any)._hideStatement && (
-        <h2 className="text-2xl sm:text-3xl font-bold text-center text-duo-dark leading-snug tracking-tight px-3 mb-8 sm:mb-10">
-          {content.statement || "Pernyataan belum diatur"}
-        </h2>
-      )}
+      {!(content as any)._hideStatement &&
+        Boolean(content.statement || (content as any).titlePrompt) && (
+          <h2 className="text-2xl sm:text-3xl font-bold text-center text-duo-dark leading-snug tracking-tight px-3 mb-8 sm:mb-10">
+            <DuoMathRenderer
+              content={content.statement || (content as any).titlePrompt}
+            />
+          </h2>
+        )}
 
       {/* 3. Two Massive 3D Choice Cards (Enlarged for Kids & Classrooms) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6 w-full">

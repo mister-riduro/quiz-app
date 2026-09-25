@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from "react";
 import {
   AlignLeft,
   HelpCircle,
@@ -8,12 +8,12 @@ import {
   RotateCcw,
   Shuffle,
   Info,
-} from 'lucide-react';
-import { EditorProps } from '@/plugins/core/types';
-import { UnjumbleContent } from './types';
-import { DuoCard } from '@/components/ui/DuoCard';
-import { Badge } from '@/components/ui/Badge';
-import { cn } from '@/utils/cn';
+} from "lucide-react";
+import { EditorProps } from "@/plugins/core/types";
+import { UnjumbleContent } from "./types";
+import { DuoCard } from "@/components/ui/DuoCard";
+import { Badge } from "@/components/ui/Badge";
+import { cn } from "@/utils/cn";
 
 /**
  * Split a sentence into individual word tokens by whitespace
@@ -27,7 +27,7 @@ export const UnjumbleEditor: React.FC<EditorProps<UnjumbleContent>> = ({
   onChange,
   disabled = false,
 }) => {
-  const fullSentence = value?.fullSentence ?? '';
+  const fullSentence = value?.fullSentence ?? "";
   const tokens = useMemo(() => {
     if (value?.tokens && value.tokens.length > 0) {
       return value.tokens;
@@ -35,11 +35,13 @@ export const UnjumbleEditor: React.FC<EditorProps<UnjumbleContent>> = ({
     return splitSentenceToTokens(fullSentence);
   }, [value?.tokens, fullSentence]);
 
-  const hint = value?.hint ?? '';
+  const hint = value?.hint ?? "";
   const [previewShuffleSeed, setPreviewShuffleSeed] = useState<number>(1);
 
   // Handle sentence input change -> automatically re-tokenizes based on whitespace
-  const handleSentenceChange = (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
+  const handleSentenceChange = (
+    e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>,
+  ) => {
     const newSentence = e.target.value;
     const autoTokens = splitSentenceToTokens(newSentence);
 
@@ -97,7 +99,9 @@ export const UnjumbleEditor: React.FC<EditorProps<UnjumbleContent>> = ({
   };
 
   // Handle hint change
-  const handleHintChange = (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
+  const handleHintChange = (
+    e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>,
+  ) => {
     onChange({
       ...value,
       hint: e.target.value,
@@ -122,7 +126,7 @@ export const UnjumbleEditor: React.FC<EditorProps<UnjumbleContent>> = ({
         <div className="flex items-center justify-between">
           <label className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-500">
             <AlignLeft className="w-4 h-4 text-duo-blue" />
-            <span>Kalimat Lengkap Yang Benar</span>
+            <span>Kunci Jawaban</span>
           </label>
           {tokens.length > 0 && (
             <Badge variant="blue" className="text-[10px]">
@@ -143,7 +147,8 @@ export const UnjumbleEditor: React.FC<EditorProps<UnjumbleContent>> = ({
         <p className="text-xs font-semibold text-[#777777] flex items-center gap-1.5">
           <Info className="w-3.5 h-3.5 text-duo-blue shrink-0" />
           <span>
-            Ketik kalimat utuh. Sistem otomatis memecahnya menjadi balok kata berdasarkan spasi.
+            Ketik kalimat utuh. Sistem otomatis memecahnya menjadi balok kata
+            berdasarkan spasi.
           </span>
         </p>
       </div>
@@ -156,7 +161,8 @@ export const UnjumbleEditor: React.FC<EditorProps<UnjumbleContent>> = ({
               Pengaturan Balok Kata (Tokens)
             </h4>
             <p className="text-[11px] font-semibold text-slate-400">
-              Klik &quot;Gabung&quot; di antara dua kata jika ingin menjadikannya satu frasa khusus.
+              Klik &quot;Gabung&quot; di antara dua kata jika ingin
+              menjadikannya satu frasa khusus.
             </p>
           </div>
 
@@ -177,26 +183,29 @@ export const UnjumbleEditor: React.FC<EditorProps<UnjumbleContent>> = ({
         {tokens.length === 0 ? (
           <div className="py-6 px-4 text-center border-2 border-dashed border-duo-gray rounded-xl bg-white">
             <span className="text-xs font-bold text-slate-400 italic">
-              Ketik kalimat di atas untuk menghasilkan balok kata secara otomatis.
+              Ketik kalimat di atas untuk menghasilkan balok kata secara
+              otomatis.
             </span>
           </div>
         ) : (
           <div className="flex flex-wrap items-center gap-2 pt-2">
             {tokens.map((token, index) => {
-              const isMergedPhrase = token.includes(' ');
+              const isMergedPhrase = token.includes(" ");
 
               return (
                 <React.Fragment key={`token-editor-${index}-${token}`}>
                   {/* Word / Phrase Block */}
                   <div
                     className={cn(
-                      'inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl border-2 border-b-4 select-none transition-all shadow-xs',
+                      "inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl border-2 border-b-4 select-none transition-all shadow-xs",
                       isMergedPhrase
-                        ? 'bg-duo-blue-light/50 border-duo-blue text-duo-dark'
-                        : 'bg-white border-slate-200 border-b-slate-300 text-duo-dark'
+                        ? "bg-duo-blue-light/50 border-duo-blue text-duo-dark"
+                        : "bg-white border-slate-200 border-b-slate-300 text-duo-dark",
                     )}
                   >
-                    <span className="text-sm font-black tracking-tight">{token}</span>
+                    <span className="text-sm font-black tracking-tight">
+                      {token}
+                    </span>
 
                     {/* Merged Phrase Indicator & Split Button */}
                     {isMergedPhrase && (
@@ -306,4 +315,3 @@ export const UnjumbleEditor: React.FC<EditorProps<UnjumbleContent>> = ({
     </DuoCard>
   );
 };
-

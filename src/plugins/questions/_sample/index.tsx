@@ -1,9 +1,9 @@
-import React from 'react';
-import { CheckCircle2 } from 'lucide-react';
-import { QuestionPlugin, EditorProps, PlayerProps } from '@/plugins/core/types';
-import { TactileButton } from '@/components/ui/TactileButton';
-import { DuoCard } from '@/components/ui/DuoCard';
-import { useSoundEffect } from '@/hooks/useSoundEffect';
+import React from "react";
+import { CheckCircle2 } from "lucide-react";
+import { QuestionPlugin, EditorProps, PlayerProps } from "@/plugins/core/types";
+import { TactileButton } from "@/components/ui/TactileButton";
+import { DuoCard } from "@/components/ui/DuoCard";
+import { useSoundEffect } from "@/hooks/useSoundEffect";
 
 export interface SampleContent {
   statement: string;
@@ -39,12 +39,12 @@ export const SampleEditor: React.FC<EditorProps<SampleContent>> = ({
 
       <div>
         <label className="block text-xs font-black uppercase text-slate-400 mb-2">
-          Kunci Jawaban Yang Benar
+          Kunci Jawaban
         </label>
         <div className="flex gap-3">
           <TactileButton
             type="button"
-            variant={value.isCorrectTrue ? 'green' : 'gray'}
+            variant={value.isCorrectTrue ? "green" : "gray"}
             size="md"
             disabled={disabled}
             onClick={() => onChange({ ...value, isCorrectTrue: true })}
@@ -53,7 +53,7 @@ export const SampleEditor: React.FC<EditorProps<SampleContent>> = ({
           </TactileButton>
           <TactileButton
             type="button"
-            variant={!value.isCorrectTrue ? 'red' : 'gray'}
+            variant={!value.isCorrectTrue ? "red" : "gray"}
             size="md"
             disabled={disabled}
             onClick={() => onChange({ ...value, isCorrectTrue: false })}
@@ -70,7 +70,7 @@ export const SampleEditor: React.FC<EditorProps<SampleContent>> = ({
         <input
           type="text"
           disabled={disabled}
-          value={value.explanation || ''}
+          value={value.explanation || ""}
           onChange={(e) => onChange({ ...value, explanation: e.target.value })}
           placeholder="Mengapa jawaban ini benar / salah..."
           className="w-full px-4 py-2.5 border-2 border-duo-gray rounded-2xl font-semibold text-sm text-duo-dark focus:outline-none focus:border-duo-blue"
@@ -83,12 +83,9 @@ export const SampleEditor: React.FC<EditorProps<SampleContent>> = ({
 /**
  * Sample Player Component for Classroom Kiosk Mode
  */
-export const SamplePlayer: React.FC<PlayerProps<SampleContent, SampleAnswer>> = ({
-  content,
-  submittedAnswer,
-  onAnswerSubmit,
-  isEvaluating = false,
-}) => {
+export const SamplePlayer: React.FC<
+  PlayerProps<SampleContent, SampleAnswer>
+> = ({ content, submittedAnswer, onAnswerSubmit, isEvaluating = false }) => {
   const { playTap } = useSoundEffect();
 
   const handleSelect = (choice: boolean) => {
@@ -98,7 +95,10 @@ export const SamplePlayer: React.FC<PlayerProps<SampleContent, SampleAnswer>> = 
   };
 
   return (
-    <DuoCard elevated className="flex flex-col items-center text-center p-8 max-w-xl mx-auto w-full">
+    <DuoCard
+      elevated
+      className="flex flex-col items-center text-center p-8 max-w-xl mx-auto w-full"
+    >
       <div className="w-12 h-12 rounded-2xl bg-duo-blue-light border-2 border-duo-blue text-duo-blue-border flex items-center justify-center mb-4">
         <CheckCircle2 className="w-7 h-7" />
       </div>
@@ -116,7 +116,9 @@ export const SamplePlayer: React.FC<PlayerProps<SampleContent, SampleAnswer>> = 
           size="lg"
           disabled={isEvaluating}
           onClick={() => handleSelect(true)}
-          className={submittedAnswer === true ? 'ring-4 ring-duo-green-border' : ''}
+          className={
+            submittedAnswer === true ? "ring-4 ring-duo-green-border" : ""
+          }
         >
           ✓ BENAR
         </TactileButton>
@@ -126,7 +128,9 @@ export const SamplePlayer: React.FC<PlayerProps<SampleContent, SampleAnswer>> = 
           size="lg"
           disabled={isEvaluating}
           onClick={() => handleSelect(false)}
-          className={submittedAnswer === false ? 'ring-4 ring-duo-red-border' : ''}
+          className={
+            submittedAnswer === false ? "ring-4 ring-duo-red-border" : ""
+          }
         >
           ✕ SALAH
         </TactileButton>
@@ -138,34 +142,34 @@ export const SamplePlayer: React.FC<PlayerProps<SampleContent, SampleAnswer>> = 
 /**
  * Sample Plugin Definition adhering to QuestionPlugin interface
  */
-export const sampleQuestionPlugin: QuestionPlugin<SampleContent, SampleAnswer> = {
-  type: 'true_false',
-  title: 'True or False (Sample Plugin)',
-  description: 'Pernyataan lugas dengan evaluasi kartu 3D Benar / Salah.',
-  icon: CheckCircle2,
-  defaultContent: {
-    statement: 'Matahari terbit dari sebelah timur.',
-    isCorrectTrue: true,
-    explanation: 'Bumi berotasi dari barat ke timur.',
-  },
-  EditorComponent: SampleEditor,
-  PlayerComponent: SamplePlayer,
-  validateAnswer: (content: SampleContent, answer: SampleAnswer) => {
-    const isCorrect = content.isCorrectTrue === answer;
-    return {
-      isCorrect,
-      feedbackMessage: isCorrect
-        ? 'Luar biasa! Jawabanmu 100% tepat.'
-        : `Kurang tepat. ${content.explanation || ''}`,
-    };
-  },
-  sanitizeForPlayer: (content: SampleContent): Partial<SampleContent> => {
-    // Strips out answer key to prevent client inspection tampering
-    return {
-      statement: content.statement,
-    };
-  },
-};
+export const sampleQuestionPlugin: QuestionPlugin<SampleContent, SampleAnswer> =
+  {
+    type: "true_false",
+    title: "True or False (Sample Plugin)",
+    description: "Pernyataan lugas dengan evaluasi kartu 3D Benar / Salah.",
+    icon: CheckCircle2,
+    defaultContent: {
+      statement: "Matahari terbit dari sebelah timur.",
+      isCorrectTrue: true,
+      explanation: "Bumi berotasi dari barat ke timur.",
+    },
+    EditorComponent: SampleEditor,
+    PlayerComponent: SamplePlayer,
+    validateAnswer: (content: SampleContent, answer: SampleAnswer) => {
+      const isCorrect = content.isCorrectTrue === answer;
+      return {
+        isCorrect,
+        feedbackMessage: isCorrect
+          ? "Luar biasa! Jawabanmu 100% tepat."
+          : `Kurang tepat. ${content.explanation || ""}`,
+      };
+    },
+    sanitizeForPlayer: (content: SampleContent): Partial<SampleContent> => {
+      // Strips out answer key to prevent client inspection tampering
+      return {
+        statement: content.statement,
+      };
+    },
+  };
 
 export default sampleQuestionPlugin;
-

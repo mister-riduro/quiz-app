@@ -1,3 +1,5 @@
+@import "katex/dist/katex.min.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -5,32 +7,32 @@
 @layer base {
   :root {
     /* Duolingo Design Tokens */
-    --duo-green: #58CC02;
-    --duo-green-border: #46A302;
-    --duo-green-light: #D7FFB8;
+    --duo-green: #58cc02;
+    --duo-green-border: #46a302;
+    --duo-green-light: #d7ffb8;
 
-    --duo-blue: #1CB0F6;
-    --duo-blue-border: #1899D6;
-    --duo-blue-light: #DDF4FF;
+    --duo-blue: #1cb0f6;
+    --duo-blue-border: #1899d6;
+    --duo-blue-light: #ddf4ff;
 
-    --duo-orange: #FF9600;
-    --duo-orange-border: #D97F00;
-    --duo-orange-light: #FFE8CC;
+    --duo-orange: #ff9600;
+    --duo-orange-border: #d97f00;
+    --duo-orange-light: #ffe8cc;
 
-    --duo-red: #FF4B4B;
-    --duo-red-border: #EA2B2B;
-    --duo-red-light: #FFDFE0;
+    --duo-red: #ff4b4b;
+    --duo-red-border: #ea2b2b;
+    --duo-red-light: #ffdfe0;
 
-    --duo-yellow: #FFC800;
-    --duo-yellow-border: #D4A500;
-    --duo-yellow-light: #FFF5CC;
+    --duo-yellow: #ffc800;
+    --duo-yellow-border: #d4a500;
+    --duo-yellow-light: #fff5cc;
 
-    --duo-gray: #E5E5E5;
-    --duo-gray-border: #CECECE;
-    --duo-gray-light: #F7F7F7;
+    --duo-gray: #e5e5e5;
+    --duo-gray-border: #cecece;
+    --duo-gray-light: #f7f7f7;
 
-    --duo-dark: #4B4B4B;
-    --duo-bg: #F7F9FA;
+    --duo-dark: #4b4b4b;
+    --duo-bg: #f7f9fa;
   }
 
   * {
@@ -39,7 +41,7 @@
   }
 
   html {
-    font-family: 'Nunito', sans-serif;
+    font-family: "Nunito", sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -66,7 +68,10 @@
     border-bottom-width: 4px;
     border-style: solid;
     user-select: none;
-    transition: transform 0.08s ease-in-out, border-bottom-width 0.08s ease-in-out, filter 0.1s ease;
+    transition:
+      transform 0.08s ease-in-out,
+      border-bottom-width 0.08s ease-in-out,
+      filter 0.1s ease;
   }
 
   .btn-3d-press:hover:not(:disabled) {
@@ -86,3 +91,60 @@
   }
 }
 
+/* ========================================================= */
+/* Custom Duolingo-Themed Math Formula Styling (KaTeX)       */
+/* ========================================================= */
+
+.duo-math-inline {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  margin: 0 0.15rem;
+  padding: 0.1rem 0.4rem;
+  background: #f1f5f9;
+  border-radius: 0.375rem;
+  font-weight: 700;
+  color: #1e293b;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  line-height: 1.35;
+}
+
+.duo-math-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0.75rem 0;
+  padding: 0.85rem 1.25rem;
+  background: #f8fafc;
+  border-radius: 0.5rem;
+  color: #1e293b;
+  font-weight: 800;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  overflow-x: auto;
+}
+
+/* Adapt math colors when rendered inside dark, red, blue, or green cards */
+.bg-duo-green .duo-math-inline,
+.bg-duo-red .duo-math-inline,
+.bg-duo-blue .duo-math-inline,
+button.text-white .duo-math-inline,
+.text-white .duo-math-inline {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff !important;
+  border: none;
+  outline: none;
+  box-shadow: none;
+}
+
+.katex {
+  font-size: 1.22em;
+  text-rendering: auto;
+}
+
+.katex-display {
+  margin: 0 !important;
+}

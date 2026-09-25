@@ -11,6 +11,7 @@ import {
 import confetti from "canvas-confetti";
 import { useSoundEffect } from "@/hooks/useSoundEffect";
 import { cn } from "@/utils/cn";
+import { DuoMathRenderer } from "./DuoMathRenderer";
 
 export interface BottomSheetFeedbackProps {
   isOpen: boolean;
@@ -186,9 +187,9 @@ export const BottomSheetFeedback: React.FC<BottomSheetFeedbackProps> = ({
 
                 {/* Primary Message */}
                 {message && (
-                  <p className="text-sm sm:text-base font-bold text-slate-700 leading-snug">
-                    {message}
-                  </p>
+                  <div className="text-sm sm:text-base font-bold text-slate-700 leading-snug">
+                    <DuoMathRenderer content={message} />
+                  </div>
                 )}
 
                 {/* Solution / Correction Explanation */}
@@ -217,9 +218,9 @@ export const BottomSheetFeedback: React.FC<BottomSheetFeedbackProps> = ({
                           ? "Kunci Jawaban / Solusi:"
                           : "Koreksi / Jawaban Benar:"}
                       </span>
-                      <p className="text-slate-800 font-bold whitespace-pre-line leading-relaxed text-xs sm:text-sm">
-                        {solutionExplanation}
-                      </p>
+                      <div className="text-slate-800 font-bold whitespace-pre-line leading-relaxed text-xs sm:text-sm">
+                        <DuoMathRenderer content={solutionExplanation} />
+                      </div>
                     </div>
                   </div>
                 )}

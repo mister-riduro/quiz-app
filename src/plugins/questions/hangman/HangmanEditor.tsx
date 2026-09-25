@@ -1,25 +1,32 @@
-import React from 'react';
-import { Gamepad2, Heart, Sparkles, Tag } from 'lucide-react';
-import { EditorProps } from '@/plugins/core/types';
-import { HangmanContent } from './types';
-import { DuoCard } from '@/components/ui/DuoCard';
-import { Badge } from '@/components/ui/Badge';
-import { cn } from '@/utils/cn';
+import React from "react";
+import { Gamepad2, Heart, Sparkles, Tag } from "lucide-react";
+import { EditorProps } from "@/plugins/core/types";
+import { HangmanContent } from "./types";
+import { DuoCard } from "@/components/ui/DuoCard";
+import { Badge } from "@/components/ui/Badge";
+import { cn } from "@/utils/cn";
 
-const BALLOON_COLORS = ['#FF4B4B', '#1CB0F6', '#58CC02', '#FFC800', '#A855F7', '#FF9600'];
+const BALLOON_COLORS = [
+  "#FF4B4B",
+  "#1CB0F6",
+  "#58CC02",
+  "#FFC800",
+  "#A855F7",
+  "#FF9600",
+];
 
 export const HangmanEditor: React.FC<EditorProps<HangmanContent>> = ({
   value,
   onChange,
   disabled = false,
 }) => {
-  const secretWord = (value.secretWord || '').toUpperCase();
-  const category = value.category || value.hint || '';
+  const secretWord = (value.secretWord || "").toUpperCase();
+  const category = value.category || value.hint || "";
   const maxLives = Math.min(6, Math.max(3, value.maxLives || 5));
 
   const handleWordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Allow uppercase letters and spaces (spaces auto-revealed in game)
-    const sanitized = e.target.value.toUpperCase().replace(/[^A-Z ]/g, '');
+    const sanitized = e.target.value.toUpperCase().replace(/[^A-Z ]/g, "");
     onChange({
       ...value,
       secretWord: sanitized,
@@ -43,7 +50,7 @@ export const HangmanEditor: React.FC<EditorProps<HangmanContent>> = ({
   };
 
   // Word statistics
-  const letterCount = secretWord.replace(/\s+/g, '').length;
+  const letterCount = secretWord.replace(/\s+/g, "").length;
   const wordCount = secretWord.trim().split(/\s+/).filter(Boolean).length;
 
   return (
@@ -53,11 +60,11 @@ export const HangmanEditor: React.FC<EditorProps<HangmanContent>> = ({
         <div className="flex items-center justify-between">
           <label className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-500">
             <Gamepad2 className="w-4 h-4 text-duo-blue" />
-            <span>Kata Rahasia Tebakan</span>
+            <span>Kunci Jawaban</span>
           </label>
           {letterCount > 0 && (
             <Badge variant="blue" className="text-[10px]">
-              {letterCount} Huruf {wordCount > 1 ? `(${wordCount} Kata)` : ''}
+              {letterCount} Huruf {wordCount > 1 ? `(${wordCount} Kata)` : ""}
             </Badge>
           )}
         </div>
@@ -71,7 +78,8 @@ export const HangmanEditor: React.FC<EditorProps<HangmanContent>> = ({
           className="w-full px-4 py-3 border-2 border-duo-gray rounded-2xl font-black text-xl uppercase tracking-widest text-duo-dark placeholder:font-medium placeholder:text-slate-400 placeholder:normal-case placeholder:tracking-normal focus:outline-none focus:border-duo-blue focus:ring-4 focus:ring-duo-blue/10 bg-white transition-all"
         />
         <p className="text-xs font-semibold text-[#777777]">
-          Karakter spasi otomatis dianggap terisi (terbuka) di papan permainan tebak kata.
+          Karakter spasi otomatis dianggap terisi (terbuka) di papan permainan
+          tebak kata.
         </p>
       </div>
 
@@ -90,7 +98,8 @@ export const HangmanEditor: React.FC<EditorProps<HangmanContent>> = ({
           className="w-full px-4 py-3 border-2 border-duo-gray rounded-2xl font-semibold text-sm text-duo-dark placeholder:text-slate-400 focus:outline-none focus:border-duo-blue focus:ring-4 focus:ring-duo-blue/10 bg-white transition-all"
         />
         <p className="text-xs font-semibold text-[#777777]">
-          Kategori ini akan tampil di bagian atas sebagai panduan konteks bagi anak.
+          Kategori ini akan tampil di bagian atas sebagai panduan konteks bagi
+          anak.
         </p>
       </div>
 
@@ -110,7 +119,13 @@ export const HangmanEditor: React.FC<EditorProps<HangmanContent>> = ({
           {[3, 4, 5, 6].map((num) => {
             const isSelected = maxLives === num;
             const difficultyLabel =
-              num === 3 ? 'Sulit' : num === 4 ? 'Sedang' : num === 5 ? 'Standar' : 'Mudah';
+              num === 3
+                ? "Sulit"
+                : num === 4
+                  ? "Sedang"
+                  : num === 5
+                    ? "Standar"
+                    : "Mudah";
 
             return (
               <button
@@ -119,16 +134,18 @@ export const HangmanEditor: React.FC<EditorProps<HangmanContent>> = ({
                 disabled={disabled}
                 onClick={() => handleLivesSelect(num)}
                 className={cn(
-                  'flex flex-col items-center justify-center p-3.5 rounded-2xl border-2 transition-all text-center',
+                  "flex flex-col items-center justify-center p-3.5 rounded-2xl border-2 transition-all text-center",
                   isSelected
-                    ? 'bg-duo-red-light/50 border-duo-red border-b-[4px] border-b-duo-red-border shadow-xs'
-                    : 'bg-slate-50 hover:bg-slate-100/80 border-slate-200 border-b-[3px] text-slate-600',
-                  disabled && 'opacity-60 cursor-not-allowed'
+                    ? "bg-duo-red-light/50 border-duo-red border-b-[4px] border-b-duo-red-border shadow-xs"
+                    : "bg-slate-50 hover:bg-slate-100/80 border-slate-200 border-b-[3px] text-slate-600",
+                  disabled && "opacity-60 cursor-not-allowed",
                 )}
               >
                 <div className="flex items-center gap-1 mb-1">
                   <div className="w-3 h-3 rounded-full bg-duo-red" />
-                  <span className="font-black text-lg text-duo-dark">{num}</span>
+                  <span className="font-black text-lg text-duo-dark">
+                    {num}
+                  </span>
                 </div>
                 <span className="text-[11px] font-bold text-slate-500">
                   {difficultyLabel}
@@ -151,7 +168,8 @@ export const HangmanEditor: React.FC<EditorProps<HangmanContent>> = ({
         {secretWord.length === 0 ? (
           <div className="py-8 px-4 text-center border-2 border-dashed border-duo-gray rounded-2xl bg-slate-50">
             <p className="text-xs font-bold text-slate-400">
-              Ketik kata rahasia di atas untuk melihat simulasi balon maskot dan garis bawah tebak kata.
+              Ketik kata rahasia di atas untuk melihat simulasi balon maskot dan
+              garis bawah tebak kata.
             </p>
           </div>
         ) : (
@@ -162,7 +180,10 @@ export const HangmanEditor: React.FC<EditorProps<HangmanContent>> = ({
                 <div
                   key={`balloon-preview-${idx}`}
                   className="w-7 h-9 rounded-full shadow-xs border border-black/10 flex items-center justify-center text-[10px] font-black text-white"
-                  style={{ backgroundColor: BALLOON_COLORS[idx % BALLOON_COLORS.length] }}
+                  style={{
+                    backgroundColor:
+                      BALLOON_COLORS[idx % BALLOON_COLORS.length],
+                  }}
                 >
                   🎈
                 </div>
@@ -178,8 +199,8 @@ export const HangmanEditor: React.FC<EditorProps<HangmanContent>> = ({
 
             {/* Mystery word underlines */}
             <div className="flex flex-wrap justify-center items-center gap-2.5 py-2">
-              {secretWord.split('').map((char, index) => {
-                if (char === ' ') {
+              {secretWord.split("").map((char, index) => {
+                if (char === " ") {
                   return <div key={`preview-char-${index}`} className="w-5" />;
                 }
                 return (

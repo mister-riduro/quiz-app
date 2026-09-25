@@ -5,7 +5,6 @@ import {
   Plus,
   Trash2,
   HelpCircle,
-  Sparkles,
   Shuffle,
   AlertCircle,
 } from "lucide-react";
@@ -15,6 +14,9 @@ import { DuoCard } from "@/components/ui/DuoCard";
 import { TactileButton } from "@/components/ui/TactileButton";
 import { generateUUID } from "@/utils/uuid";
 import { cn } from "@/utils/cn";
+import { DuoMathRenderer } from "@/components/common/DuoMathRenderer";
+import { MathFormulaModal } from "@/components/common/MathFormulaModal";
+import { DuoMathTextarea } from "@/components/common/DuoMathTextarea";
 
 const OPTION_LETTERS = ["A", "B", "C", "D", "E"] as const;
 const MIN_OPTIONS = 2;
@@ -31,6 +33,9 @@ const OPTION_BADGE_COLORS = [
 export const MultipleChoiceEditor: React.FC<
   EditorProps<MultipleChoiceContent>
 > = ({ value, onChange, disabled = false }) => {
+  const [mathModalTarget, setMathModalTarget] = React.useState<string | null>(
+    null,
+  );
   const options = value.options ?? [];
   const correctOptionIds = useMemo<string[]>(() => {
     if (
@@ -109,15 +114,6 @@ export const MultipleChoiceEditor: React.FC<
     });
   };
 
-  const handleExplanationChange = (
-    e: React.ChangeEvent<HTMLTextAreaElement>,
-  ) => {
-    onChange({
-      ...value,
-      explanation: e.target.value,
-    });
-  };
-
   const handleHintChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange({
       ...value,
@@ -133,6 +129,19 @@ export const MultipleChoiceEditor: React.FC<
     });
   };
 
+  const handleInsertMath = (latex: string, isBlock: boolean) => {
+    if (!mathModalTarget) return;
+    const mathStr = isBlock ? `$$${latex}$$` : `$${latex}$`;
+    const targetOpt = options.find((o) => o.id === mathModalTarget);
+    if (targetOpt) {
+      const nextText = targetOpt.text
+        ? `${targetOpt.text} ${mathStr}`
+        : mathStr;
+      handleOptionTextChange(mathModalTarget, nextText);
+    }
+    setMathModalTarget(null);
+  };
+
   const isMissingCorrect =
     correctOptionIds.length === 0 ||
     !options.some((opt) => correctOptionIds.includes(opt.id));
@@ -145,7 +154,7 @@ export const MultipleChoiceEditor: React.FC<
         <div className="flex items-center justify-between">
           <label className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-500">
             <span>
-              Daftar Pilihan Jawaban ({options.length}/{MAX_OPTIONS})
+              Kunci Jawaban ({options.length}/{MAX_OPTIONS})
             </span>
           </label>
           <span className="text-[11px] font-extrabold text-slate-400">
@@ -223,24 +232,47 @@ export const MultipleChoiceEditor: React.FC<
                     </button>
                   </div>
 
-                  {/* Middle: Option Text Field */}
-                  <div className="flex-1 min-w-0">
-                    <input
-                      type="text"
-                      disabled={disabled}
-                      value={opt.text}
-                      onChange={(e) =>
-                        handleOptionTextChange(opt.id, e.target.value)
-                      }
-                      placeholder={`Teks pilihan ${letter}...`}
-                      className={cn(
-                        "w-full px-3.5 py-2 rounded-xl border-2 font-bold text-sm text-duo-dark placeholder:font-medium placeholder:text-slate-400 focus:outline-none transition-all",
-                        isCorrect
-                          ? "border-duo-green/60 bg-white focus:border-duo-green focus:ring-2 focus:ring-duo-green/20"
-                          : "border-duo-gray bg-white focus:border-duo-blue focus:ring-2 focus:ring-duo-blue/15",
-                        !opt.text.trim() && "border-amber-300",
-                      )}
-                    />
+                  {/* Middle: Option Text Field & Math Formula Button */}
+                  <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="text"
+                        disabled={disabled}
+                        value={opt.text}
+                        onChange={(e) =>
+                          handleOptionTextChange(opt.id, e.target.value)
+                        }
+                        placeholder={`Teks pilihan ${letter}...`}
+                        className={cn(
+                          "flex-1 px-3.5 py-2 rounded-xl border-2 font-bold text-sm text-duo-dark placeholder:font-medium placeholder:text-slate-400 focus:outline-none transition-all",
+                          isCorrect
+                            ? "border-duo-green/60 bg-white focus:border-duo-green focus:ring-2 focus:ring-duo-green/20"
+                            : "border-duo-gray bg-white focus:border-duo-blue focus:ring-2 focus:ring-duo-blue/15",
+                          !opt.text.trim() && "border-amber-300",
+                        )}
+                      />
+                      <button
+                        type="button"
+                        disabled={disabled}
+                        onClick={() => setMathModalTarget(opt.id)}
+                        className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-duo-blue-light text-slate-500 hover:text-duo-blue border border-slate-200 text-xs font-black transition-all cursor-pointer shrink-0 flex items-center justify-center shadow-2xs"
+                        title={`Sisipkan rumus matematika pada pilihan ${letter}`}
+                      >
+                        ∑
+                      </button>
+                    </div>
+
+                    {/* Live Preview if option text contains math */}
+                    {(opt.text.includes("$") ||
+                      opt.text.includes("\\(") ||
+                      opt.text.includes("\\[")) && (
+                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50/70 border border-blue-200/60 text-xs font-bold text-duo-dark">
+                        <span className="text-[10px] uppercase font-black text-duo-blue shrink-0">
+                          Hasil:
+                        </span>
+                        <DuoMathRenderer content={opt.text} inlineOnly />
+                      </div>
+                    )}
                   </div>
 
                   {/* Right: Remove Button */}
@@ -307,7 +339,7 @@ export const MultipleChoiceEditor: React.FC<
             </h5>
             <p className="text-[11px] font-semibold text-slate-500">
               Tampilkan posisi opsi (A, B, C, D, E) secara acak saat siswa
-              bermain agar tidak menghafal pola.
+              bermain.
             </p>
           </div>
         </div>
@@ -353,25 +385,22 @@ export const MultipleChoiceEditor: React.FC<
         </p>
       </div>
 
-      {/* 4. Explanation (Pembahasan) */}
-      <div className="flex flex-col gap-2">
-        <label className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-500">
-          <Sparkles className="w-4 h-4 text-duo-green" />
-          <span>Pembahasan & Penjelasan Jawaban (Opsional)</span>
-        </label>
-        <textarea
-          rows={2}
-          disabled={disabled}
-          value={explanation}
-          onChange={handleExplanationChange}
-          placeholder="Contoh: Klorofil adalah pigmen pada kloroplas yang berfungsi menangkap cahaya matahari."
-          className="w-full px-4 py-3 border-2 border-duo-gray rounded-2xl font-bold text-sm text-duo-dark placeholder:font-medium placeholder:text-slate-400 focus:outline-none focus:border-duo-blue focus:ring-4 focus:ring-duo-blue/10 bg-white transition-all resize-none"
-        />
-        <p className="text-xs font-semibold text-slate-400">
-          Penjelasan ini akan ditampilkan di kartu rangkuman saat kunci jawaban
-          dibuka atau setelah siswa selesai menjawab.
-        </p>
-      </div>
+      {/* 4. Explanation (Pembahasan) with Rich Math Support */}
+      <DuoMathTextarea
+        label="Pembahasan & Penjelasan Jawaban (Opsional)"
+        value={explanation}
+        onChange={(val) => onChange({ ...value, explanation: val })}
+        placeholder="Contoh: Klorofil adalah pigmen pada kloroplas yang berfungsi menangkap cahaya matahari..."
+        rows={2}
+        helperText="Penjelasan ini akan ditampilkan di kartu rangkuman saat kunci jawaban dibuka atau setelah siswa selesai menjawab."
+      />
+
+      {/* Math Formula Modal for Options */}
+      <MathFormulaModal
+        isOpen={Boolean(mathModalTarget)}
+        onClose={() => setMathModalTarget(null)}
+        onInsert={handleInsertMath}
+      />
     </DuoCard>
   );
 };

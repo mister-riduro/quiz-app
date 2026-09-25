@@ -1,29 +1,31 @@
-import React, { useState, useMemo } from 'react';
-import { Shuffle, HelpCircle, Sparkles, Type } from 'lucide-react';
-import { EditorProps } from '@/plugins/core/types';
-import { AnagramContent } from './types';
-import { DuoCard } from '@/components/ui/DuoCard';
-import { TileToken } from '@/components/ui/TileToken';
-import { Badge } from '@/components/ui/Badge';
+import React, { useState, useMemo } from "react";
+import { Shuffle, HelpCircle, Sparkles, Type } from "lucide-react";
+import { EditorProps } from "@/plugins/core/types";
+import { AnagramContent } from "./types";
+import { DuoCard } from "@/components/ui/DuoCard";
+import { TileToken } from "@/components/ui/TileToken";
+import { Badge } from "@/components/ui/Badge";
 
 export const AnagramEditor: React.FC<EditorProps<AnagramContent>> = ({
   value,
   onChange,
   disabled = false,
 }) => {
-  const targetWord = (value.targetWord || '').toUpperCase();
-  const hint = value.hint || '';
+  const targetWord = (value.targetWord || "").toUpperCase();
+  const hint = value.hint || "";
   const [shuffleSeed, setShuffleSeed] = useState<number>(1);
 
   const handleTargetWordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const sanitized = e.target.value.toUpperCase().replace(/[^A-Z]/g, '');
+    const sanitized = e.target.value.toUpperCase().replace(/[^A-Z]/g, "");
     onChange({
       ...value,
       targetWord: sanitized,
     });
   };
 
-  const handleHintChange = (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
+  const handleHintChange = (
+    e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>,
+  ) => {
     onChange({
       ...value,
       hint: e.target.value,
@@ -32,7 +34,7 @@ export const AnagramEditor: React.FC<EditorProps<AnagramContent>> = ({
 
   // Preview scrambled letters
   const previewLetters = useMemo(() => {
-    const chars = targetWord.split('').filter(Boolean);
+    const chars = targetWord.split("").filter(Boolean);
     if (chars.length <= 1) return chars;
 
     const shuffled = [...chars];
@@ -42,7 +44,7 @@ export const AnagramEditor: React.FC<EditorProps<AnagramContent>> = ({
     }
 
     // Ensure it looks scrambled if possible
-    if (shuffled.join('') === targetWord && chars.length > 1) {
+    if (shuffled.join("") === targetWord && chars.length > 1) {
       const temp = shuffled[0];
       shuffled[0] = shuffled[1];
       shuffled[1] = temp;
@@ -58,7 +60,7 @@ export const AnagramEditor: React.FC<EditorProps<AnagramContent>> = ({
         <div className="flex items-center justify-between">
           <label className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-500">
             <Type className="w-4 h-4 text-duo-blue" />
-            <span>Kata Target Anagram</span>
+            <span>Kunci Jawaban</span>
           </label>
           {targetWord.length > 0 && (
             <Badge variant="blue" className="text-[10px]">
@@ -76,7 +78,8 @@ export const AnagramEditor: React.FC<EditorProps<AnagramContent>> = ({
           className="w-full px-4 py-3 border-2 border-duo-gray rounded-2xl font-black text-xl uppercase tracking-widest text-duo-dark placeholder:font-medium placeholder:text-slate-400 placeholder:normal-case placeholder:tracking-normal focus:outline-none focus:border-duo-blue focus:ring-4 focus:ring-duo-blue/10 bg-white transition-all"
         />
         <p className="text-xs font-semibold text-[#777777]">
-          Hanya huruf alfabet (A-Z). Huruf-huruf ini akan diacak dan disusun kembali oleh siswa dengan menggeser ubin 3D.
+          Hanya huruf alfabet (A-Z). Huruf-huruf ini akan diacak dan disusun
+          kembali oleh siswa dengan menggeser ubin 3D.
         </p>
       </div>
 
@@ -95,7 +98,8 @@ export const AnagramEditor: React.FC<EditorProps<AnagramContent>> = ({
           className="w-full px-4 py-3 border-2 border-duo-gray rounded-2xl font-semibold text-sm text-duo-dark placeholder:text-slate-400 focus:outline-none focus:border-duo-blue focus:ring-4 focus:ring-duo-blue/10 bg-white transition-all resize-none"
         />
         <p className="text-xs font-semibold text-[#777777]">
-          Berikan petunjuk kontekstual atau definisi agar siswa dapat menebak kata yang dimaksud.
+          Berikan petunjuk kontekstual atau definisi agar siswa dapat menebak
+          kata yang dimaksud.
         </p>
       </div>
 
@@ -123,7 +127,8 @@ export const AnagramEditor: React.FC<EditorProps<AnagramContent>> = ({
         {targetWord.length === 0 ? (
           <div className="py-8 px-4 text-center border-2 border-dashed border-duo-gray rounded-2xl bg-slate-50">
             <p className="text-xs font-bold text-slate-400">
-              Masukkan kata target di atas untuk melihat simulasi balok anagram teracak.
+              Masukkan kata target di atas untuk melihat simulasi balok anagram
+              teracak.
             </p>
           </div>
         ) : (
@@ -152,4 +157,3 @@ export const AnagramEditor: React.FC<EditorProps<AnagramContent>> = ({
     </DuoCard>
   );
 };
-

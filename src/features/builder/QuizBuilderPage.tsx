@@ -24,6 +24,8 @@ import { DuoCard } from "@/components/ui/DuoCard";
 import { Badge } from "@/components/ui/Badge";
 import { DuoDropdown } from "@/components/ui/DuoDropdown";
 import { ImageUploader } from "@/components/common/ImageUploader";
+import { DuoMathTextarea } from "@/components/common/DuoMathTextarea";
+import { DuoMathRenderer } from "@/components/common/DuoMathRenderer";
 import { SortableQuestionItem } from "./components/SortableQuestionItem";
 import { QuestionSettingsDrawer } from "./components/QuestionSettingsDrawer";
 import { AddQuestionModal } from "./components/AddQuestionModal";
@@ -542,12 +544,23 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
                   </TactileButton>
                 </div>
 
+                {/* Question Prompt for Preview */}
+                {activeQuestion.titlePrompt && (
+                  <h3 className="text-xl sm:text-2xl font-black text-center text-duo-dark px-2">
+                    <DuoMathRenderer content={activeQuestion.titlePrompt} />
+                  </h3>
+                )}
+
                 {/* Render Player Component */}
                 {currentPlugin && (
-                  <div className="my-4">
+                  <div className="my-2">
                     <currentPlugin.PlayerComponent
                       content={{
                         ...activeQuestion.content,
+                        titlePrompt: activeQuestion.titlePrompt,
+                        statement:
+                          activeQuestion.content?.statement ||
+                          activeQuestion.titlePrompt,
                         mediaUrl:
                           activeQuestion.mediaUrl ||
                           activeQuestion.content?.mediaUrl,
@@ -566,24 +579,18 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
                 <DuoCard elevated className="p-6 sm:p-7 flex flex-col gap-6">
                   {/* Question Type Header & Changer Row */}
 
-                  {/* Prompt Text Field (Default Empty, Placeholder Only) */}
-                  <div className="flex flex-col gap-2">
-                    <label className="text-xs font-black uppercase text-slate-400 tracking-wider block">
-                      Pertanyaan
-                    </label>
-
-                    <textarea
-                      rows={2}
-                      value={activeQuestion.titlePrompt}
-                      onChange={(e) =>
-                        updateQuestion(activeQuestionIndex, {
-                          titlePrompt: e.target.value,
-                        })
-                      }
-                      placeholder="Tuliskan petunjuk / pertanyaan soal di sini..."
-                      className="w-full px-4 py-3 border-2 border-duo-gray rounded-2xl font-bold text-sm sm:text-base text-duo-dark placeholder:font-medium placeholder:text-slate-400 focus:outline-none focus:border-duo-blue focus:ring-4 focus:ring-duo-blue/15 bg-white transition-all resize-none"
-                    />
-                  </div>
+                  {/* Rich Math WYSIWYG Question Prompt Field */}
+                  <DuoMathTextarea
+                    label="Soal"
+                    value={activeQuestion.titlePrompt}
+                    onChange={(val) =>
+                      updateQuestion(activeQuestionIndex, {
+                        titlePrompt: val,
+                      })
+                    }
+                    placeholder="Tuliskan soal di sini (klik tombol rumus fx untuk menyisipkan matematika)..."
+                    rows={2}
+                  />
 
                   {/* Media Uploader (Auto WebP Compression) */}
                   {activeQuestion.type !== "labelled_diagram" && (

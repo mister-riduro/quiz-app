@@ -38,6 +38,7 @@ import {
 import { VictoryScreen } from "./VictoryScreen";
 import { useSoundEffect } from "@/hooks/useSoundEffect";
 import { cn } from "@/utils/cn";
+import { DuoMathRenderer } from "@/components/common/DuoMathRenderer";
 
 /**
  * Helper to extract human-readable solution explanation and auto-fill payload
@@ -861,7 +862,7 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
       ...rawContent,
       hint: undefined, // Hint is controlled via Presenter's "Butuh Petunjuk?" button & bottom sheet
       _hideMedia: hasMedia,
-      _hideStatement: statementMatches,
+      _hideStatement: Boolean(promptText) || statementMatches,
       _hideHint: true,
     };
   }, [activeQuestion?.content, hasMedia, promptText]);
@@ -1035,7 +1036,7 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
 
               {/* Big Question Prompt Text (Large & High Contrast for Kids / Projectors) */}
               <h2 className="text-lg sm:text-xl lg:text-2xl xl:text-[36px] font-black text-duo-dark leading-tight tracking-tight">
-                {promptText}
+                <DuoMathRenderer content={promptText} />
               </h2>
 
               {/* Educational Hint Button (Opens Bottom Sheet Modal) */}

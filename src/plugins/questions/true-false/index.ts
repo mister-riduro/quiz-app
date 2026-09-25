@@ -9,7 +9,7 @@ export * from "./TrueFalseEditor";
 export * from "./TrueFalsePlayer";
 
 export const defaultTrueFalseContent: TrueFalseContent = {
-  statement: "Matahari terbit dari arah timur.",
+  statement: "",
   correctAnswer: true,
   explanation: "",
 };

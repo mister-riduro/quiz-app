@@ -10,6 +10,7 @@ import {
 import { TactileButton } from "@/components/ui/TactileButton";
 import { useSoundEffect } from "@/hooks/useSoundEffect";
 import { cn } from "@/utils/cn";
+import { DuoMathRenderer } from "@/components/common/DuoMathRenderer";
 
 const OPTION_LETTERS = ["A", "B", "C", "D", "E"] as const;
 
@@ -191,7 +192,7 @@ export const MultipleChoicePlayer: React.FC<
       {/* 2. Optional Statement / Question Prompt */}
       {content.statement && !(content as any)._hideStatement && (
         <h2 className="text-xl sm:text-2xl font-bold text-center text-duo-dark leading-snug tracking-tight px-3 mb-6 sm:mb-8">
-          {content.statement}
+          <DuoMathRenderer content={content.statement} />
         </h2>
       )}
 
@@ -297,7 +298,11 @@ export const MultipleChoicePlayer: React.FC<
               {/* Option Label Text */}
               <div className="flex-1 min-w-0">
                 <span className="block text-base sm:text-lg font-black tracking-tight leading-snug break-words">
-                  {opt.text || `Pilihan ${letter}`}
+                  {opt.text ? (
+                    <DuoMathRenderer content={opt.text} />
+                  ) : (
+                    `Pilihan ${letter}`
+                  )}
                 </span>
               </div>
 
