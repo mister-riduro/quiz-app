@@ -136,8 +136,8 @@ export const HangmanEditor: React.FC<EditorProps<HangmanContent>> = ({
                 className={cn(
                   "flex flex-col items-center justify-center p-3.5 rounded-2xl border-2 transition-all text-center",
                   isSelected
-                    ? "bg-duo-red-light/50 border-duo-red border-b-[4px] border-b-duo-red-border shadow-xs"
-                    : "bg-slate-50 hover:bg-slate-100/80 border-slate-200 border-b-[3px] text-slate-600",
+                    ? "bg-duo-red-light/50 border-duo-red text-duo-red-border"
+                    : "bg-slate-50 hover:bg-slate-100/80 border-slate-200 text-slate-600",
                   disabled && "opacity-60 cursor-not-allowed",
                 )}
               >

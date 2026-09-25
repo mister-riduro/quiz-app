@@ -281,7 +281,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({
                   playTap();
                   onEdit(quiz);
                 }}
-                className="py-2 px-2.5 border-2 border-duo-gray text-[#4B4B4B]"
+                className="py-2 px-2.5"
               >
                 <Edit3 className="w-3.5 h-3.5" />
               </TactileButton>
@@ -294,7 +294,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({
                 size="sm"
                 aria-label="Menu Opsi Kuis"
                 onClick={toggleMenu}
-                className="py-2 px-2.5 border-2 border-duo-gray text-[#4B4B4B]"
+                className="py-2 px-2.5"
               >
                 <MoreVertical className="w-3.5 h-3.5" />
               </TactileButton>
@@ -442,7 +442,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({
                 playTap();
                 onEdit(quiz);
               }}
-              className="px-3.5 py-3 border-2 border-duo-gray text-[#4B4B4B]"
+              className="px-3.5 py-3"
             >
               <Edit3 className="w-4 h-4" />
             </TactileButton>
@@ -455,7 +455,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({
               size="md"
               aria-label="Menu Opsi Kuis"
               onClick={toggleMenu}
-              className="px-3.5 py-3 border-2 border-duo-gray text-[#4B4B4B]"
+              className="px-3.5 py-3"
             >
               <MoreVertical className="w-4 h-4" />
             </TactileButton>

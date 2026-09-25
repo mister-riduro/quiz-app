@@ -837,14 +837,12 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
   const isDiagram = normalizedType === "labelled_diagram";
   const hasMedia = Boolean(effectiveMediaUrl && !isDiagram);
   const hintText = activeQuestion?.content?.hint;
-  const isWidePlugin =
-    normalizedType === "wordsearch" || normalizedType === "crossword";
-  const leftColClass = isWidePlugin
-    ? "md:col-span-4 lg:col-span-4"
-    : "md:col-span-5 lg:col-span-5";
-  const rightColClass = isWidePlugin
-    ? "md:col-span-8 lg:col-span-8"
-    : "md:col-span-7 lg:col-span-7";
+  const stageMaxWidth =
+    normalizedType === "crossword"
+      ? "max-w-6xl xl:max-w-7xl"
+      : normalizedType === "wordsearch"
+        ? "max-w-4xl"
+        : "max-w-3xl";
 
   const playerContent = useMemo(() => {
     const rawContent =
@@ -971,182 +969,154 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
         </div>
       </header>
 
-      {/* 2. MAIN HORIZONTAL STAGE: DYNAMIC QUESTION & PLAYER RENDERER */}
-      <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 lg:p-8 pb-32">
-        <div className="w-full max-w-7xl mx-auto min-h-full flex flex-col justify-start pt-2 sm:pt-4 pb-2">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8 xl:gap-12 items-start">
-            {/* LEFT COLUMN: Badges, Big Prompt Text, and Large Supporting Image */}
-            <div
-              className={cn(
-                leftColClass,
-                "flex flex-col justify-start gap-3 sm:gap-4 text-left",
-              )}
-            >
-              {/* Badges: Quiz Title, Plugin, Points, Live Timer */}
+      {/* 2. MAIN VERTICAL STAGE: DYNAMIC QUESTION & PLAYER RENDERER */}
+      <main className="flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-6 pt-6 pb-32">
+        <div
+          className={cn(
+            "w-full mx-auto min-h-full flex flex-col justify-start gap-6 sm:gap-8 pb-2",
+            stageMaxWidth,
+          )}
+        >
+          {/* QUESTION SECTION (Top) */}
+          <div className="flex flex-col justify-start gap-3 sm:gap-4 text-left w-full">
+            {/* Header: Quiz Title, Plugin, Points on Left; Live Timer on Right with space-between */}
+            <div className="flex items-center justify-between gap-4 w-full">
               <div className="flex items-center gap-2 flex-wrap">
                 {quiz?.title && (
                   <span className="text-xs font-black uppercase text-slate-400 tracking-wider">
                     {quiz.title} &bull;
                   </span>
                 )}
-                <span className="text-xs sm:text-sm font-black uppercase px-3 py-1 rounded-xl bg-duo-blue/10 text-duo-blue border border-duo-blue/20">
-                  {activePlugin?.title || "Mini-Game"}
+                <span className="text-xs font-black uppercase text-slate-400 tracking-wider">
+                  {activePlugin?.title || "Mini-Game"} &bull;
                 </span>
-                <span
-                  className={cn(
-                    "text-xs sm:text-sm font-black uppercase px-3 py-1 rounded-xl border",
-                    (activeQuestion?.points ?? 100) === 0
-                      ? "bg-slate-100 text-slate-600 border-slate-200"
-                      : "bg-amber-50 text-amber-700 border-amber-200",
-                  )}
-                >
+                <span className="text-xs font-black uppercase text-slate-400 tracking-wider">
                   {(activeQuestion?.points ?? 100) === 0
                     ? "Tanpa Poin"
                     : `${activeQuestion?.points ?? 100} Poin`}
                 </span>
-
-                {/* Live Question / Global Timer Badge */}
-                <span
-                  className={cn(
-                    "text-xs sm:text-sm font-black uppercase px-3 py-1 rounded-xl flex items-center gap-1.5 border transition-all",
-                    effectiveTimeLimit <= 0
-                      ? "bg-slate-100 text-slate-600 border-slate-200"
-                      : timeLeft <= 0
-                        ? "bg-red-100 text-duo-red border-red-300 font-black shadow-xs animate-pulse"
-                        : timeLeft <= 10
-                          ? "bg-red-100 text-duo-red border-red-300 animate-pulse font-black shadow-xs"
-                          : isGlobalTimer
-                            ? "bg-blue-50 text-duo-blue border-blue-200"
-                            : "bg-emerald-50 text-duo-green border-emerald-200",
-                  )}
-                >
-                  <Clock className="w-4 h-4 shrink-0" />
-                  <span className="text-[11px] sm:text-xs font-bold tracking-wider opacity-85">
-                    Sisa Waktu:
-                  </span>
-                  <span className="font-black">
-                    {formatTimerBadge(
-                      timeLeft,
-                      isGlobalTimer,
-                      effectiveTimeLimit,
-                    )}
-                  </span>
-                </span>
               </div>
 
-              {/* Big Question Prompt Text (Large & High Contrast for Kids / Projectors) */}
-              <h2 className="text-lg sm:text-xl lg:text-2xl xl:text-[36px] font-black text-duo-dark leading-tight tracking-tight">
+              {/* Live Question / Global Timer Badge */}
+              <span
+                className={cn(
+                  "text-xs sm:text-sm font-black uppercase px-3 py-1 rounded-xl flex items-center gap-1.5 border transition-all shrink-0",
+                  effectiveTimeLimit <= 0
+                    ? "bg-slate-100 text-slate-600 border-slate-200"
+                    : timeLeft <= 0
+                      ? "bg-red-100 text-duo-red border-red-300 font-black shadow-xs animate-pulse"
+                      : timeLeft <= 10
+                        ? "bg-red-100 text-duo-red border-red-300 animate-pulse font-black shadow-xs"
+                        : isGlobalTimer
+                          ? "bg-blue-50 text-duo-blue border-blue-200"
+                          : "bg-emerald-50 text-duo-green border-emerald-200",
+                )}
+              >
+                <Clock className="w-4 h-4 shrink-0" />
+                <span className="text-[11px] sm:text-xs font-bold tracking-wider opacity-85">
+                  Sisa Waktu:
+                </span>
+                <span className="font-black">
+                  {formatTimerBadge(
+                    timeLeft,
+                    isGlobalTimer,
+                    effectiveTimeLimit,
+                  )}
+                </span>
+              </span>
+            </div>
+
+            {/* Big Question Prompt Text (Large & High Contrast for Kids / Projectors) - Hidden for Crossword */}
+            {normalizedType !== "crossword" && (
+              <h2 className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-black text-duo-dark leading-tight tracking-tight">
                 <DuoMathRenderer content={promptText} />
               </h2>
+            )}
 
-              {/* Educational Hint Button (Opens Bottom Sheet Modal) */}
-              {hintText && (
-                <motion.button
-                  type="button"
-                  whileHover={{ scale: 1.03, y: -2 }}
-                  whileTap={{ scale: 0.96, y: 2 }}
-                  onClick={() => {
-                    playPop();
-                    setIsHintOpen(true);
-                  }}
-                  className="inline-flex items-center gap-2 px-3.5 py-2 bg-amber-50 hover:bg-amber-100/90 border-2 border-amber-300 border-b-4 border-b-amber-400 hover:border-b-amber-500 text-amber-900 rounded-2xl font-black text-xs sm:text-sm cursor-pointer shadow-xs active:border-b-2 active:translate-y-0.5 transition-all w-fit select-none"
-                  title="Klik untuk membuka petunjuk soal"
-                >
-                  <div className="w-5 h-5 rounded-lg bg-amber-400 text-white flex items-center justify-center shadow-2xs shrink-0">
-                    <Lightbulb className="w-3.5 h-3.5 stroke-[2.5]" />
+            {/* Educational Hint Button (Opens Bottom Sheet Modal) */}
+            {hintText && (
+              <motion.button
+                type="button"
+                whileHover={{ scale: 1.03, y: -2 }}
+                whileTap={{ scale: 0.96, y: 2 }}
+                onClick={() => {
+                  playPop();
+                  setIsHintOpen(true);
+                }}
+                className="inline-flex items-center gap-2 px-3.5 py-2 bg-amber-50 hover:bg-amber-100/90 border-2 border-amber-300 hover:border-amber-400 text-amber-900 rounded-2xl font-black text-xs sm:text-sm cursor-pointer active:translate-y-0.5 active:scale-[0.99] transition-all w-fit select-none"
+                title="Klik untuk membuka petunjuk soal"
+              >
+                <div className="w-5 h-5 rounded-lg bg-amber-400 text-white flex items-center justify-center shadow-2xs shrink-0">
+                  <Lightbulb className="w-3.5 h-3.5 stroke-[2.5]" />
+                </div>
+                <span>Butuh Petunjuk?</span>
+              </motion.button>
+            )}
+
+            {/* Teacher Unlocked Answer Card (High visibility on stage for classroom discussion) */}
+            {unlockedQuestions[activeQuestion?.id] && (
+              <motion.div
+                initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                className="p-4 sm:p-5 bg-gradient-to-br from-emerald-50 to-green-50/80 border-2 border-[#58CC02]/50 rounded-3xl flex items-start gap-3.5 shadow-sm"
+              >
+                <div className="w-10 h-10 rounded-2xl bg-[#58CC02] text-white flex items-center justify-center font-black shrink-0 shadow-xs mt-0.5">
+                  <KeyRound className="w-5 h-5 stroke-[2.5]" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <h4 className="text-xs font-black uppercase text-[#46A302] tracking-wider">
+                      Kunci Jawaban & Pembahasan
+                    </h4>
+                    <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-[#58CC02]/20 text-[#28570E] font-extrabold">
+                      Mode Guru
+                    </span>
                   </div>
-                  <span>Butuh Petunjuk?</span>
-                </motion.button>
-              )}
+                  <p className="text-xs sm:text-sm font-black text-slate-800 whitespace-pre-line leading-relaxed">
+                    {getQuestionSolution(activeQuestion).text}
+                  </p>
+                </div>
+              </motion.div>
+            )}
 
-              {/* Teacher Unlocked Answer Card (High visibility on stage for classroom discussion) */}
-              {unlockedQuestions[activeQuestion?.id] && (
+            {/* Large Supporting Image / Diagram (Responsive for Classroom Layout) */}
+            {hasMedia && (
+              <div className="w-full rounded-3xl overflow-hidden border-4 border-slate-200 shadow-md bg-white p-2 sm:p-2.5 flex items-center justify-center transition-all max-w-xl mx-auto">
+                <img
+                  src={effectiveMediaUrl}
+                  alt="Media Soal"
+                  className="w-full max-h-[220px] sm:max-h-[260px] md:max-h-[300px] object-contain rounded-2xl"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* ANSWER SECTION: Spacious Interactive Player Component (Bottom) */}
+          <div className="flex flex-col justify-start items-center w-full">
+            <ErrorBoundary
+              key={`error-boundary-${currentIndex}-${activeQuestion?.id}`}
+              fallbackTitle="Komponen Soal Mengalami Kendala"
+              fallbackMessage="Terjadi kendala saat menampilkan soal ini. Ketuk tombol di bawah untuk memuat ulang."
+            >
+              {activePlugin && activeQuestion && (
                 <motion.div
-                  initial={{ opacity: 0, y: 8, scale: 0.98 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  className="p-4 sm:p-5 bg-gradient-to-br from-emerald-50 to-green-50/80 border-2 border-[#58CC02]/50 rounded-3xl flex items-start gap-3.5 shadow-sm"
+                  key={`player-${currentIndex}-${activeQuestion.id}`}
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.18, ease: "easeOut" }}
+                  className="w-full flex justify-center"
                 >
-                  <div className="w-10 h-10 rounded-2xl bg-[#58CC02] text-white flex items-center justify-center font-black shrink-0 shadow-xs mt-0.5">
-                    <KeyRound className="w-5 h-5 stroke-[2.5]" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-2 mb-1">
-                      <h4 className="text-xs font-black uppercase text-[#46A302] tracking-wider">
-                        Kunci Jawaban & Pembahasan
-                      </h4>
-                      <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-[#58CC02]/20 text-[#28570E] font-extrabold">
-                        Mode Guru
-                      </span>
-                    </div>
-                    <p className="text-xs sm:text-sm font-black text-slate-800 whitespace-pre-line leading-relaxed">
-                      {getQuestionSolution(activeQuestion).text}
-                    </p>
-                  </div>
+                  <activePlugin.PlayerComponent
+                    key={activeQuestion.id}
+                    content={playerContent}
+                    submittedAnswer={answers[activeQuestion.id]}
+                    onAnswerSubmit={handleAnswerSubmit}
+                    isEvaluating={feedbackState.isOpen}
+                    isCorrect={evaluations[activeQuestion.id]}
+                  />
                 </motion.div>
               )}
-
-              {/* Large Supporting Image / Diagram (Responsive for Classroom Layout) */}
-              {hasMedia && (
-                <div className="w-full rounded-3xl overflow-hidden border-4 border-slate-200 shadow-md bg-white p-2 sm:p-2.5 flex items-center justify-center transition-all">
-                  <img
-                    src={effectiveMediaUrl}
-                    alt="Media Soal"
-                    className="w-full max-h-[190px] sm:max-h-[220px] md:max-h-[250px] lg:max-h-[270px] object-contain rounded-2xl"
-                  />
-                </div>
-              )}
-
-              {/* Friendly Challenge Card when no media image is needed */}
-              {!hasMedia && !isDiagram && (
-                <div className="p-4 sm:p-5 bg-gradient-to-br from-blue-50/80 to-indigo-50/40 border-2 border-blue-100 rounded-3xl flex items-start gap-3.5 shadow-2xs">
-                  <div className="w-10 h-10 rounded-2xl bg-duo-blue text-white flex items-center justify-center font-black text-lg shrink-0 shadow-xs">
-                    ⭐
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-black uppercase text-duo-blue tracking-wider mb-0.5">
-                      Tantangan Interaktif
-                    </h4>
-                    <p className="text-xs sm:text-sm font-bold text-slate-600 leading-relaxed">
-                      Selesaikan permainan interaktif di sebelah kanan untuk
-                      meraih skor penuh!
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* RIGHT COLUMN: Spacious Interactive Player Component */}
-            <div
-              className={cn(
-                rightColClass,
-                "flex flex-col justify-start items-center w-full",
-              )}
-            >
-              <ErrorBoundary
-                key={`error-boundary-${currentIndex}-${activeQuestion?.id}`}
-                fallbackTitle="Komponen Soal Mengalami Kendala"
-                fallbackMessage="Terjadi kendala saat menampilkan soal ini. Ketuk tombol di bawah untuk memuat ulang."
-              >
-                {activePlugin && activeQuestion && (
-                  <motion.div
-                    key={`player-${currentIndex}-${activeQuestion.id}`}
-                    initial={{ opacity: 0, scale: 0.98 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.18, ease: "easeOut" }}
-                    className="w-full flex justify-center"
-                  >
-                    <activePlugin.PlayerComponent
-                      key={activeQuestion.id}
-                      content={playerContent}
-                      submittedAnswer={answers[activeQuestion.id]}
-                      onAnswerSubmit={handleAnswerSubmit}
-                      isEvaluating={feedbackState.isOpen}
-                      isCorrect={evaluations[activeQuestion.id]}
-                    />
-                  </motion.div>
-                )}
-              </ErrorBoundary>
-            </div>
+            </ErrorBoundary>
           </div>
         </div>
       </main>

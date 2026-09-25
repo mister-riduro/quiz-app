@@ -292,7 +292,7 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
           }}
           className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl font-black text-sm transition-all cursor-pointer ${
             mainTab === "my-quizzes"
-              ? "bg-duo-green text-white shadow-md border-b-4 border-b-duo-green-border"
+              ? "bg-duo-green text-white border-2 border-duo-green-border active:translate-y-0.5"
               : "bg-white text-[#777777] hover:text-duo-dark border-2 border-slate-200 hover:bg-slate-50"
           }`}
         >
@@ -309,7 +309,7 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
           }}
           className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl font-black text-sm transition-all cursor-pointer ${
             mainTab === "community"
-              ? "bg-duo-blue text-white shadow-md border-b-4 border-b-duo-blue-border"
+              ? "bg-duo-blue text-white border-2 border-duo-blue-border active:translate-y-0.5"
               : "bg-white text-[#777777] hover:text-duo-dark border-2 border-slate-200 hover:bg-slate-50"
           }`}
         >

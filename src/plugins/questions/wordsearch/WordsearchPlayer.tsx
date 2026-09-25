@@ -6,7 +6,7 @@ import React, {
   useCallback,
 } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { HelpCircle, Check, RotateCcw, Search } from "lucide-react";
+import { HelpCircle, Check, RotateCcw } from "lucide-react";
 import { PlayerProps } from "@/plugins/core/types";
 import { WordsearchContent, WordsearchAnswer } from "./types";
 import { TactileButton } from "@/components/ui/TactileButton";
@@ -409,17 +409,6 @@ export const WordsearchPlayer: React.FC<
           <span>{hint}</span>
         </div>
       )}
-
-      {/* Title & Instructions */}
-      <div className="flex flex-col items-center gap-1.5 mb-5 text-center">
-        <h3 className="text-xl sm:text-2xl font-black text-duo-dark">
-          Temukan Semua Kata Tersembunyi
-        </h3>
-        <p className="flex items-center gap-1.5 text-xs font-bold text-slate-400">
-          <Search className="w-4 h-4 text-duo-blue" />
-          <span>Tarik garis (swipe) dari huruf awal ke huruf akhir kata</span>
-        </p>
-      </div>
 
       {/* Active Swipe Preview Pill */}
       <div className="h-8 flex items-center justify-center mb-2">

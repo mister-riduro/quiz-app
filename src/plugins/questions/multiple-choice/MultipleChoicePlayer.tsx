@@ -230,27 +230,27 @@ export const MultipleChoicePlayer: React.FC<
             if (isSelected) {
               if (isCorrect === true || isThisCorrect) {
                 cardStyle =
-                  "bg-duo-green text-white border-duo-green-border border-b-duo-green-border border-r-duo-green-border ring-4 ring-duo-green/30 scale-[1.02] shadow-md";
+                  "bg-duo-green text-white border-duo-green-border ring-4 ring-duo-green/30 scale-[1.02]";
                 badgeStyle = badgeTheme.badgeActive;
               } else {
                 cardStyle =
-                  "bg-duo-red text-white border-duo-red-border border-b-duo-red-border border-r-duo-red-border ring-4 ring-duo-red/30 scale-[1.02] shadow-md";
+                  "bg-duo-red text-white border-duo-red-border ring-4 ring-duo-red/30 scale-[1.02]";
                 badgeStyle = badgeTheme.badgeActive;
               }
             } else if (isThisCorrect) {
               // Highlight the real correct answer softly when student missed it
               cardStyle =
-                "bg-emerald-50 text-duo-green-border border-duo-green border-b-duo-green-border border-r-duo-green-border ring-2 ring-duo-green/40";
+                "bg-emerald-50 text-duo-green-border border-duo-green ring-2 ring-duo-green/40";
               badgeStyle = "bg-duo-green text-white border-duo-green-border";
             } else {
               cardStyle =
-                "bg-slate-50/70 text-slate-400 border-slate-200 border-b-slate-200 opacity-50 filter grayscale-[0.3]";
+                "bg-slate-50/70 text-slate-400 border-slate-200 opacity-50 filter grayscale-[0.3]";
               badgeStyle = "bg-slate-200 text-slate-500 border-slate-300";
             }
           } else if (isMultiSelect && isSelected) {
             // Selected in multi-select mode before submission
             cardStyle =
-              "bg-duo-blue-light/70 text-duo-dark border-duo-blue border-b-duo-blue-border border-r-duo-blue-border ring-2 ring-duo-blue/30 scale-[1.01]";
+              "bg-duo-blue-light/70 text-duo-dark border-duo-blue ring-2 ring-duo-blue/30 scale-[1.01]";
             badgeStyle = badgeTheme.bg;
           }
 
@@ -263,12 +263,10 @@ export const MultipleChoicePlayer: React.FC<
               disabled={isEvaluating || isAnswered}
               onClick={() => handleOptionClick(opt.id)}
               whileHover={
-                !isAnswered && !isEvaluating
-                  ? { scale: 1.02, y: -3 }
-                  : undefined
+                !isAnswered && !isEvaluating ? { scale: 1.01 } : undefined
               }
               whileTap={
-                !isAnswered && !isEvaluating ? { scale: 0.97, y: 2 } : undefined
+                !isAnswered && !isEvaluating ? { scale: 0.98 } : undefined
               }
               transition={{
                 type: "spring",
@@ -277,9 +275,8 @@ export const MultipleChoicePlayer: React.FC<
                 mass: 0.8,
               }}
               className={cn(
-                "group relative flex items-center gap-3.5 p-4 sm:p-5 rounded-2xl text-left select-none transition-colors duration-150 cursor-pointer shadow-xs",
-                "border-2 border-b-4 border-r-2 border-solid",
-                "active:border-b-2 active:translate-y-[2px]",
+                "group relative flex items-center gap-3.5 p-4 sm:p-5 rounded-2xl text-left select-none transition-colors duration-150 cursor-pointer",
+                "border-2 border-solid active:translate-y-0.5",
                 cardStyle,
                 isFifthSpan && "sm:col-span-2",
                 (isEvaluating || isAnswered) && "cursor-default",

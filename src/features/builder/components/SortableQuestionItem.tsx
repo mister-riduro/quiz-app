@@ -134,13 +134,19 @@ export const SortableQuestionItem = React.memo<SortableQuestionItemProps>(
           <div
             className={cn(
               "text-xs truncate",
-              question.titlePrompt
+              question.titlePrompt || question.type === "crossword"
                 ? "font-bold text-duo-dark"
                 : "font-medium text-slate-400 italic",
             )}
           >
             {question.titlePrompt ? (
               <DuoMathRenderer content={question.titlePrompt} inlineOnly />
+            ) : question.type === "crossword" ? (
+              <span className="not-italic text-slate-600 font-bold">
+                {question.content?.words?.length
+                  ? `${question.content.words.length} Kata Teka-Teki Silang`
+                  : "Teka-Teki Silang"}
+              </span>
             ) : (
               "(Belum ada pertanyaan)"
             )}

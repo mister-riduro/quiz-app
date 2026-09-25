@@ -65,7 +65,7 @@ export const SampleEditor: React.FC<EditorProps<SampleContent>> = ({
 
       <div>
         <label className="block text-xs font-black uppercase text-slate-400 mb-1">
-          Penjelasan Tambahan (Opsional)
+          Penjelasan (Opsional)
         </label>
         <input
           type="text"
@@ -75,6 +75,9 @@ export const SampleEditor: React.FC<EditorProps<SampleContent>> = ({
           placeholder="Mengapa jawaban ini benar / salah..."
           className="w-full px-4 py-2.5 border-2 border-duo-gray rounded-2xl font-semibold text-sm text-duo-dark focus:outline-none focus:border-duo-blue"
         />
+        <p className="mt-1 text-xs font-semibold text-slate-400">
+          Teks ini akan muncul sebagai umpan balik setelah siswa menjawab soal.
+        </p>
       </div>
     </DuoCard>
   );

@@ -5,10 +5,9 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   HelpCircle,
-  Check,
   RotateCcw,
   Sparkles,
   ArrowRight,
@@ -17,6 +16,8 @@ import {
   ChevronRight,
   CheckCircle2,
   Delete,
+  Keyboard,
+  X,
 } from "lucide-react";
 import { PlayerProps } from "@/plugins/core/types";
 import {
@@ -35,7 +36,6 @@ import {
   getStudentWord,
   defaultCrosswordContent,
 } from "./crosswordUtils";
-import { TactileButton } from "@/components/ui/TactileButton";
 import { Badge } from "@/components/ui/Badge";
 import { useSoundEffect } from "@/hooks/useSoundEffect";
 import { cn } from "@/utils/cn";
@@ -55,8 +55,7 @@ export const CrosswordPlayer: React.FC<
   isEvaluating = false,
   isCorrect,
 }) => {
-  const { playTap, playPop, playCorrect, playWrong, playVictory } =
-    useSoundEffect();
+  const { playTap, playCorrect, playVictory } = useSoundEffect();
 
   const words = useMemo<CrosswordWord[]>(
     () =>
@@ -109,6 +108,9 @@ export const CrosswordPlayer: React.FC<
       return firstWord ? { ...firstWord.startPos } : { row: 0, col: 0 };
     },
   );
+
+  // Floating keyboard state (only shown when explicitly clicked by user)
+  const [showFloatingKeyboard, setShowFloatingKeyboard] = useState(false);
 
   // Track victory state
   const [hasCheckedAnswer, setHasCheckedAnswer] = useState(false);
@@ -256,6 +258,23 @@ export const CrosswordPlayer: React.FC<
     [cellMap, activeCell, activeDirection, words, playTap],
   );
 
+  // Handle direct selection of a word from Across / Down list
+  const handleSelectWord = useCallback(
+    (word: CrosswordWord) => {
+      playTap();
+      setActiveWordId(word.id);
+      setActiveDirection(word.direction);
+      const cells = getWordCells(word);
+      const firstEmpty = cells.find((c) => !answers[coordKey(c.row, c.col)]);
+      setActiveCell(
+        firstEmpty
+          ? { row: firstEmpty.row, col: firstEmpty.col }
+          : { ...word.startPos },
+      );
+    },
+    [answers, playTap],
+  );
+
   // Cycle to next / prev clue
   const handleNavigateClue = useCallback(
     (delta: number) => {
@@ -395,16 +414,52 @@ export const CrosswordPlayer: React.FC<
         return;
       }
 
-      if (e.key >= "a" && e.key <= "z") {
+      // Ignore modifier combinations (Ctrl, Alt, Meta)
+      if (e.altKey || e.ctrlKey || e.metaKey) {
+        return;
+      }
+
+      // Explicitly reject Tab and Alt
+      if (e.key === "Tab" || e.key === "Alt") {
+        e.preventDefault();
+        return;
+      }
+
+      // Only letters (a-z, A-Z) are accepted into the block
+      if (/^[a-zA-Z]$/.test(e.key)) {
         e.preventDefault();
         handleTypeLetter(e.key.toUpperCase());
-      } else if (e.key >= "A" && e.key <= "Z") {
-        e.preventDefault();
-        handleTypeLetter(e.key);
-      } else if (e.key === "Backspace") {
+        return;
+      }
+
+      // Backspace is accepted exclusively to delete / erase
+      if (e.key === "Backspace") {
         e.preventDefault();
         handleBackspace();
-      } else if (e.key === "ArrowRight") {
+        return;
+      }
+
+      // Delete key clears current cell
+      if (e.key === "Delete") {
+        e.preventDefault();
+        const { row, col } = activeCell;
+        const currentKey = coordKey(row, col);
+        if (answers[currentKey]) {
+          const nextAnswers = { ...answers };
+          delete nextAnswers[currentKey];
+          setAnswers(nextAnswers);
+        }
+        return;
+      }
+
+      // Prevent Space or Enter from triggering random focused button click or page scroll
+      if (e.key === " " || e.key === "Spacebar" || e.key === "Enter") {
+        e.preventDefault();
+        return;
+      }
+
+      // Arrow keys navigation
+      if (e.key === "ArrowRight") {
         e.preventDefault();
         const nextCol = activeCell.col + 1;
         if (
@@ -434,9 +489,6 @@ export const CrosswordPlayer: React.FC<
         if (prevRow >= 0 && cellMap.has(coordKey(prevRow, activeCell.col))) {
           handleSelectCell(prevRow, activeCell.col);
         }
-      } else if (e.key === "Tab" || e.key === "Enter") {
-        e.preventDefault();
-        handleNavigateClue(e.shiftKey ? -1 : 1);
       }
     };
 
@@ -445,30 +497,12 @@ export const CrosswordPlayer: React.FC<
   }, [
     handleTypeLetter,
     handleBackspace,
-    handleNavigateClue,
     handleSelectCell,
     activeCell,
+    answers,
     gridSize,
     cellMap,
   ]);
-
-  // Answer validation submission
-  const handleSubmitCheck = () => {
-    if (isEvaluating || effectiveIsCorrect) return;
-    playPop();
-
-    const allCorrect = checkIsAllCorrect(answers);
-    setHasCheckedAnswer(true);
-    setIsAnswerValid(allCorrect);
-
-    if (allCorrect) {
-      playVictory();
-    } else {
-      playWrong();
-    }
-
-    onAnswerSubmit(answers);
-  };
 
   // Reset grid answers
   const handleResetAnswers = () => {
@@ -492,430 +526,442 @@ export const CrosswordPlayer: React.FC<
     [words],
   );
 
+  const acrossCompletedCount = useMemo(() => {
+    return acrossWords.filter((w) => {
+      const studentWord = getStudentWord(w, answers);
+      const targetWord = (w.word || "").trim().toUpperCase();
+      return studentWord === targetWord && targetWord.length > 0;
+    }).length;
+  }, [acrossWords, answers]);
+
+  const downCompletedCount = useMemo(() => {
+    return downWords.filter((w) => {
+      const studentWord = getStudentWord(w, answers);
+      const targetWord = (w.word || "").trim().toUpperCase();
+      return studentWord === targetWord && targetWord.length > 0;
+    }).length;
+  }, [downWords, answers]);
+
   return (
-    <div className="flex flex-col items-center w-full max-w-4xl mx-auto px-2 sm:px-4 py-2 select-none text-duo-dark">
-      {/* 1. ACTIVE CLUE BANNER (ABOVE THE GRID - USER REQUIREMENT) */}
-      <div className="w-full mb-4">
-        <div className="bg-white border-2 border-duo-gray border-b-4 border-b-slate-200 rounded-2xl p-3 sm:p-4 shadow-xs flex items-center justify-between gap-3">
-          <button
-            type="button"
-            onClick={() => handleNavigateClue(-1)}
-            title="Petunjuk sebelumnya"
-            className="w-10 h-10 rounded-xl bg-slate-50 hover:bg-slate-100 border-2 border-slate-200 flex items-center justify-center text-duo-dark transition-colors shrink-0 active:scale-95"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-
-          <div className="flex-1 min-w-0 text-center px-2">
-            <div className="flex items-center justify-center gap-2 mb-1 flex-wrap">
-              <Badge
-                variant="blue"
-                className="text-[11px] font-black uppercase tracking-wider flex items-center gap-1"
-              >
-                {activeDirection === "ACROSS" ? (
-                  <ArrowRight className="w-3.5 h-3.5" />
-                ) : (
-                  <ArrowDown className="w-3.5 h-3.5" />
-                )}
-                <span>
-                  {activeWord?.number}{" "}
-                  {activeDirection === "ACROSS" ? "Mendatar" : "Menurun"}
-                </span>
-              </Badge>
-              <span className="text-xs font-bold text-slate-400">
-                ({activeWord?.word?.length || 0} Huruf)
-              </span>
-              <span className="text-slate-300">•</span>
-              <Badge
-                variant={correctWordsCount === words.length ? "green" : "gray"}
-                className="text-[11px] font-black uppercase tracking-wider"
-              >
-                {correctWordsCount} / {words.length} Kata Benar
-              </Badge>
-            </div>
-
-            <p className="text-sm sm:text-base font-black text-duo-dark line-clamp-2">
-              {activeWord?.clue ||
-                "Pilih kotak pada grid untuk melihat petunjuk kata."}
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => handleNavigateClue(1)}
-            title="Petunjuk selanjutnya"
-            className="w-10 h-10 rounded-xl bg-slate-50 hover:bg-slate-100 border-2 border-slate-200 flex items-center justify-center text-duo-dark transition-colors shrink-0 active:scale-95"
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
-        </div>
-      </div>
-
-      {/* 2. CROSSWORD INTERACTIVE GRID MATRIX */}
-      <div className="flex flex-col items-center justify-center w-full my-2">
-        <div
-          className="p-3 bg-slate-100/90 rounded-3xl border-2 border-slate-200 shadow-inner inline-block"
-          style={{
-            maxWidth: "100%",
-            overflowX: "auto",
-          }}
-        >
-          <div
-            className="grid gap-1 sm:gap-1.5"
-            style={{
-              gridTemplateColumns: `repeat(${gridSize.cols}, minmax(36px, 50px))`,
-              gridTemplateRows: `repeat(${gridSize.rows}, minmax(36px, 50px))`,
-            }}
-          >
-            {Array.from({ length: gridSize.rows }).map((_, r) =>
-              Array.from({ length: gridSize.cols }).map((_, c) => {
-                const key = coordKey(r, c);
-                const cell = cellMap.get(key);
-                const isOccupied = !!cell;
-                const isCurrentActiveCell =
-                  activeCell.row === r && activeCell.col === c;
-                const isInActiveWord = activeWordCells.has(key);
-                const userLetter = answers[key] || "";
-
-                // Inactive / Black square in crossword
-                if (!isOccupied) {
-                  return (
-                    <div
-                      key={key}
-                      className="aspect-square rounded-xl bg-slate-800/85 border border-slate-800 flex items-center justify-center opacity-90 shadow-2xs"
-                    />
-                  );
-                }
-
-                // Active Letter Cell
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => handleSelectCell(r, c)}
-                    className={cn(
-                      "relative aspect-square rounded-xl flex items-center justify-center font-black select-none transition-all duration-150",
-                      // Standard active cell appearance
-                      "bg-white text-duo-dark border-2 border-slate-300 shadow-xs cursor-pointer",
-                      // Active word row/col highlight (Light blue - User requirement)
-                      isInActiveWord &&
-                        !isCurrentActiveCell &&
-                        "bg-blue-50/90 border-blue-300",
-                      // Active focused cell (Strong blue outline & ring - User requirement)
-                      isCurrentActiveCell &&
-                        "bg-duo-blue-light border-duo-blue ring-3 ring-duo-blue/40 text-duo-dark z-20 scale-105 shadow-md",
-                      // Feedback state after checking answer
-                      hasCheckedAnswer &&
-                        (userLetter.toUpperCase() === cell.char.toUpperCase()
-                          ? "border-duo-green bg-duo-green-light/40 text-duo-green-border"
-                          : "border-duo-red bg-duo-red-light/40 text-duo-red"),
-                    )}
-                  >
-                    {/* Clue index number at top-left corner (User requirement) */}
-                    {cell.number !== undefined && (
-                      <span className="absolute top-0.5 left-1 text-[10px] sm:text-[11px] font-black text-slate-400 select-none pointer-events-none">
-                        {cell.number}
-                      </span>
-                    )}
-
-                    {/* Entered Letter */}
-                    <span className="text-lg sm:text-xl font-black tracking-wider mt-1">
-                      {userLetter}
-                    </span>
-                  </button>
-                );
-              }),
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* 3. EVALUATION FEEDBACK BANNER */}
-      {showFeedback && (
-        <motion.div
-          initial={{ opacity: 0, y: 8, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          className={cn(
-            "flex items-center justify-between p-4 rounded-2xl border-2 w-full max-w-xl my-3 shadow-xs",
-            effectiveIsCorrect
-              ? "bg-duo-green-light/60 border-duo-green text-duo-dark"
-              : "bg-duo-red-light/60 border-duo-red text-duo-dark",
-          )}
-        >
-          <div className="flex items-center gap-3">
-            <div
-              className={cn(
-                "w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0",
-                effectiveIsCorrect ? "bg-duo-green" : "bg-duo-red",
-              )}
+    <div className="flex flex-col items-center w-full mx-auto select-none text-duo-dark">
+      {/* MAIN 2-COLUMN CROSSWORD CONTAINER (Matching User Screenshot) */}
+      <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-start">
+        {/* LEFT COLUMN: Active Clue Bar + Grid + Action Controls */}
+        <div className="lg:col-span-7 xl:col-span-7 flex flex-col items-center gap-3 w-full">
+          {/* 1. ACTIVE CLUE BANNER (Original Duo Styling) */}
+          <div className="w-full bg-white border-2 border-duo-gray border-b-4 border-b-slate-200 rounded-2xl p-3 sm:p-4 shadow-xs flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => handleNavigateClue(-1)}
+              title="Petunjuk sebelumnya"
+              className="w-10 h-10 rounded-xl bg-slate-50 hover:bg-slate-100 border-2 border-slate-200 flex items-center justify-center text-duo-dark transition-colors shrink-0 active:scale-95 cursor-pointer shadow-2xs"
             >
-              {effectiveIsCorrect ? (
-                <Sparkles className="w-5 h-5" />
-              ) : (
-                <HelpCircle className="w-5 h-5" />
-              )}
-            </div>
-            <div>
-              <h4 className="font-black text-sm uppercase tracking-wider">
-                {effectiveIsCorrect
-                  ? "Luar Biasa! Semua Benar!"
-                  : "Periksa Kembali Kotakmu!"}
-              </h4>
-              <p className="text-xs sm:text-sm font-semibold text-slate-600">
-                {effectiveIsCorrect
-                  ? "Selamat! Kamu berhasil memecahkan teka-teki silang dengan sempurna."
-                  : `${correctWordsCount} dari ${words.length} kata sudah tepat. Periksa kembali kotak huruf yang masih keliru!`}
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+
+            <div className="flex-1 min-w-0 text-center px-2">
+              <div className="flex items-center justify-center gap-2 mb-1 flex-wrap">
+                <Badge
+                  variant="blue"
+                  className="text-[11px] font-black uppercase tracking-wider flex items-center gap-1"
+                >
+                  {activeDirection === "ACROSS" ? (
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  ) : (
+                    <ArrowDown className="w-3.5 h-3.5" />
+                  )}
+                  <span>
+                    {activeWord?.number}{" "}
+                    {activeDirection === "ACROSS" ? "Mendatar" : "Menurun"}
+                  </span>
+                </Badge>
+                <span className="text-xs font-bold text-slate-400">
+                  ({activeWord?.word?.length || 0} Huruf)
+                </span>
+              </div>
+
+              <p className="text-base sm:text-lg font-black text-duo-dark line-clamp-2">
+                {activeWord?.clue ||
+                  "Pilih kotak pada grid untuk melihat petunjuk kata."}
               </p>
             </div>
+
+            <button
+              type="button"
+              onClick={() => handleNavigateClue(1)}
+              title="Petunjuk selanjutnya"
+              className="w-10 h-10 rounded-xl bg-slate-50 hover:bg-slate-100 border-2 border-slate-200 flex items-center justify-center text-duo-dark transition-colors shrink-0 active:scale-95 cursor-pointer shadow-2xs"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
           </div>
 
-          <button
-            type="button"
-            disabled={isEvaluating}
-            onClick={handleResetAnswers}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-slate-200 rounded-xl text-xs font-black text-duo-dark hover:bg-slate-50 transition-colors shrink-0 ml-2 cursor-pointer"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span>Ulangi</span>
-          </button>
-        </motion.div>
-      )}
-
-      {/* 4. ACTION BUTTONS ROW */}
-      <div className="flex items-center justify-center gap-3 w-full max-w-xl my-2">
-        <TactileButton
-          type="button"
-          variant="green"
-          size="md"
-          isLoading={isEvaluating}
-          disabled={isEvaluating || effectiveIsCorrect}
-          onClick={handleSubmitCheck}
-          className="flex-1 justify-center py-2.5"
-        >
-          <Check className="w-4 h-4 mr-1.5" />
-          <span>
-            {effectiveIsCorrect ||
-            (words.length > 0 && correctWordsCount === words.length)
-              ? "Semua Kata Berhasil Dipecahkan!"
-              : `Periksa Jawaban TTS (${correctWordsCount}/${words.length} Kata)`}
-          </span>
-        </TactileButton>
-
-        <button
-          type="button"
-          disabled={isEvaluating || effectiveIsCorrect}
-          onClick={handleResetAnswers}
-          title="Kosongkan jawaban"
-          className="px-3.5 py-2.5 rounded-2xl bg-white border-2 border-slate-200 hover:bg-slate-50 text-slate-600 font-black text-xs flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer disabled:opacity-50"
-        >
-          <RotateCcw className="w-4 h-4" />
-          <span className="hidden sm:inline">Reset</span>
-        </button>
-      </div>
-
-      {/* 5. ON-SCREEN TOUCH KEYBOARD (Mobile & Classroom Touchscreen friendly) */}
-      <div className="flex flex-col items-center gap-1.5 w-full max-w-xl pt-2 pb-3">
-        {QWERTY_ROWS.map((row, rowIdx) => (
-          <div
-            key={`kbd-row-${rowIdx}`}
-            className="flex justify-center gap-1 sm:gap-1.5 w-full"
-          >
-            {row.map((letter) => (
-              <button
-                key={`k-${letter}`}
-                type="button"
-                onClick={() => handleTypeLetter(letter)}
-                className="min-w-[28px] sm:min-w-[40px] min-h-[40px] sm:min-h-[44px] flex-1 max-w-[44px] rounded-xl font-black text-xs sm:text-sm select-none transition-all flex items-center justify-center bg-white text-duo-dark border-2 border-slate-200 border-b-4 border-b-slate-300 hover:bg-slate-50 active:translate-y-0.5 active:border-b-2 shadow-xs cursor-pointer"
+          {/* 2. CROSSWORD INTERACTIVE GRID MATRIX (Original Duo Styling) */}
+          <div className="w-full flex justify-center overflow-x-auto p-1">
+            <div
+              className="p-3 bg-slate-100/90 rounded-3xl border-2 border-slate-200 shadow-inner inline-block"
+              style={{
+                maxWidth: "100%",
+                overflowX: "auto",
+              }}
+            >
+              <div
+                className="grid gap-1 sm:gap-1.5"
+                style={{
+                  gridTemplateColumns: `repeat(${gridSize.cols}, minmax(36px, 50px))`,
+                  gridTemplateRows: `repeat(${gridSize.rows}, minmax(36px, 50px))`,
+                }}
               >
-                {letter}
-              </button>
-            ))}
+                {Array.from({ length: gridSize.rows }).map((_, r) =>
+                  Array.from({ length: gridSize.cols }).map((_, c) => {
+                    const key = coordKey(r, c);
+                    const cell = cellMap.get(key);
+                    const isOccupied = !!cell;
+                    const isCurrentActiveCell =
+                      activeCell.row === r && activeCell.col === c;
+                    const isInActiveWord = activeWordCells.has(key);
+                    const userLetter = answers[key] || "";
 
-            {/* Backspace on the 3rd row */}
-            {rowIdx === 2 && (
-              <button
-                type="button"
-                onClick={handleBackspace}
-                title="Hapus huruf (Backspace)"
-                className="min-w-[42px] sm:min-w-[54px] min-h-[40px] sm:min-h-[44px] flex-1 max-w-[56px] rounded-xl font-black text-xs sm:text-sm select-none transition-all flex items-center justify-center bg-slate-100 text-duo-dark border-2 border-slate-300 border-b-4 border-b-slate-400 hover:bg-slate-200 active:translate-y-0.5 active:border-b-2 shadow-xs cursor-pointer"
-              >
-                <Delete className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-        ))}
-      </div>
+                    // Inactive / Black square in crossword (Original Duo tile)
+                    if (!isOccupied) {
+                      return (
+                        <div
+                          key={key}
+                          className="aspect-square rounded-xl bg-slate-800/85 border border-slate-800 flex items-center justify-center opacity-90 shadow-2xs"
+                        />
+                      );
+                    }
 
-      {/* 6. CLUES OVERVIEW DRAWER (MENDATAR & MENURUN LISTS) */}
-      <div className="w-full max-w-3xl mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
-        {/* Across Clues List */}
-        <div className="bg-white border-2 border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col gap-2">
-          <div className="flex items-center justify-between font-black text-xs uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2">
-            <div className="flex items-center gap-1.5">
-              <ArrowRight className="w-3.5 h-3.5 text-duo-blue" />
-              <span>Mendatar (Across)</span>
+                    // Active Letter Cell (Original Duo Styling)
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => handleSelectCell(r, c)}
+                        className={cn(
+                          "relative aspect-square rounded-xl flex items-center justify-center font-black select-none transition-all duration-150 cursor-pointer",
+                          // Standard active cell appearance
+                          "bg-white text-duo-dark border-2 border-slate-300 shadow-xs",
+                          // Active word row/col highlight (Light blue - Original Duo styling)
+                          isInActiveWord &&
+                            !isCurrentActiveCell &&
+                            "bg-blue-50/90 border-blue-300",
+                          // Active focused cell (Strong blue outline & ring - Original Duo styling)
+                          isCurrentActiveCell &&
+                            "bg-duo-blue-light border-duo-blue ring-3 ring-duo-blue/40 text-duo-dark z-20 scale-105 shadow-md",
+                          // Feedback state after checking answer
+                          hasCheckedAnswer &&
+                            (userLetter.toUpperCase() ===
+                            cell.char.toUpperCase()
+                              ? "border-duo-green bg-duo-green-light/40 text-duo-green-border"
+                              : "border-duo-red bg-duo-red-light/40 text-duo-red"),
+                        )}
+                      >
+                        {/* Clue index number at top-left corner */}
+                        {cell.number !== undefined && (
+                          <span className="absolute top-0.5 left-1 text-[10px] sm:text-[11px] font-black text-slate-400 select-none pointer-events-none">
+                            {cell.number}
+                          </span>
+                        )}
+
+                        {/* Entered Letter */}
+                        <span className="text-lg sm:text-xl font-black tracking-wider mt-1">
+                          {userLetter}
+                        </span>
+                      </button>
+                    );
+                  }),
+                )}
+              </div>
             </div>
-            <span className="text-[10px] font-black text-slate-400">
-              {
-                acrossWords.filter(
-                  (w) =>
-                    getStudentWord(w, answers) ===
-                    (w.word || "").trim().toUpperCase(),
-                ).length
-              }{" "}
-              / {acrossWords.length} Benar
-            </span>
           </div>
 
-          <div className="flex flex-col gap-1.5 mt-1">
-            {acrossWords.map((word) => {
-              const isFilled = isWordFilled(word, answers);
-              const isActive =
-                activeWordId === word.id && activeDirection === "ACROSS";
-              const studentWord = getStudentWord(word, answers);
-              const targetWord = (word.word || "").trim().toUpperCase();
-              const isWordCorrect =
-                studentWord === targetWord && targetWord.length > 0;
-
-              return (
-                <button
-                  key={`across-${word.id}`}
-                  type="button"
-                  onClick={() => {
-                    playTap();
-                    setActiveWordId(word.id);
-                    setActiveDirection("ACROSS");
-                    const cells = getWordCells(word);
-                    const firstEmpty = cells.find(
-                      (c) => !answers[coordKey(c.row, c.col)],
-                    );
-                    setActiveCell(
-                      firstEmpty
-                        ? { row: firstEmpty.row, col: firstEmpty.col }
-                        : { ...word.startPos },
-                    );
-                  }}
+          {/* 3. EVALUATION FEEDBACK BANNER (Original Duo Styling) */}
+          {showFeedback && (
+            <motion.div
+              initial={{ opacity: 0, y: 8, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              className={cn(
+                "flex items-center justify-between p-4 rounded-2xl border-2 w-full max-w-xl my-2 shadow-xs",
+                effectiveIsCorrect
+                  ? "bg-duo-green-light/60 border-duo-green text-duo-dark"
+                  : "bg-duo-red-light/60 border-duo-red text-duo-dark",
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <div
                   className={cn(
-                    "p-2 rounded-xl text-left transition-all flex items-start gap-2 border-2 cursor-pointer",
-                    isActive
-                      ? "bg-duo-blue-light/60 border-duo-blue text-duo-dark"
-                      : isWordCorrect
-                        ? "bg-emerald-50/50 border-emerald-200 text-duo-dark"
-                        : "bg-slate-50 border-transparent hover:border-slate-200 text-slate-700",
+                    "w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0",
+                    effectiveIsCorrect ? "bg-duo-green" : "bg-duo-red",
                   )}
                 >
-                  <span
-                    className={cn(
-                      "w-5 h-5 rounded-md border font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5",
-                      isWordCorrect
-                        ? "bg-duo-green text-white border-duo-green"
-                        : "bg-white border-slate-200 text-duo-dark",
-                    )}
-                  >
-                    {word.number}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold leading-snug line-clamp-2">
-                      {word.clue}
-                    </p>
-                  </div>
-                  {isWordCorrect ? (
-                    <CheckCircle2 className="w-4 h-4 text-duo-green shrink-0 mt-0.5" />
-                  ) : isFilled && hasCheckedAnswer ? (
-                    <span className="text-[10px] font-black text-duo-red shrink-0 mt-0.5 uppercase">
-                      Keliru
-                    </span>
-                  ) : null}
-                </button>
-              );
-            })}
+                  {effectiveIsCorrect ? (
+                    <Sparkles className="w-5 h-5" />
+                  ) : (
+                    <HelpCircle className="w-5 h-5" />
+                  )}
+                </div>
+                <div>
+                  <h4 className="font-black text-sm uppercase tracking-wider">
+                    {effectiveIsCorrect
+                      ? "Luar Biasa! Semua Benar!"
+                      : "Periksa Kembali Kotakmu!"}
+                  </h4>
+                  <p className="text-xs sm:text-sm font-semibold text-slate-600">
+                    {effectiveIsCorrect
+                      ? "Selamat! Kamu berhasil memecahkan teka-teki silang dengan sempurna."
+                      : `${correctWordsCount} dari ${words.length} kata sudah tepat. Periksa kembali kotak huruf yang masih keliru!`}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                disabled={isEvaluating}
+                onClick={handleResetAnswers}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-slate-200 rounded-xl text-xs font-black text-duo-dark hover:bg-slate-50 transition-colors shrink-0 ml-2 cursor-pointer"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Ulangi</span>
+              </button>
+            </motion.div>
+          )}
+
+          {/* 4. ACTION CONTROLS ROW */}
+          <div className="flex items-center justify-center gap-3 w-full max-w-sm my-2">
+            <button
+              type="button"
+              disabled={isEvaluating || effectiveIsCorrect}
+              onClick={handleResetAnswers}
+              title="Kosongkan seluruh jawaban teka-teki silang"
+              className="flex-1 px-4 py-2.5 rounded-2xl bg-white border-2 border-slate-200 border-b-4 hover:bg-slate-50 text-slate-700 font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-2xs cursor-pointer active:translate-y-0.5 active:border-b-2 disabled:opacity-50"
+            >
+              <RotateCcw className="w-4 h-4 text-slate-500" />
+              <span>Reset Jawaban</span>
+            </button>
+
+            {/* Floating Keyboard Toggle Option */}
+            <button
+              type="button"
+              onClick={() => {
+                playTap();
+                setShowFloatingKeyboard((prev) => !prev);
+              }}
+              title={
+                showFloatingKeyboard
+                  ? "Sembunyikan Keyboard Virtual"
+                  : "Tampilkan Keyboard Virtual"
+              }
+              className={cn(
+                "flex-1 px-4 py-2.5 rounded-2xl border-2 border-b-4 font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-2xs cursor-pointer active:translate-y-0.5 active:border-b-2",
+                showFloatingKeyboard
+                  ? "bg-duo-blue text-white border-duo-blue shadow-md"
+                  : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50",
+              )}
+            >
+              <Keyboard className="w-4 h-4" />
+              <span>Keyboard Virtual</span>
+            </button>
           </div>
         </div>
 
-        {/* Down Clues List */}
-        <div className="bg-white border-2 border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col gap-2">
-          <div className="flex items-center justify-between font-black text-xs uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2">
-            <div className="flex items-center gap-1.5">
-              <ArrowDown className="w-3.5 h-3.5 text-duo-blue" />
-              <span>Menurun (Down)</span>
+        {/* RIGHT COLUMN: Across & Down Clue Panels (Original Duo Styling) */}
+        <div className="lg:col-span-5 xl:col-span-5 flex flex-col gap-4 w-full">
+          {/* Card 1: Across Clues */}
+          <div className="bg-white border-2 border-duo-gray border-b-4 border-b-slate-200 rounded-2xl p-3.5 sm:p-4 shadow-xs flex flex-col gap-2">
+            <div className="flex items-center justify-between pb-2 border-b-2 border-slate-100">
+              <div className="flex items-center gap-1.5 font-black text-xs uppercase tracking-wider text-slate-600">
+                <ArrowRight className="w-4 h-4 text-duo-blue" />
+                <span>Mendatar (Across)</span>
+              </div>
+              <Badge variant="gray" className="font-black text-[10px]">
+                {acrossCompletedCount}/{acrossWords.length} Selesai
+              </Badge>
             </div>
-            <span className="text-[10px] font-black text-slate-400">
-              {
-                downWords.filter(
-                  (w) =>
-                    getStudentWord(w, answers) ===
-                    (w.word || "").trim().toUpperCase(),
-                ).length
-              }{" "}
-              / {downWords.length} Benar
-            </span>
-          </div>
 
-          <div className="flex flex-col gap-1.5 mt-1">
-            {downWords.map((word) => {
-              const isFilled = isWordFilled(word, answers);
-              const isActive =
-                activeWordId === word.id && activeDirection === "DOWN";
-              const studentWord = getStudentWord(word, answers);
-              const targetWord = (word.word || "").trim().toUpperCase();
-              const isWordCorrect =
-                studentWord === targetWord && targetWord.length > 0;
+            <div className="flex flex-col gap-1.5 overflow-y-auto max-h-[250px] lg:max-h-[290px] pr-1 scrollbar-thin">
+              {acrossWords.map((word) => {
+                const isActive =
+                  activeWordId === word.id && activeDirection === "ACROSS";
+                const studentWord = getStudentWord(word, answers);
+                const targetWord = (word.word || "").trim().toUpperCase();
+                const isWordCorrect =
+                  studentWord === targetWord && targetWord.length > 0;
+                const isFilled = isWordFilled(word, answers);
 
-              return (
-                <button
-                  key={`down-${word.id}`}
-                  type="button"
-                  onClick={() => {
-                    playTap();
-                    setActiveWordId(word.id);
-                    setActiveDirection("DOWN");
-                    const cells = getWordCells(word);
-                    const firstEmpty = cells.find(
-                      (c) => !answers[coordKey(c.row, c.col)],
-                    );
-                    setActiveCell(
-                      firstEmpty
-                        ? { row: firstEmpty.row, col: firstEmpty.col }
-                        : { ...word.startPos },
-                    );
-                  }}
-                  className={cn(
-                    "p-2 rounded-xl text-left transition-all flex items-start gap-2 border-2 cursor-pointer",
-                    isActive
-                      ? "bg-duo-blue-light/60 border-duo-blue text-duo-dark"
-                      : isWordCorrect
-                        ? "bg-emerald-50/50 border-emerald-200 text-duo-dark"
-                        : "bg-slate-50 border-transparent hover:border-slate-200 text-slate-700",
-                  )}
-                >
-                  <span
+                return (
+                  <button
+                    key={`across-${word.id}`}
+                    type="button"
+                    onClick={() => handleSelectWord(word)}
                     className={cn(
-                      "w-5 h-5 rounded-md border font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5",
-                      isWordCorrect
-                        ? "bg-duo-green text-white border-duo-green"
-                        : "bg-white border-slate-200 text-duo-dark",
+                      "p-2.5 sm:p-3 rounded-xl text-left transition-all flex items-start gap-2.5 sm:gap-3 border-2 cursor-pointer",
+                      isActive
+                        ? "bg-duo-blue-light/60 border-duo-blue text-duo-dark shadow-xs"
+                        : isWordCorrect
+                          ? "bg-emerald-50/50 border-emerald-200 text-duo-dark"
+                          : "bg-slate-50 border-transparent hover:border-slate-200 text-slate-700",
                     )}
                   >
-                    {word.number}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold leading-snug line-clamp-2">
-                      {word.clue}
-                    </p>
-                  </div>
-                  {isWordCorrect ? (
-                    <CheckCircle2 className="w-4 h-4 text-duo-green shrink-0 mt-0.5" />
-                  ) : isFilled && hasCheckedAnswer ? (
-                    <span className="text-[10px] font-black text-duo-red shrink-0 mt-0.5 uppercase">
-                      Keliru
+                    <span
+                      className={cn(
+                        "w-6 h-6 rounded-lg border font-black text-xs flex items-center justify-center shrink-0 mt-0.5",
+                        isWordCorrect
+                          ? "bg-duo-green text-white border-duo-green"
+                          : "bg-white border-slate-200 text-duo-dark",
+                      )}
+                    >
+                      {word.number}
                     </span>
-                  ) : null}
-                </button>
-              );
-            })}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm sm:text-[15px] font-bold leading-snug line-clamp-2">
+                        {word.clue}
+                      </p>
+                    </div>
+                    {isWordCorrect ? (
+                      <CheckCircle2 className="w-4 h-4 text-duo-green shrink-0 mt-0.5" />
+                    ) : isFilled && hasCheckedAnswer ? (
+                      <span className="text-[10px] font-black text-duo-red shrink-0 mt-0.5 uppercase">
+                        Keliru
+                      </span>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Card 2: Down Clues */}
+          <div className="bg-white border-2 border-duo-gray border-b-4 border-b-slate-200 rounded-2xl p-3.5 sm:p-4 shadow-xs flex flex-col gap-2">
+            <div className="flex items-center justify-between pb-2 border-b-2 border-slate-100">
+              <div className="flex items-center gap-1.5 font-black text-xs uppercase tracking-wider text-slate-600">
+                <ArrowDown className="w-4 h-4 text-duo-blue" />
+                <span>Menurun (Down)</span>
+              </div>
+              <Badge variant="gray" className="font-black text-[10px]">
+                {downCompletedCount}/{downWords.length} Selesai
+              </Badge>
+            </div>
+
+            <div className="flex flex-col gap-1.5 overflow-y-auto max-h-[250px] lg:max-h-[290px] pr-1 scrollbar-thin">
+              {downWords.map((word) => {
+                const isActive =
+                  activeWordId === word.id && activeDirection === "DOWN";
+                const studentWord = getStudentWord(word, answers);
+                const targetWord = (word.word || "").trim().toUpperCase();
+                const isWordCorrect =
+                  studentWord === targetWord && targetWord.length > 0;
+                const isFilled = isWordFilled(word, answers);
+
+                return (
+                  <button
+                    key={`down-${word.id}`}
+                    type="button"
+                    onClick={() => handleSelectWord(word)}
+                    className={cn(
+                      "p-2.5 sm:p-3 rounded-xl text-left transition-all flex items-start gap-2.5 sm:gap-3 border-2 cursor-pointer",
+                      isActive
+                        ? "bg-duo-blue-light/60 border-duo-blue text-duo-dark shadow-xs"
+                        : isWordCorrect
+                          ? "bg-emerald-50/50 border-emerald-200 text-duo-dark"
+                          : "bg-slate-50 border-transparent hover:border-slate-200 text-slate-700",
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "w-6 h-6 rounded-lg border font-black text-xs flex items-center justify-center shrink-0 mt-0.5",
+                        isWordCorrect
+                          ? "bg-duo-green text-white border-duo-green"
+                          : "bg-white border-slate-200 text-duo-dark",
+                      )}
+                    >
+                      {word.number}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm sm:text-[15px] font-bold leading-snug line-clamp-2">
+                        {word.clue}
+                      </p>
+                    </div>
+                    {isWordCorrect ? (
+                      <CheckCircle2 className="w-4 h-4 text-duo-green shrink-0 mt-0.5" />
+                    ) : isFilled && hasCheckedAnswer ? (
+                      <span className="text-[10px] font-black text-duo-red shrink-0 mt-0.5 uppercase">
+                        Keliru
+                      </span>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
+
+      {/* 5. FLOATING VIRTUAL KEYBOARD (Shown on block touch or toggled) */}
+      <AnimatePresence>
+        {showFloatingKeyboard && (
+          <motion.div
+            initial={{ opacity: 0, y: 40, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 40, scale: 0.95 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            className="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-lg bg-white/95 backdrop-blur-md border-2 border-slate-300 rounded-3xl p-3 sm:p-4 shadow-2xl flex flex-col items-center gap-2 select-none"
+          >
+            {/* Header / Dismiss Toolbar */}
+            <div className="w-full flex items-center justify-between pb-1.5 border-b border-slate-100 text-xs">
+              <div className="flex items-center gap-1.5 text-slate-600 font-black">
+                <Keyboard className="w-4 h-4 text-duo-blue" />
+                <span>Keyboard Virtual</span>
+                <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+                  Hanya Huruf A-Z
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowFloatingKeyboard(false)}
+                title="Tutup Keyboard"
+                className="w-7 h-7 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* QWERTY Letter Rows (Only Letters & Backspace with Duo tactile styling) */}
+            <div className="flex flex-col items-center gap-1.5 w-full pt-1">
+              {QWERTY_ROWS.map((row, rowIdx) => (
+                <div
+                  key={`float-kbd-row-${rowIdx}`}
+                  className="flex justify-center gap-1 sm:gap-1.5 w-full"
+                >
+                  {row.map((letter) => (
+                    <button
+                      key={`float-k-${letter}`}
+                      type="button"
+                      onClick={() => handleTypeLetter(letter)}
+                      className="min-w-[28px] sm:min-w-[36px] min-h-[38px] sm:min-h-[42px] flex-1 max-w-[42px] rounded-xl font-black text-xs sm:text-sm select-none transition-all flex items-center justify-center bg-white text-duo-dark border-2 border-slate-200 border-b-4 hover:bg-slate-50 active:translate-y-0.5 active:border-b-2 shadow-2xs cursor-pointer"
+                    >
+                      {letter}
+                    </button>
+                  ))}
+
+                  {/* Backspace on the 3rd row */}
+                  {rowIdx === 2 && (
+                    <button
+                      type="button"
+                      onClick={handleBackspace}
+                      title="Hapus huruf (Backspace)"
+                      className="min-w-[40px] sm:min-w-[50px] min-h-[38px] sm:min-h-[42px] flex-1 max-w-[52px] rounded-xl font-black text-xs sm:text-sm select-none transition-all flex items-center justify-center bg-slate-100 text-duo-dark border-2 border-slate-300 border-b-4 hover:bg-slate-200 active:translate-y-0.5 active:border-b-2 shadow-2xs cursor-pointer"
+                    >
+                      <Delete className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

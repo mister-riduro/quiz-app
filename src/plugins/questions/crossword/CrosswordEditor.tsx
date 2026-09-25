@@ -9,7 +9,6 @@ import {
   ArrowDown,
   AlertTriangle,
   Info,
-  Check,
   X,
 } from "lucide-react";
 import { EditorProps } from "@/plugins/core/types";
@@ -69,6 +68,10 @@ export const CrosswordEditor: React.FC<EditorProps<CrosswordContent>> = ({
   const [formRow, setFormRow] = useState(1); // 1-indexed for user display
   const [formCol, setFormCol] = useState(1); // 1-indexed for user display
   const [selectedWordId, setSelectedWordId] = useState<number | null>(null);
+  const [selectedCellCoord, setSelectedCellCoord] = useState<{
+    row: number;
+    col: number;
+  } | null>(null);
 
   // Computed grid map and collisions
   const { cellMap, collisionCount, outOfBoundsCount } = useMemo(
@@ -247,19 +250,73 @@ export const CrosswordEditor: React.FC<EditorProps<CrosswordContent>> = ({
     });
   };
 
-  // Click on visual grid cell to pick startPos or select word
+  // Toggle selection on a word item (click to select, click again to deselect)
+  const handleToggleSelectWord = (word: CrosswordWord) => {
+    playTap();
+    if (selectedWordId === word.id || editingWordId === word.id) {
+      // Toggle OFF: deselect
+      setSelectedWordId(null);
+      setSelectedCellCoord(null);
+      if (editingWordId === word.id) {
+        resetForm();
+      }
+    } else {
+      // Toggle ON: select word and its cells
+      setSelectedWordId(word.id);
+      setSelectedCellCoord({ row: word.startPos.row, col: word.startPos.col });
+      setFormRow(word.startPos.row + 1);
+      setFormCol(word.startPos.col + 1);
+      setFormDirection(word.direction);
+    }
+  };
+
+  // Click on visual grid cell to pick startPos or select/deselect word
   const handleCellClick = (r: number, c: number) => {
     playTap();
-    // Update form startPos
+    const cell = cellMap.get(coordKey(r, c));
+
+    // Case 1: Clicking an occupied cell (a cell containing words)
+    if (cell && cell.wordIds.length > 0) {
+      const isAlreadySelected =
+        selectedWordId !== null && cell.wordIds.includes(selectedWordId);
+
+      if (isAlreadySelected) {
+        // Toggle OFF: deselect
+        setSelectedWordId(null);
+        setSelectedCellCoord(null);
+        if (editingWordId) resetForm();
+        return;
+      }
+
+      // Toggle ON: select the word at this cell
+      const targetWordId =
+        cell.acrossWordId || cell.downWordId || cell.wordIds[0];
+      setSelectedWordId(targetWordId);
+      setSelectedCellCoord({ row: r, col: c });
+      setFormRow(r + 1);
+      setFormCol(c + 1);
+      return;
+    }
+
+    // Case 2: Clicking an empty cell
+    const isSameEmptyCell =
+      selectedCellCoord !== null &&
+      selectedCellCoord.row === r &&
+      selectedCellCoord.col === c &&
+      selectedWordId === null;
+
+    if (isSameEmptyCell) {
+      // Already selected this empty cell -> DESELECT!
+      setSelectedCellCoord(null);
+      return;
+    }
+
+    // Select new empty cell as start position
+    setSelectedCellCoord({ row: r, col: c });
+    setSelectedWordId(null);
+    if (editingWordId) resetForm();
     setFormRow(r + 1);
     setFormCol(c + 1);
-
-    const cell = cellMap.get(coordKey(r, c));
-    if (cell && cell.wordIds.length > 0) {
-      // If clicking an existing word, select it
-      const wordId = cell.acrossWordId || cell.downWordId || cell.wordIds[0];
-      setSelectedWordId(wordId);
-    }
   };
 
   const acrossWords = useMemo(
@@ -403,7 +460,7 @@ export const CrosswordEditor: React.FC<EditorProps<CrosswordContent>> = ({
           <div className="flex items-center justify-between">
             <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
               <Grid className="w-3.5 h-3.5 text-duo-blue" />
-              Visual 2D Grid Canvas ({gridSize.rows} &times; {gridSize.cols})
+              Visual Grid ({gridSize.rows} &times; {gridSize.cols})
             </h4>
             <span className="text-[11px] font-bold text-slate-400">
               Total {words.length} Kata
@@ -427,7 +484,10 @@ export const CrosswordEditor: React.FC<EditorProps<CrosswordContent>> = ({
                   const key = coordKey(r, c);
                   const cell = cellMap.get(key);
                   const isHighlighted = highlightedCells.has(key);
-                  const isStartPos = formRow - 1 === r && formCol - 1 === c;
+                  const isStartPos =
+                    selectedCellCoord !== null &&
+                    selectedCellCoord.row === r &&
+                    selectedCellCoord.col === c;
                   const isOccupied = !!cell;
                   const hasCollision = cell?.hasCollision;
 
@@ -529,10 +589,25 @@ export const CrosswordEditor: React.FC<EditorProps<CrosswordContent>> = ({
           <DuoCard elevated className="p-5 flex flex-col gap-4">
             {/* Form Fields */}
             <form onSubmit={handleSaveWord} className="flex flex-col gap-4">
+              {/* Clue / Prompt Input */}
+              <div>
+                <label className="text-xs font-black uppercase text-slate-400 tracking-wider block mb-1.5">
+                  Pertanyaan / Soal
+                </label>
+                <textarea
+                  rows={2}
+                  disabled={disabled}
+                  value={formClue}
+                  onChange={(e) => setFormClue(e.target.value)}
+                  placeholder="Contoh: Planet ketiga dari Matahari tempat tinggal manusia..."
+                  className="w-full px-4 py-2.5 border-2 border-duo-gray rounded-2xl font-bold text-sm text-duo-dark focus:outline-none focus:border-duo-blue"
+                />
+              </div>
+
               {/* Word Input */}
               <div>
                 <label className="text-xs font-black uppercase text-slate-400 tracking-wider block mb-1.5">
-                  Kunci Jawaban (Huruf Kapital)
+                  Kunci Jawaban
                 </label>
                 <input
                   type="text"
@@ -549,21 +624,6 @@ export const CrosswordEditor: React.FC<EditorProps<CrosswordContent>> = ({
                 <span className="text-[11px] font-semibold text-slate-400 mt-1 block">
                   {formWord.length} huruf &bull; Hanya huruf A-Z tanpa spasi
                 </span>
-              </div>
-
-              {/* Clue / Prompt Input */}
-              <div>
-                <label className="text-xs font-black uppercase text-slate-400 tracking-wider block mb-1.5">
-                  Petunjuk / Definisi Soal (Clue)
-                </label>
-                <textarea
-                  rows={2}
-                  disabled={disabled}
-                  value={formClue}
-                  onChange={(e) => setFormClue(e.target.value)}
-                  placeholder="Contoh: Planet ketiga dari Matahari tempat tinggal manusia..."
-                  className="w-full px-4 py-2.5 border-2 border-duo-gray rounded-2xl font-bold text-sm text-duo-dark focus:outline-none focus:border-duo-blue"
-                />
               </div>
 
               {/* Direction & Start Position Row */}
@@ -588,7 +648,6 @@ export const CrosswordEditor: React.FC<EditorProps<CrosswordContent>> = ({
                           : "text-slate-500 hover:text-duo-dark",
                       )}
                     >
-                      <ArrowRight className="w-3.5 h-3.5" />
                       <span>Mendatar</span>
                     </button>
 
@@ -606,7 +665,6 @@ export const CrosswordEditor: React.FC<EditorProps<CrosswordContent>> = ({
                           : "text-slate-500 hover:text-duo-dark",
                       )}
                     >
-                      <ArrowDown className="w-3.5 h-3.5" />
                       <span>Menurun</span>
                     </button>
                   </div>
@@ -673,17 +731,7 @@ export const CrosswordEditor: React.FC<EditorProps<CrosswordContent>> = ({
                   disabled={disabled || !formWord.trim() || !formClue.trim()}
                   className="w-full justify-center"
                 >
-                  {editingWordId ? (
-                    <>
-                      <Check className="w-4 h-4 mr-1.5" />
-                      Simpan Perubahan Kata
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="w-4 h-4 mr-1.5" />
-                      Tambahkan ke Grid Crossword
-                    </>
-                  )}
+                  {editingWordId ? <>Simpan Perubahan</> : <>Tambahkan</>}
                 </TactileButton>
               </div>
             </form>
@@ -716,10 +764,7 @@ export const CrosswordEditor: React.FC<EditorProps<CrosswordContent>> = ({
                     selectedWordId === word.id || editingWordId === word.id
                   }
                   disabled={disabled}
-                  onSelect={() => {
-                    playTap();
-                    setSelectedWordId(word.id);
-                  }}
+                  onSelect={() => handleToggleSelectWord(word)}
                   onEdit={() => handleStartEditWord(word)}
                   onDelete={() => handleDeleteWord(word.id)}
                 />
@@ -751,10 +796,7 @@ export const CrosswordEditor: React.FC<EditorProps<CrosswordContent>> = ({
                     selectedWordId === word.id || editingWordId === word.id
                   }
                   disabled={disabled}
-                  onSelect={() => {
-                    playTap();
-                    setSelectedWordId(word.id);
-                  }}
+                  onSelect={() => handleToggleSelectWord(word)}
                   onEdit={() => handleStartEditWord(word)}
                   onDelete={() => handleDeleteWord(word.id)}
                 />

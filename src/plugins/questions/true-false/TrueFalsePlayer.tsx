@@ -23,7 +23,7 @@ export const TrueFalsePlayer: React.FC<
   const isSelectedFalse = submittedAnswer === false;
 
   return (
-    <div className="flex flex-col items-center w-full max-w-2xl mx-auto py-2">
+    <div className="flex flex-col items-center w-full max-w-3xl mx-auto py-2">
       {/* 1. Image Media (if present: center, rounded-2xl, border 2px) */}
       {content.mediaUrl && !(content as any)._hideMedia && (
         <div className="flex justify-center w-full mb-6">
@@ -66,8 +66,8 @@ export const TrueFalsePlayer: React.FC<
           }}
           className={cn(
             "group relative flex flex-col items-center justify-center gap-4 sm:gap-6 py-10 sm:py-14 md:py-16 px-6 rounded-3xl",
-            "border-2 border-duo-green-border border-b-[8px] sm:border-b-[12px] border-b-duo-green-border",
-            "bg-duo-green text-white select-none cursor-pointer shadow-lg",
+            "border-2 border-duo-green-border",
+            "bg-duo-green text-white select-none cursor-pointer",
             "transition-colors duration-150",
             // Active ring when selected
             isSelectedTrue &&
@@ -80,11 +80,8 @@ export const TrueFalsePlayer: React.FC<
             (isEvaluating || isAnswered) && "cursor-default",
           )}
         >
-          {/* Inner highlight gloss */}
-          <div className="absolute top-2.5 inset-x-4 h-3.5 bg-white/20 rounded-full pointer-events-none" />
-
           {/* Thick Checkmark Icon */}
-          <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl sm:rounded-3xl bg-white/20 flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform">
+          <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl sm:rounded-3xl bg-white/20 flex items-center justify-center group-hover:scale-105 transition-transform">
             <Check
               className="w-12 h-12 sm:w-18 sm:h-18 text-white"
               strokeWidth={4}
@@ -102,11 +99,9 @@ export const TrueFalsePlayer: React.FC<
           disabled={isEvaluating || isAnswered}
           onClick={() => handleChoice(false)}
           whileHover={
-            !isAnswered && !isEvaluating ? { scale: 1.04, y: -4 } : undefined
+            !isAnswered && !isEvaluating ? { scale: 1.02 } : undefined
           }
-          whileTap={
-            !isAnswered && !isEvaluating ? { scale: 0.93, y: 6 } : undefined
-          }
+          whileTap={!isAnswered && !isEvaluating ? { scale: 0.97 } : undefined}
           transition={{
             type: "spring",
             stiffness: 450,
@@ -115,8 +110,8 @@ export const TrueFalsePlayer: React.FC<
           }}
           className={cn(
             "group relative flex flex-col items-center justify-center gap-4 sm:gap-6 py-10 sm:py-14 md:py-16 px-6 rounded-3xl",
-            "border-2 border-duo-red-border border-b-[8px] sm:border-b-[12px] border-b-duo-red-border",
-            "bg-duo-red text-white select-none cursor-pointer shadow-lg",
+            "border-2 border-duo-red-border",
+            "bg-duo-red text-white select-none cursor-pointer",
             "transition-colors duration-150",
             // Active ring when selected
             isSelectedFalse &&
@@ -129,11 +124,8 @@ export const TrueFalsePlayer: React.FC<
             (isEvaluating || isAnswered) && "cursor-default",
           )}
         >
-          {/* Inner highlight gloss */}
-          <div className="absolute top-2.5 inset-x-4 h-3.5 bg-white/20 rounded-full pointer-events-none" />
-
           {/* Thick Cross Icon */}
-          <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl sm:rounded-3xl bg-white/20 flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform">
+          <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl sm:rounded-3xl bg-white/20 flex items-center justify-center group-hover:scale-105 transition-transform">
             <X
               className="w-12 h-12 sm:w-18 sm:h-18 text-white"
               strokeWidth={4}

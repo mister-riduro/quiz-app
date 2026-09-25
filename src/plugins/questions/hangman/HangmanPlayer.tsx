@@ -500,11 +500,11 @@ export const HangmanPlayer: React.FC<
                     "min-w-[32px] sm:min-w-[44px] min-h-[44px] sm:min-h-[48px] flex-1 max-w-[48px] rounded-xl font-black text-sm sm:text-base select-none transition-all flex items-center justify-center",
                     // Key States
                     !isGuessed &&
-                      "bg-white text-duo-dark border-2 border-slate-200 border-b-4 border-b-slate-300 hover:bg-slate-50 active:translate-y-0.5 active:border-b-2 shadow-xs cursor-pointer",
+                      "bg-white text-duo-dark border-2 border-slate-200 hover:bg-slate-50 active:translate-y-0.5 active:scale-[0.98] cursor-pointer",
                     isCorrectLetter &&
-                      "bg-duo-green text-white border-2 border-duo-green-border border-b-2 shadow-none cursor-default opacity-95",
+                      "bg-duo-green text-white border-2 border-duo-green-border cursor-default opacity-95",
                     isWrongLetter &&
-                      "bg-slate-200 text-slate-400 border-2 border-slate-300 border-b-2 shadow-none cursor-default opacity-50",
+                      "bg-slate-200 text-slate-400 border-2 border-slate-300 cursor-default opacity-50",
                   )}
                 >
                   {letter}

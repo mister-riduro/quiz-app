@@ -296,7 +296,7 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
           <div className="relative flex justify-center">
             <span className="bg-white px-2.5 text-[10px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
               <HelpCircle className="w-3.5 h-3.5 text-duo-blue" />
-              Daftar Butir Soal ({questions.length})
+              Daftar Soal ({questions.length})
             </span>
           </div>
         </div>
@@ -545,11 +545,12 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
                 </div>
 
                 {/* Question Prompt for Preview */}
-                {activeQuestion.titlePrompt && (
-                  <h3 className="text-xl sm:text-2xl font-black text-center text-duo-dark px-2">
-                    <DuoMathRenderer content={activeQuestion.titlePrompt} />
-                  </h3>
-                )}
+                {activeQuestion.type !== "crossword" &&
+                  activeQuestion.titlePrompt && (
+                    <h3 className="text-xl sm:text-2xl font-black text-center text-duo-dark px-2">
+                      <DuoMathRenderer content={activeQuestion.titlePrompt} />
+                    </h3>
+                  )}
 
                 {/* Render Player Component */}
                 {currentPlugin && (
@@ -579,33 +580,41 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
                 <DuoCard elevated className="p-6 sm:p-7 flex flex-col gap-6">
                   {/* Question Type Header & Changer Row */}
 
-                  {/* Rich Math WYSIWYG Question Prompt Field */}
-                  <DuoMathTextarea
-                    label="Soal"
-                    value={activeQuestion.titlePrompt}
-                    onChange={(val) =>
-                      updateQuestion(activeQuestionIndex, {
-                        titlePrompt: val,
-                      })
-                    }
-                    placeholder="Tuliskan soal di sini (klik tombol rumus fx untuk menyisipkan matematika)..."
-                    rows={2}
-                  />
-
-                  {/* Media Uploader (Auto WebP Compression) */}
-                  {activeQuestion.type !== "labelled_diagram" && (
-                    <ImageUploader
-                      value={activeQuestion.mediaUrl}
-                      onChange={(url) =>
-                        updateQuestion(activeQuestionIndex, { mediaUrl: url })
+                  {/* Rich Math WYSIWYG Question Prompt Field (Hidden for Crossword) */}
+                  {activeQuestion.type !== "crossword" && (
+                    <DuoMathTextarea
+                      label="Soal"
+                      value={activeQuestion.titlePrompt}
+                      onChange={(val) =>
+                        updateQuestion(activeQuestionIndex, {
+                          titlePrompt: val,
+                        })
                       }
-                      label="Media Gambar / Diagram Pendukung (Opsional)"
+                      placeholder="Tuliskan soal di sini (klik tombol rumus fx untuk menyisipkan matematika)..."
+                      rows={2}
                     />
                   )}
 
+                  {/* Media Uploader (Auto WebP Compression) - Hidden for Crossword & Labelled Diagram */}
+                  {activeQuestion.type !== "labelled_diagram" &&
+                    activeQuestion.type !== "crossword" && (
+                      <ImageUploader
+                        value={activeQuestion.mediaUrl}
+                        onChange={(url) =>
+                          updateQuestion(activeQuestionIndex, { mediaUrl: url })
+                        }
+                        label="Media Gambar / Diagram Pendukung (Opsional)"
+                      />
+                    )}
+
                   {/* Dynamic Plugin Editor Component */}
                   {currentPlugin?.EditorComponent && (
-                    <div className="pt-4 border-t border-slate-100">
+                    <div
+                      className={cn(
+                        activeQuestion.type !== "crossword" &&
+                          "pt-4 border-t border-slate-100",
+                      )}
+                    >
                       <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider mb-3">
                         Konfigurasi {currentPlugin.title}:
                       </h4>

@@ -427,7 +427,7 @@ export const SpellWordPlayer: React.FC<
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex flex-col items-center w-full max-w-2xl mx-auto py-4 px-2 select-none">
+      <div className="flex flex-col items-center w-full max-w-3xl mx-auto py-4 select-none">
         {/* Optional Media Image */}
         {content.mediaUrl && !(content as any)._hideMedia && (
           <div className="flex justify-center w-full mb-5">
@@ -446,10 +446,6 @@ export const SpellWordPlayer: React.FC<
             <span>{hint}</span>
           </div>
         )}
-
-        <h3 className="text-xl sm:text-2xl font-black text-duo-dark mb-6 text-center">
-          Susun Huruf Menjadi Kata Yang Tepat
-        </h3>
 
         {/* 1. Baris Slot Huruf Kotak Bergaris Putus-Putus */}
         <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-3 p-4 sm:p-6 bg-white border-2 border-slate-200 border-b-4 rounded-3xl w-full min-h-[100px] shadow-sm mb-6 sm:mb-8">
@@ -481,22 +477,13 @@ export const SpellWordPlayer: React.FC<
 
         {/* 2. Bank Huruf Acak Balok 3D (TileToken.tsx) */}
         <div className="w-full flex flex-col gap-2">
-          <div className="flex items-center justify-between px-2">
-            <span className="text-xs font-black uppercase tracking-wider text-slate-400">
-              Bank Huruf Pilihan:
-            </span>
-            <span className="text-xs font-bold text-slate-400">
-              {bank.length} huruf tersisa
-            </span>
-          </div>
-
           <div
             ref={setBankDropRef}
             className="flex flex-wrap justify-center items-center gap-2 sm:gap-3 p-4 sm:p-5 bg-slate-100/80 border-2 border-dashed border-slate-300 rounded-3xl min-h-[96px] w-full transition-colors"
           >
             {bank.length === 0 ? (
-              <span className="text-xs font-bold text-slate-400 italic">
-                Semua huruf telah dimasukkan ke dalam slot di atas
+              <span className="text-xs font-bold text-slate-300 uppercase tracking-widest">
+                Bank Huruf
               </span>
             ) : (
               bank.map((token) => (

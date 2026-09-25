@@ -41,7 +41,7 @@ export const Header: React.FC<HeaderProps> = ({
             type="button"
             onClick={handleToggleSound}
             aria-label="Toggle Sound"
-            className="w-10 h-10 rounded-2xl bg-duo-bg border-2 border-duo-gray border-b-4 border-b-duo-gray-border flex items-center justify-center text-duo-dark hover:bg-duo-gray transition-all active:translate-y-[2px] active:border-b-2"
+            className="w-10 h-10 rounded-2xl bg-duo-bg border-2 border-slate-200 hover:border-slate-300 flex items-center justify-center text-duo-dark hover:bg-duo-gray transition-all active:translate-y-0.5 active:scale-[0.98] cursor-pointer"
           >
             {isMuted ? (
               <VolumeX className="w-5 h-5 text-duo-red" />

@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import React, { useEffect, useMemo } from "react";
+import { motion } from "framer-motion";
 import {
   RotateCcw,
   Home,
@@ -8,10 +8,11 @@ import {
   Trophy,
   Target,
   Sparkles,
-} from 'lucide-react';
-import confetti from 'canvas-confetti';
-import { soundManager } from '@/lib/soundManager';
-import { cn } from '@/utils/cn';
+} from "lucide-react";
+import confetti from "canvas-confetti";
+import { soundManager } from "@/lib/soundManager";
+import { cn } from "@/utils/cn";
+import { TactileButton } from "@/components/ui/TactileButton";
 
 export interface VictoryScreenProps {
   quizTitle?: string;
@@ -28,7 +29,7 @@ export interface VictoryScreenProps {
 function formatDuration(seconds: number): string {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
-  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
 }
 
 export const VictoryScreen: React.FC<VictoryScreenProps> = ({
@@ -58,26 +59,29 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({
   const celebrationText = useMemo(() => {
     if (earnedStars === 3) {
       return {
-        title: 'Kelas Juara! Sempurna!',
-        subtitle: 'Seluruh siswa menunjukkan pemahaman materi yang sangat luar biasa!',
+        title: "Kelas Juara! Sempurna!",
+        subtitle:
+          "Seluruh siswa menunjukkan pemahaman materi yang sangat luar biasa!",
       };
     }
     if (earnedStars === 2) {
       return {
-        title: 'Kerja Hebat! Sangat Bagus!',
-        subtitle: 'Hasil kuis yang impresif, sebagian besar soal berhasil dijawab dengan tepat!',
+        title: "Kerja Hebat! Sangat Bagus!",
+        subtitle:
+          "Hasil kuis yang impresif, sebagian besar soal berhasil dijawab dengan tepat!",
       };
     }
     return {
-      title: 'Semangat Belajar! Bagus Sekali!',
-      subtitle: 'Partisipasi yang menyenangkan, mari pelajari kembali konsep yang menantang!',
+      title: "Semangat Belajar! Bagus Sekali!",
+      subtitle:
+        "Partisipasi yang menyenangkan, mari pelajari kembali konsep yang menantang!",
     };
   }, [earnedStars]);
 
   // Massive Multi-Stage Confetti & Audio Fanfare Effect
   useEffect(() => {
     // 1. Instant Victory fanfare sound
-    soundManager.play('victory');
+    soundManager.play("victory");
 
     // 2. Stage 1: Massive center explosion
     try {
@@ -85,7 +89,7 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({
         particleCount: 110,
         spread: 90,
         origin: { y: 0.55 },
-        colors: ['#58CC02', '#FFC800', '#1CB0F6', '#FF4B4B', '#A855F7'],
+        colors: ["#58CC02", "#FFC800", "#1CB0F6", "#FF4B4B", "#A855F7"],
       });
     } catch {
       // Safe fallback
@@ -99,7 +103,7 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({
           angle: 60,
           spread: 65,
           origin: { x: 0.05, y: 0.8 },
-          colors: ['#58CC02', '#FFC800', '#1CB0F6', '#22C55E'],
+          colors: ["#58CC02", "#FFC800", "#1CB0F6", "#22C55E"],
         });
       } catch {
         // Safe fallback
@@ -114,7 +118,7 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({
           angle: 120,
           spread: 65,
           origin: { x: 0.95, y: 0.8 },
-          colors: ['#FFC800', '#FF4B4B', '#A855F7', '#FF9600'],
+          colors: ["#FFC800", "#FF4B4B", "#A855F7", "#FF9600"],
         });
       } catch {
         // Safe fallback
@@ -122,9 +126,9 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({
     }, 600);
 
     // 5. Star pop audio triggers timed with star animations
-    const timerStar1 = setTimeout(() => soundManager.play('pop'), 450);
-    const timerStar2 = setTimeout(() => soundManager.play('pop'), 850);
-    const timerStar3 = setTimeout(() => soundManager.play('pop'), 1250);
+    const timerStar1 = setTimeout(() => soundManager.play("pop"), 450);
+    const timerStar2 = setTimeout(() => soundManager.play("pop"), 850);
+    const timerStar3 = setTimeout(() => soundManager.play("pop"), 1250);
 
     return () => {
       clearTimeout(timer1);
@@ -145,7 +149,7 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({
       <motion.div
         initial={{ scale: 0.88, y: 30 }}
         animate={{ scale: 1, y: 0 }}
-        transition={{ type: 'spring', damping: 22, stiffness: 260 }}
+        transition={{ type: "spring", damping: 22, stiffness: 260 }}
         className="max-w-2xl w-full bg-white rounded-3xl sm:rounded-[32px] border-4 border-slate-200 shadow-2xl p-6 sm:p-10 flex flex-col items-center text-center my-auto"
       >
         {/* Top Header Badge */}
@@ -157,12 +161,7 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({
         {/* 3. THREE-STAR 3D RATING DISPLAY (USER REQUIREMENT) */}
         <div className="flex items-end justify-center gap-3 sm:gap-5 mb-5 h-28 sm:h-32">
           {/* Star 1 (Left) */}
-          <Star3D
-            index={1}
-            isEarned={earnedStars >= 1}
-            size="sm"
-            delay={0.4}
-          />
+          <Star3D index={1} isEarned={earnedStars >= 1} size="sm" delay={0.4} />
 
           {/* Star 2 (Middle - Elevated & Larger) */}
           <Star3D
@@ -174,12 +173,7 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({
           />
 
           {/* Star 3 (Right) */}
-          <Star3D
-            index={3}
-            isEarned={earnedStars >= 3}
-            size="sm"
-            delay={1.2}
-          />
+          <Star3D index={3} isEarned={earnedStars >= 3} size="sm" delay={1.2} />
         </div>
 
         {/* Celebration Title & Description */}
@@ -189,7 +183,11 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({
         <p className="text-sm sm:text-base font-bold text-slate-500 max-w-md mb-6 leading-relaxed">
           {quizTitle ? (
             <>
-              Kuis <span className="text-duo-dark font-extrabold">"{quizTitle}"</span> telah tuntas.{' '}
+              Kuis{" "}
+              <span className="text-duo-dark font-extrabold">
+                "{quizTitle}"
+              </span>{" "}
+              telah tuntas.{" "}
             </>
           ) : null}
           {celebrationText.subtitle}
@@ -252,33 +250,37 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({
           </div>
         </div>
 
-        {/* 5. TWO LARGE 3D ACTION BUTTONS (USER REQUIREMENT) */}
+        {/* 5. TWO ACTION BUTTONS WITH UNIFORM 2PX OUTLINE */}
         <div className="flex flex-col sm:flex-row items-center gap-3.5 w-full">
           {/* Mainkan Lagi Button (duo-green) */}
-          <button
-            type="button"
+          <TactileButton
+            variant="green"
+            size="lg"
+            icon={<RotateCcw className="w-5 h-5 stroke-[2.5]" />}
+            iconPosition="left"
             onClick={() => {
-              soundManager.play('tap');
+              soundManager.play("tap");
               onPlayAgain();
             }}
-            className="w-full sm:flex-1 py-4 px-6 rounded-2xl bg-[#58CC02] border-b-4 border-[#58A700] hover:bg-[#61DC02] active:translate-y-1 active:border-b-0 text-white font-black text-sm sm:text-base uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg transition-all duration-100 cursor-pointer"
+            className="w-full sm:flex-1 py-4 text-sm sm:text-base tracking-wider"
           >
-            <RotateCcw className="w-5 h-5 stroke-[2.5]" />
-            <span>Mainkan Lagi</span>
-          </button>
+            Mainkan Lagi
+          </TactileButton>
 
           {/* Kembali ke Dashboard Button (duo-blue) */}
-          <button
-            type="button"
+          <TactileButton
+            variant="blue"
+            size="lg"
+            icon={<Home className="w-5 h-5 stroke-[2.5]" />}
+            iconPosition="left"
             onClick={() => {
-              soundManager.play('tap');
+              soundManager.play("tap");
               onExitDashboard();
             }}
-            className="w-full sm:flex-1 py-4 px-6 rounded-2xl bg-[#1CB0F6] border-b-4 border-[#1899D6] hover:bg-[#28B8FE] active:translate-y-1 active:border-b-0 text-white font-black text-sm sm:text-base uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg transition-all duration-100 cursor-pointer"
+            className="w-full sm:flex-1 py-4 text-sm sm:text-base tracking-wider"
           >
-            <Home className="w-5 h-5 stroke-[2.5]" />
-            <span>Kembali ke Dashboard</span>
-          </button>
+            Kembali ke Dashboard
+          </TactileButton>
         </div>
       </motion.div>
     </motion.div>
@@ -288,7 +290,7 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({
 interface Star3DProps {
   index: number;
   isEarned: boolean;
-  size: 'sm' | 'lg';
+  size: "sm" | "lg";
   delay: number;
   isCenter?: boolean;
 }
@@ -299,7 +301,7 @@ const Star3D: React.FC<Star3DProps> = ({
   delay,
   isCenter = false,
 }) => {
-  const isLarge = size === 'lg';
+  const isLarge = size === "lg";
 
   return (
     <motion.div
@@ -311,27 +313,37 @@ const Star3D: React.FC<Star3DProps> = ({
       }}
       transition={{
         delay,
-        type: 'spring',
+        type: "spring",
         damping: 14,
         stiffness: 260,
         mass: 0.7,
       }}
       className={cn(
-        'relative flex items-center justify-center transition-all',
-        isLarge ? 'w-20 h-20 sm:w-24 sm:h-24 -translate-y-2' : 'w-16 h-16 sm:w-20 sm:h-20'
+        "relative flex items-center justify-center transition-all",
+        isLarge
+          ? "w-20 h-20 sm:w-24 sm:h-24 -translate-y-2"
+          : "w-16 h-16 sm:w-20 sm:h-20",
       )}
     >
       {/* 3D Star Graphic with Specular Highlight and Depth */}
       <svg
         viewBox="0 0 100 100"
         className={cn(
-          'w-full h-full filter drop-shadow-md transition-all',
-          isEarned ? 'drop-shadow-[0_8px_12px_rgba(255,200,0,0.35)]' : 'opacity-45'
+          "w-full h-full filter drop-shadow-md transition-all",
+          isEarned
+            ? "drop-shadow-[0_8px_12px_rgba(255,200,0,0.35)]"
+            : "opacity-45",
         )}
       >
         <defs>
           {/* Gold Yellow Gradient */}
-          <linearGradient id={`star-grad-${isCenter ? 'c' : 's'}`} x1="0%" y1="0%" x2="0%" y2="100%">
+          <linearGradient
+            id={`star-grad-${isCenter ? "c" : "s"}`}
+            x1="0%"
+            y1="0%"
+            x2="0%"
+            y2="100%"
+          >
             <stop offset="0%" stopColor="#FFE066" />
             <stop offset="50%" stopColor="#FFC800" />
             <stop offset="100%" stopColor="#E5A100" />
@@ -347,8 +359,12 @@ const Star3D: React.FC<Star3DProps> = ({
         {/* 3D Star Base Shape with Thick 3D Border */}
         <polygon
           points="50,5 64,36 98,39 72,62 80,95 50,77 20,95 28,62 2,39 36,36"
-          fill={isEarned ? `url(#star-grad-${isCenter ? 'c' : 's'})` : 'url(#star-gray)'}
-          stroke={isEarned ? '#D48B00' : '#64748B'}
+          fill={
+            isEarned
+              ? `url(#star-grad-${isCenter ? "c" : "s"})`
+              : "url(#star-gray)"
+          }
+          stroke={isEarned ? "#D48B00" : "#64748B"}
           strokeWidth="4.5"
           strokeLinejoin="round"
         />
@@ -367,4 +383,3 @@ const Star3D: React.FC<Star3DProps> = ({
 };
 
 export default VictoryScreen;
-

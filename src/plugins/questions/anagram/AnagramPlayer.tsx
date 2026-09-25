@@ -6,7 +6,7 @@ import React, {
   useRef,
 } from "react";
 import { Reorder } from "framer-motion";
-import { Shuffle, HelpCircle, MoveHorizontal } from "lucide-react";
+import { Shuffle, HelpCircle } from "lucide-react";
 import { PlayerProps } from "@/plugins/core/types";
 import { AnagramContent, AnagramAnswer } from "./types";
 import { TactileButton } from "@/components/ui/TactileButton";
@@ -209,26 +209,26 @@ export const AnagramPlayer: React.FC<
     isSelected?: boolean,
   ) => {
     if (isSelected) {
-      return "bg-duo-blue-light text-duo-blue-border border-duo-blue border-b-duo-blue-border border-r-duo-blue-border ring-4 ring-duo-blue/40 scale-105 z-20 shadow-md";
+      return "bg-duo-blue-light text-duo-blue-border border-duo-blue ring-4 ring-duo-blue/40 scale-105 z-20";
     }
     if (!isAnswered) {
-      return "bg-white text-duo-dark border-duo-gray border-b-duo-gray-border border-r-duo-gray-border hover:bg-slate-50";
+      return "bg-white text-duo-dark border-duo-gray hover:bg-slate-50";
     }
     if (isCorrect === true) {
-      return "bg-duo-green-light text-duo-green-border border-duo-green border-b-duo-green-border border-r-duo-green-border ring-2 ring-duo-green/30";
+      return "bg-duo-green-light text-duo-green-border border-duo-green ring-2 ring-duo-green/30";
     }
     if (isCorrect === false) {
       const isCharMatchingTarget = letter === targetWord[index];
       if (isCharMatchingTarget) {
-        return "bg-duo-green-light text-duo-green-border border-duo-green border-b-duo-green-border border-r-duo-green-border ring-2 ring-duo-green/30";
+        return "bg-duo-green-light text-duo-green-border border-duo-green ring-2 ring-duo-green/30";
       }
-      return "bg-duo-red-light text-duo-red-border border-duo-red border-b-duo-red-border border-r-duo-red-border ring-2 ring-duo-red/30";
+      return "bg-duo-red-light text-duo-red-border border-duo-red ring-2 ring-duo-red/30";
     }
-    return "bg-duo-blue-light text-duo-blue-border border-duo-blue border-b-duo-blue-border border-r-duo-blue-border";
+    return "bg-duo-blue-light text-duo-blue-border border-duo-blue";
   };
 
   return (
-    <div className="flex flex-col items-center w-full max-w-2xl mx-auto py-4 px-2 select-none">
+    <div className="flex flex-col items-center w-full max-w-3xl mx-auto py-4 select-none">
       {/* Optional Media Image */}
       {content.mediaUrl && !(content as any)._hideMedia && (
         <div className="flex justify-center w-full mb-5">
@@ -248,32 +248,9 @@ export const AnagramPlayer: React.FC<
         </div>
       )}
 
-      {/* Title & Gesture Instruction */}
-      <div className="flex flex-col items-center gap-1.5 mb-6 text-center">
-        <h3 className="text-xl sm:text-2xl font-black text-duo-dark">
-          Tukar & Susun Kembali Balok Huruf
-        </h3>
-        <p className="flex items-center justify-center gap-1.5 text-xs font-bold text-slate-400 text-center flex-wrap">
-          <MoveHorizontal className="w-4 h-4 text-duo-blue shrink-0" />
-          <span>
-            Geser balok huruf untuk mengubah urutan, atau ketuk 2 balok untuk
-            menukar posisi
-          </span>
-        </p>
-      </div>
-
       {/* Header Bar with Shuffle Button */}
-      <div className="flex items-center justify-between w-full mb-3 px-2">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-black uppercase tracking-wider text-slate-400">
-            Kata Saat Ini:
-          </span>
-          <span className="font-mono font-black text-base text-duo-blue tracking-widest bg-duo-blue-light/40 px-2.5 py-0.5 rounded-lg border border-duo-blue/20">
-            {currentWord}
-          </span>
-        </div>
-
-        {!isAnswered && items.length > 1 && (
+      {!isAnswered && items.length > 1 && (
+        <div className="flex justify-end w-full mb-3 px-2">
           <TactileButton
             type="button"
             variant="outline"
@@ -285,8 +262,8 @@ export const AnagramPlayer: React.FC<
           >
             Acak Ulang
           </TactileButton>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Reorderable Horizontal 3D Tile Container with Safe Horizontal Scrolling & Auto-Scaling */}
       <div className="w-full overflow-x-auto py-3 px-1 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
@@ -351,7 +328,7 @@ export const AnagramPlayer: React.FC<
                 }}
                 className={cn(
                   "relative flex flex-col items-center justify-between font-black select-none shrink-0 transition-colors duration-150",
-                  "border-2 border-b-4 border-r-2 shadow-sm",
+                  "border-2 border-solid",
                   tileConfig.tileClass,
                   !isInteractionDisabled
                     ? "cursor-grab active:cursor-grabbing touch-none"

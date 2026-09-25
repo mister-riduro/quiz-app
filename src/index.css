@@ -58,19 +58,18 @@
 }
 
 @layer utilities {
-  /* Tactile 3D Physical Button Press Simulation (Duolingo Style) */
+  /* Tactile Button with Uniform 2px Outline */
   .btn-3d-press {
     position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     font-weight: 800;
-    border-bottom-width: 4px;
+    border-width: 2px;
     border-style: solid;
     user-select: none;
     transition:
       transform 0.08s ease-in-out,
-      border-bottom-width 0.08s ease-in-out,
       filter 0.1s ease;
   }
 
@@ -79,8 +78,7 @@
   }
 
   .btn-3d-press:active:not(:disabled) {
-    transform: translateY(2px);
-    border-bottom-width: 2px;
+    transform: translateY(1px) scale(0.99);
   }
 
   .btn-3d-press:disabled {

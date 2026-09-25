@@ -19,7 +19,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { AnimatePresence } from "framer-motion";
-import { HelpCircle, RotateCcw, MoveHorizontal } from "lucide-react";
+import { HelpCircle, RotateCcw } from "lucide-react";
 import { PlayerProps } from "@/plugins/core/types";
 import { UnjumbleContent, UnjumbleAnswer, UnjumbleTokenItem } from "./types";
 import { TactileButton } from "@/components/ui/TactileButton";
@@ -92,21 +92,21 @@ const PlacedSortableTile: React.FC<PlacedSortableTileProps> = ({
   // Determine styling based on evaluation state
   const getStyleState = () => {
     if (!isAnswered) {
-      return "bg-white text-duo-dark border-slate-200 border-b-slate-300 hover:border-duo-blue hover:border-b-duo-blue-border hover:bg-slate-50";
+      return "bg-white text-duo-dark border-slate-200 hover:border-duo-blue hover:bg-slate-50";
     }
     if (isCorrect === true) {
-      return "bg-duo-green-light text-duo-green-border border-duo-green border-b-duo-green-border ring-2 ring-duo-green/30";
+      return "bg-duo-green-light text-duo-green-border border-duo-green ring-2 ring-duo-green/30";
     }
     if (isCorrect === false) {
       const isWordInTargetPos =
         targetToken &&
         item.text.trim().toLowerCase() === targetToken.trim().toLowerCase();
       if (isWordInTargetPos) {
-        return "bg-duo-green-light text-duo-green-border border-duo-green border-b-duo-green-border ring-2 ring-duo-green/30";
+        return "bg-duo-green-light text-duo-green-border border-duo-green ring-2 ring-duo-green/30";
       }
-      return "bg-duo-red-light text-duo-red-border border-duo-red border-b-duo-red-border ring-2 ring-duo-red/30";
+      return "bg-duo-red-light text-duo-red-border border-duo-red ring-2 ring-duo-red/30";
     }
-    return "bg-white text-duo-dark border-slate-200 border-b-slate-300";
+    return "bg-white text-duo-dark border-slate-200";
   };
 
   return (
@@ -118,7 +118,7 @@ const PlacedSortableTile: React.FC<PlacedSortableTileProps> = ({
       onClick={!disabled ? onTap : undefined}
       className={cn(
         "relative inline-flex items-center justify-center font-black select-none transition-all duration-150",
-        "px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl border-2 border-b-4 border-solid shadow-sm text-base sm:text-lg",
+        "px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl border-2 border-solid text-base sm:text-lg",
         !disabled
           ? "cursor-grab active:cursor-grabbing hover:-translate-y-0.5 active:translate-y-0.5"
           : "cursor-default",
@@ -153,7 +153,7 @@ const BankTile: React.FC<BankTileProps> = ({
     data: { fromBank: true, item },
   });
 
-  // If already placed, show a 3D ghost silhouette placeholder so layout doesn't jump
+  // If already placed, show a ghost silhouette placeholder so layout doesn't jump
   if (isPlaced) {
     return (
       <div
@@ -173,10 +173,10 @@ const BankTile: React.FC<BankTileProps> = ({
       onClick={!disabled ? onTap : undefined}
       className={cn(
         "relative inline-flex items-center justify-center font-black select-none transition-all duration-150",
-        "px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl border-2 border-b-4 border-solid shadow-sm text-base sm:text-lg",
-        "bg-white text-duo-dark border-slate-200 border-b-slate-300",
+        "px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl border-2 border-solid text-base sm:text-lg",
+        "bg-white text-duo-dark border-slate-200",
         !disabled
-          ? "cursor-pointer hover:border-duo-blue hover:border-b-duo-blue-border hover:-translate-y-1 hover:scale-105 active:translate-y-1 active:border-b-2"
+          ? "cursor-pointer hover:border-duo-blue hover:-translate-y-0.5 hover:scale-105 active:translate-y-0.5"
           : "cursor-default opacity-60",
         isDragging && "opacity-25",
       )}
@@ -425,7 +425,7 @@ export const UnjumblePlayer: React.FC<
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex flex-col items-center w-full max-w-3xl mx-auto py-4 px-2 select-none">
+      <div className="flex flex-col items-center w-full max-w-3xl mx-auto py-4 select-none">
         {/* Optional Media Image */}
         {content.mediaUrl && !(content as any)._hideMedia && (
           <div className="flex justify-center w-full mb-5">
@@ -445,31 +445,9 @@ export const UnjumblePlayer: React.FC<
           </div>
         )}
 
-        {/* Title & Gesture Instruction */}
-        <div className="flex flex-col items-center gap-1.5 mb-6 text-center">
-          <h3 className="text-xl sm:text-2xl font-black text-duo-dark">
-            Susun Balok Kata Menjadi Kalimat Utuh
-          </h3>
-          <p className="flex items-center gap-1.5 text-xs font-bold text-slate-400">
-            <MoveHorizontal className="w-4 h-4 text-duo-blue" />
-            <span>
-              Ketuk kata untuk memindahkan, atau geser untuk menyisipkan posisi
-            </span>
-          </p>
-        </div>
-
-        {/* Header Bar: Tray Word Count & Reset */}
-        <div className="flex items-center justify-between w-full mb-2.5 px-2">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-black uppercase tracking-wider text-slate-400">
-              Wadah Kalimat:
-            </span>
-            <span className="text-xs font-extrabold text-duo-blue bg-duo-blue-light/50 px-2.5 py-0.5 rounded-lg border border-duo-blue/20">
-              {placedTokens.length} / {masterTokens.length} Kata
-            </span>
-          </div>
-
-          {!isAnswered && placedTokens.length > 0 && (
+        {/* Reset Tray Button */}
+        {!isAnswered && placedTokens.length > 0 && (
+          <div className="flex justify-end w-full mb-2.5 px-2">
             <button
               type="button"
               onClick={handleResetTray}
@@ -478,8 +456,8 @@ export const UnjumblePlayer: React.FC<
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Kosongkan Wadah</span>
             </button>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* 1. AREA ATAS: "Wadah Kalimat" dengan background abu-abu halus dan garis batas melengkung */}
         <div
@@ -499,13 +477,9 @@ export const UnjumblePlayer: React.FC<
           <SortableContext items={placedIds} strategy={rectSortingStrategy}>
             <AnimatePresence>
               {placedTokens.length === 0 ? (
-                <div className="flex flex-col items-center justify-center gap-1.5 py-4 text-center select-none z-10">
-                  <span className="text-sm sm:text-base font-bold text-slate-400">
-                    Ketuk kata di bawah atau seret ke sini untuk menyusun
-                    kalimat
-                  </span>
-                  <span className="text-xs font-semibold text-slate-300">
-                    Balok-balok kata akan berbaris rapi di wadah ini
+                <div className="flex items-center justify-center py-6 text-center select-none z-10">
+                  <span className="text-xs font-bold text-slate-300 uppercase tracking-widest">
+                    Wadah Kalimat
                   </span>
                 </div>
               ) : (
@@ -527,16 +501,7 @@ export const UnjumblePlayer: React.FC<
         </div>
 
         {/* 2. AREA BAWAH: Kumpulan gelembung kata acak bertekstur 3D */}
-        <div className="w-full flex flex-col gap-2.5 mt-8">
-          <div className="flex items-center justify-between px-2">
-            <span className="text-xs font-black uppercase tracking-wider text-slate-400">
-              Kumpulan Gelembung Kata:
-            </span>
-            <span className="text-xs font-bold text-slate-400">
-              {masterTokens.length - placedTokens.length} kata tersedia
-            </span>
-          </div>
-
+        <div className="w-full flex flex-col gap-2.5 mt-6">
           <div
             ref={setBankTrayRef}
             className="flex flex-wrap justify-center items-center gap-2.5 sm:gap-3.5 p-5 sm:p-6 bg-slate-50/90 border-2 border-slate-200 border-b-4 rounded-3xl min-h-[120px] w-full shadow-xs"

@@ -216,8 +216,8 @@ export const MultipleChoiceEditor: React.FC<
                       className={cn(
                         "w-9 h-9 rounded-xl border-2 flex items-center justify-center select-none transition-all cursor-pointer shrink-0",
                         isCorrect
-                          ? "bg-duo-green text-white border-duo-green-border border-b-4 active:border-b-2 shadow-xs"
-                          : "bg-white text-transparent border-slate-300 border-b-4 hover:border-slate-400 hover:bg-slate-50",
+                          ? "bg-duo-green text-white border-duo-green-border active:translate-y-0.5"
+                          : "bg-white text-transparent border-slate-300 hover:border-slate-400 hover:bg-slate-50 active:translate-y-0.5",
                         disabled && "cursor-not-allowed opacity-60",
                       )}
                       title={
@@ -385,14 +385,14 @@ export const MultipleChoiceEditor: React.FC<
         </p>
       </div>
 
-      {/* 4. Explanation (Pembahasan) with Rich Math Support */}
+      {/* 4. Explanation with Rich Math Support */}
       <DuoMathTextarea
-        label="Pembahasan & Penjelasan Jawaban (Opsional)"
+        label="Penjelasan (Opsional)"
         value={explanation}
         onChange={(val) => onChange({ ...value, explanation: val })}
         placeholder="Contoh: Klorofil adalah pigmen pada kloroplas yang berfungsi menangkap cahaya matahari..."
         rows={2}
-        helperText="Penjelasan ini akan ditampilkan di kartu rangkuman saat kunci jawaban dibuka atau setelah siswa selesai menjawab."
+        helperText="Teks ini akan muncul sebagai umpan balik setelah siswa menjawab soal."
       />
 
       {/* Math Formula Modal for Options */}

@@ -12,7 +12,7 @@ import {
   DragStartEvent,
 } from "@dnd-kit/core";
 import { motion, AnimatePresence } from "framer-motion";
-import { HelpCircle, RotateCcw, Crosshair, X } from "lucide-react";
+import { HelpCircle, RotateCcw, X } from "lucide-react";
 import { PlayerProps } from "@/plugins/core/types";
 import {
   LabelledDiagramContent,
@@ -193,19 +193,19 @@ const TargetPin: React.FC<TargetPinProps> = ({
                 if (!disabled) onDetachLabel();
               }}
               className={cn(
-                "relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 border-b-4 font-black text-xs sm:text-sm whitespace-nowrap shadow-md select-none transition-all",
+                "relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 font-black text-xs sm:text-sm whitespace-nowrap select-none transition-all",
                 !disabled
                   ? "cursor-pointer hover:scale-105 active:scale-95"
                   : "cursor-default",
                 // Pre-submit appearance
                 !isAnswered &&
-                  "bg-white text-duo-dark border-duo-blue border-b-duo-blue-border hover:bg-duo-blue-light/30",
+                  "bg-white text-duo-dark border-duo-blue hover:bg-duo-blue-light/30",
                 // Correct evaluation appearance
                 isLabelCorrect &&
-                  "bg-duo-green-light text-duo-green-border border-duo-green border-b-duo-green-border shadow-[0_0_12px_rgba(88,204,2,0.4)]",
+                  "bg-duo-green-light text-duo-green-border border-duo-green shadow-[0_0_12px_rgba(88,204,2,0.4)]",
                 // Wrong evaluation appearance
                 isLabelWrong &&
-                  "bg-duo-red-light text-duo-red-border border-duo-red border-b-duo-red-border shadow-[0_0_12px_rgba(255,75,75,0.4)]",
+                  "bg-duo-red-light text-duo-red-border border-duo-red shadow-[0_0_12px_rgba(255,75,75,0.4)]",
               )}
             >
               <span>{attachedLabel.text}</span>
@@ -272,13 +272,13 @@ const TrayLabelBadge: React.FC<TrayLabelBadgeProps> = ({
       onClick={!disabled ? onTap : undefined}
       className={cn(
         "relative inline-flex items-center justify-center font-black select-none transition-all duration-150",
-        "px-4 py-2.5 rounded-2xl border-2 border-b-4 border-solid shadow-sm text-sm sm:text-base",
+        "px-4 py-2.5 rounded-2xl border-2 border-solid text-sm sm:text-base",
         !disabled
-          ? "cursor-pointer hover:border-duo-blue hover:border-b-duo-blue-border hover:-translate-y-0.5 active:translate-y-1 active:border-b-2"
+          ? "cursor-pointer hover:border-duo-blue hover:-translate-y-0.5 active:translate-y-0.5"
           : "cursor-default opacity-60",
         isSelected
-          ? "bg-duo-blue-light text-duo-blue-border border-duo-blue border-b-duo-blue-border ring-4 ring-duo-blue/20 scale-105"
-          : "bg-white text-duo-dark border-slate-200 border-b-slate-300",
+          ? "bg-duo-blue-light text-duo-blue-border border-duo-blue ring-4 ring-duo-blue/20 scale-105"
+          : "bg-white text-duo-dark border-slate-200",
         isDragging && "opacity-25",
       )}
     >
@@ -522,7 +522,7 @@ export const DiagramPlayer: React.FC<
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex flex-col items-center w-full max-w-3xl mx-auto py-4 px-2 select-none">
+      <div className="flex flex-col items-center w-full max-w-3xl mx-auto py-4 select-none">
         {/* Hint / Context Clue */}
         {hint && (
           <div className="flex items-center gap-2 px-4 py-2.5 bg-duo-blue-light/50 border border-duo-blue/30 rounded-2xl mb-6 text-duo-blue-border font-bold text-sm sm:text-base text-center max-w-lg">
@@ -531,32 +531,9 @@ export const DiagramPlayer: React.FC<
           </div>
         )}
 
-        {/* Title & Gesture Instructions */}
-        <div className="flex flex-col items-center gap-1.5 mb-5 text-center">
-          <h3 className="text-xl sm:text-2xl font-black text-duo-dark">
-            Pasangkan Label Pada Titik Diagram Yang Tepat
-          </h3>
-          <p className="flex items-center gap-1.5 text-xs font-bold text-slate-400">
-            <Crosshair className="w-4 h-4 text-duo-blue" />
-            <span>
-              Seret kartu label ke titik target, atau ketuk label lalu ketuk
-              titik pin
-            </span>
-          </p>
-        </div>
-
-        {/* Header Bar: Progress & Reset */}
-        <div className="flex items-center justify-between w-full mb-3 px-2">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-black uppercase tracking-wider text-slate-400">
-              Label Terpasang:
-            </span>
-            <span className="text-xs font-extrabold text-duo-blue bg-duo-blue-light/50 px-2.5 py-0.5 rounded-lg border border-duo-blue/20">
-              {placedCount} / {totalPinsCount} Label
-            </span>
-          </div>
-
-          {!isAnswered && placedCount > 0 && (
+        {/* Reset Button */}
+        {!isAnswered && placedCount > 0 && (
+          <div className="flex justify-end w-full mb-3 px-2">
             <button
               type="button"
               onClick={handleResetPlacements}
@@ -565,8 +542,8 @@ export const DiagramPlayer: React.FC<
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Reset Semua Posisi</span>
             </button>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* 1. AREA DIAGRAM INTERAKTIF */}
         <div className="relative w-full rounded-3xl overflow-hidden border-2 border-slate-200 bg-slate-100 shadow-sm flex items-center justify-center min-h-[300px] max-h-[560px]">
@@ -629,15 +606,6 @@ export const DiagramPlayer: React.FC<
 
         {/* 2. NAMPAN LABEL NAMA (AREA BAWAH) */}
         <div className="w-full flex flex-col gap-2.5 mt-6">
-          <div className="flex items-center justify-between px-2">
-            <span className="text-xs font-black uppercase tracking-wider text-slate-400">
-              Nampan Kartu Label:
-            </span>
-            <span className="text-xs font-bold text-slate-400">
-              {totalPinsCount - placedCount} kartu belum terpasang
-            </span>
-          </div>
-
           <div className="flex flex-wrap justify-center items-center gap-2.5 sm:gap-3 p-5 sm:p-6 bg-slate-50/90 border-2 border-slate-200 border-b-4 rounded-3xl min-h-[96px] w-full shadow-xs">
             {trayLabels.map((label) => {
               const isAttached = Object.values(placements).some(

@@ -197,10 +197,10 @@ export const UnjumbleEditor: React.FC<EditorProps<UnjumbleContent>> = ({
                   {/* Word / Phrase Block */}
                   <div
                     className={cn(
-                      "inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl border-2 border-b-4 select-none transition-all shadow-xs",
+                      "inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl border-2 select-none transition-all shadow-xs",
                       isMergedPhrase
                         ? "bg-duo-blue-light/50 border-duo-blue text-duo-dark"
-                        : "bg-white border-slate-200 border-b-slate-300 text-duo-dark",
+                        : "bg-white border-slate-200 text-duo-dark",
                     )}
                   >
                     <span className="text-sm font-black tracking-tight">
@@ -298,7 +298,7 @@ export const UnjumbleEditor: React.FC<EditorProps<UnjumbleContent>> = ({
               {previewTokens.map((tok, idx) => (
                 <div
                   key={`preview-tok-${idx}-${tok}`}
-                  className="px-4 py-2.5 rounded-2xl bg-white border-2 border-slate-200 border-b-4 border-b-slate-300 font-black text-sm text-duo-dark shadow-xs select-none"
+                  className="px-4 py-2.5 rounded-2xl bg-white border-2 border-slate-200 font-black text-sm text-duo-dark shadow-xs select-none"
                 >
                   {tok}
                 </div>

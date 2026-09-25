@@ -111,7 +111,7 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
             className={cn(
               "w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl font-black text-sm transition-all cursor-pointer text-left",
               currentMode === "dashboard"
-                ? "bg-[#E5FAD2] text-[#2E6B00] border-2 border-[#A2E865] border-b-[3px] border-b-[#85D641] shadow-xs active:translate-y-[1px] active:border-b-2"
+                ? "bg-[#E5FAD2] text-[#2E6B00] border-2 border-[#A2E865] active:translate-y-0.5"
                 : "bg-transparent text-slate-600 hover:text-duo-dark hover:bg-slate-100 border-2 border-transparent active:bg-slate-200",
             )}
           >
@@ -135,7 +135,7 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
             className={cn(
               "w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl font-black text-sm transition-all cursor-pointer text-left",
               currentMode === "showcase"
-                ? "bg-[#E5F5FF] text-[#096996] border-2 border-[#8ED4FF] border-b-[3px] border-b-[#66C3FC] shadow-xs active:translate-y-[1px] active:border-b-2"
+                ? "bg-[#E5F5FF] text-[#096996] border-2 border-[#8ED4FF] active:translate-y-0.5"
                 : "bg-transparent text-slate-600 hover:text-duo-dark hover:bg-slate-100 border-2 border-transparent active:bg-slate-200",
             )}
           >
@@ -261,7 +261,7 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
               setIsMobileOpen(true);
             }}
             aria-label="Buka Menu Navigasi"
-            className="w-10 h-10 rounded-2xl bg-duo-bg border-2 border-duo-gray border-b-4 border-b-duo-gray-border flex items-center justify-center text-duo-dark hover:bg-duo-gray transition-all active:translate-y-[2px] active:border-b-2 cursor-pointer"
+            className="w-10 h-10 rounded-2xl bg-duo-bg border-2 border-slate-200 hover:border-slate-300 flex items-center justify-center text-duo-dark hover:bg-duo-gray transition-all active:translate-y-0.5 active:scale-[0.98] cursor-pointer"
           >
             <Menu className="w-5 h-5" />
           </button>

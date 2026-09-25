@@ -30,7 +30,7 @@ const variantStyles: Record<ButtonVariant, string> = {
     "bg-duo-yellow border-duo-yellow-border text-duo-dark hover:brightness-105",
   gray: "bg-duo-gray border-duo-gray-border text-duo-dark/50 hover:brightness-100",
   outline:
-    "bg-white border-duo-gray border-b-duo-gray-border border-r-duo-gray-border text-duo-dark hover:bg-slate-50",
+    "bg-white border-slate-200 hover:border-slate-400 text-duo-dark hover:bg-slate-50",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
@@ -68,17 +68,17 @@ export const TactileButton = React.forwardRef<
         className={cn(
           // Base & Typography
           "relative inline-flex items-center justify-center select-none uppercase tracking-wider transition-all duration-75",
-          // 3D Bevel Structure (PRD 3.3 & prompt specs)
-          "border-b-4 border-r-2 border-solid",
+          // Uniform 2px Outline
+          "border-2 border-solid",
           // Active Physical Interaction
-          "active:translate-y-[2px] active:border-b-2",
+          "active:translate-y-0.5 active:scale-[0.99]",
           // Size & Variant
           variantStyles[variant],
           sizeStyles[size],
           fullWidth && "w-full",
           // Disabled State: Abu-abu redup, tanpa efek active press
           isDisabled &&
-            "bg-duo-gray border-duo-gray-border text-duo-dark/40 cursor-not-allowed transform-none active:translate-y-0 active:border-b-4 hover:brightness-100 opacity-80",
+            "bg-duo-gray border-duo-gray-border text-duo-dark/40 cursor-not-allowed transform-none active:translate-y-0 hover:brightness-100 opacity-80",
           className,
         )}
         {...props}

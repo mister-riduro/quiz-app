@@ -11,6 +11,7 @@ import {
 import confetti from "canvas-confetti";
 import { useSoundEffect } from "@/hooks/useSoundEffect";
 import { cn } from "@/utils/cn";
+import { TactileButton } from "@/components/ui/TactileButton";
 import { DuoMathRenderer } from "./DuoMathRenderer";
 
 export interface BottomSheetFeedbackProps {
@@ -227,24 +228,20 @@ export const BottomSheetFeedback: React.FC<BottomSheetFeedbackProps> = ({
               </div>
             </div>
 
-            {/* Right Action Button (3D Duolingo Tactile Style) */}
+            {/* Right Action Button */}
             <div className="shrink-0 w-full sm:w-auto">
-              <button
-                type="button"
+              <TactileButton
+                variant={isCorrect ? "green" : "red"}
+                size="lg"
+                icon={
+                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 stroke-[3]" />
+                }
+                iconPosition="right"
                 onClick={handleButtonClick}
-                className={cn(
-                  "w-full sm:w-auto min-w-[180px] sm:min-w-[200px] py-3.5 sm:py-4 px-8 rounded-2xl font-black text-sm sm:text-base uppercase tracking-wider text-white shadow-md flex items-center justify-center gap-2 transition-all duration-100 cursor-pointer",
-                  // 3D Tactile Button states
-                  isCorrect
-                    ? "bg-[#58CC02] border-b-4 border-[#58A700] hover:bg-[#61DC02] active:translate-y-1 active:border-b-0"
-                    : "bg-[#FF4B4B] border-b-4 border-[#EA2B2B] hover:bg-[#FF5C5C] active:translate-y-1 active:border-b-0",
-                )}
+                className="w-full sm:w-auto min-w-[180px] sm:min-w-[200px]"
               >
-                <span>
-                  {actionText || (isCorrect ? "Lanjutkan" : "Mengerti")}
-                </span>
-                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 stroke-[3]" />
-              </button>
+                {actionText || (isCorrect ? "Lanjutkan" : "Mengerti")}
+              </TactileButton>
             </div>
           </div>
         </motion.div>

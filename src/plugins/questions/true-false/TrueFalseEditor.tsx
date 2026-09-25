@@ -46,8 +46,8 @@ export const TrueFalseEditor: React.FC<EditorProps<TrueFalseContent>> = ({
             className={cn(
               "flex items-center justify-between p-4 sm:p-5 rounded-2xl border-2 transition-all cursor-pointer text-left",
               correctAnswer === true
-                ? "bg-duo-green text-white border-duo-green-border border-b-[5px] shadow-sm"
-                : "bg-slate-50 hover:bg-slate-100/80 text-slate-700 border-slate-200 border-b-[4px]",
+                ? "bg-duo-green text-white border-duo-green-border"
+                : "bg-slate-50 hover:bg-slate-100/80 text-slate-700 border-slate-200",
               disabled && "opacity-70 cursor-not-allowed",
             )}
           >
@@ -95,8 +95,8 @@ export const TrueFalseEditor: React.FC<EditorProps<TrueFalseContent>> = ({
             className={cn(
               "flex items-center justify-between p-4 sm:p-5 rounded-2xl border-2 transition-all cursor-pointer text-left",
               correctAnswer === false
-                ? "bg-duo-red text-white border-duo-red-border border-b-[5px] shadow-sm"
-                : "bg-slate-50 hover:bg-slate-100/80 text-slate-700 border-slate-200 border-b-[4px]",
+                ? "bg-duo-red text-white border-duo-red-border"
+                : "bg-slate-50 hover:bg-slate-100/80 text-slate-700 border-slate-200",
               disabled && "opacity-70 cursor-not-allowed",
             )}
           >
@@ -134,14 +134,14 @@ export const TrueFalseEditor: React.FC<EditorProps<TrueFalseContent>> = ({
         </div>
       </div>
 
-      {/* 2. Optional Explanation / Fun Fact Input with Rich Math Support */}
+      {/* 2. Optional Explanation Input with Rich Math Support */}
       <DuoMathTextarea
-        label="Penjelasan / Fakta Menarik (Opsional)"
+        label="Penjelasan (Opsional)"
         value={explanation}
         onChange={(val) => onChange({ ...value, explanation: val })}
         placeholder="Contoh: Pada ketinggian tinggi seperti di pegunungan, titik didih air menjadi lebih rendah dari 100°C akibat tekanan udara yang lebih kecil."
         rows={2}
-        helperText="Teks ini akan muncul sebagai umpan balik edukatif setelah siswa menjawab kartu soal."
+        helperText="Teks ini akan muncul sebagai umpan balik setelah siswa menjawab soal."
       />
     </DuoCard>
   );
