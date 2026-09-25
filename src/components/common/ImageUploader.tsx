@@ -5,7 +5,6 @@ import {
   formatBytes,
   CompressionResult,
 } from "@/utils/imageCompressor";
-import { TactileButton } from "@/components/ui/TactileButton";
 import { Badge } from "@/components/ui/Badge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { useSoundEffect } from "@/hooks/useSoundEffect";
