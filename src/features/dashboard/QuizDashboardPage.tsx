@@ -20,6 +20,7 @@ import {
   LayoutGrid,
   List,
   Sparkles,
+  Star,
 } from "lucide-react";
 import { generateUUID } from "@/utils/uuid";
 
@@ -66,6 +67,7 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
     "my-quizzes",
   );
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
+  const [communityCategory, setCommunityCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [internalCreateModalOpen, setInternalCreateModalOpen] = useState(false);
   const isCreateModalOpen =
@@ -203,8 +205,20 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
     return true;
   });
 
+  // Available categories in community quizzes
+  const communityCategories = React.useMemo(() => {
+    const cats = new Set<string>();
+    communityQuizzes.forEach((q) => {
+      if (q.category && q.category.trim()) cats.add(q.category.trim());
+    });
+    return Array.from(cats);
+  }, [communityQuizzes]);
+
   // Filter calculations for Community Hub
   const filteredCommunityQuizzes = communityQuizzes.filter((q) => {
+    if (communityCategory !== "all" && q.category !== communityCategory) {
+      return false;
+    }
     if (!searchQuery.trim()) return true;
     const qLower = searchQuery.toLowerCase();
     const matchTitle = q.title.toLowerCase().includes(qLower);
@@ -339,8 +353,8 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
         <>
           {/* Filter Bar & Search Bar Row */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-            {/* Airlearn Filter Segmented Capsule: Semua, Dipublikasikan, Draft */}
-            <div className="inline-flex p-1.5 rounded-[16px] bg-[#E8EDF2] gap-1">
+            {/* Filter Standalone Chips (Airlearn Style): Semua, Dipublikasikan, Draft */}
+            <div className="flex items-center gap-2 flex-wrap">
               <button
                 type="button"
                 onClick={() => {
@@ -348,13 +362,13 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
                   setActiveTab("all");
                 }}
                 className={cn(
-                  "px-4 py-1.5 rounded-[13px] text-xs font-black transition-all cursor-pointer border-0",
+                  "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-[10px] text-xs sm:text-sm transition-all cursor-pointer select-none active:scale-[0.98] bg-white border",
                   activeTab === "all"
-                    ? "bg-white text-duo-dark shadow-xs"
-                    : "text-slate-500 hover:text-duo-dark hover:bg-white/40",
+                    ? "border-2 border-duo-dark text-duo-dark font-extrabold shadow-xs"
+                    : "border-slate-200 text-slate-500 hover:text-duo-dark hover:border-slate-300 font-bold shadow-2xs",
                 )}
               >
-                Semua ({totalCount})
+                <span>Semua ({totalCount})</span>
               </button>
 
               <button
@@ -364,13 +378,13 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
                   setActiveTab("published");
                 }}
                 className={cn(
-                  "px-4 py-1.5 rounded-[13px] text-xs font-black transition-all cursor-pointer border-0",
+                  "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-[10px] text-xs sm:text-sm transition-all cursor-pointer select-none active:scale-[0.98] bg-white border",
                   activeTab === "published"
-                    ? "bg-white text-duo-dark shadow-xs"
-                    : "text-slate-500 hover:text-duo-dark hover:bg-white/40",
+                    ? "border-2 border-duo-dark text-duo-dark font-extrabold shadow-xs"
+                    : "border-slate-200 text-slate-500 hover:text-duo-dark hover:border-slate-300 font-bold shadow-2xs",
                 )}
               >
-                Dipublikasikan ({publishedCount})
+                <span>Dipublikasikan ({publishedCount})</span>
               </button>
 
               <button
@@ -380,13 +394,13 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
                   setActiveTab("draft");
                 }}
                 className={cn(
-                  "px-4 py-1.5 rounded-[13px] text-xs font-black transition-all cursor-pointer border-0",
+                  "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-[10px] text-xs sm:text-sm transition-all cursor-pointer select-none active:scale-[0.98] bg-white border",
                   activeTab === "draft"
-                    ? "bg-white text-duo-dark shadow-xs"
-                    : "text-slate-500 hover:text-duo-dark hover:bg-white/40",
+                    ? "border-2 border-duo-dark text-duo-dark font-extrabold shadow-xs"
+                    : "border-slate-200 text-slate-500 hover:text-duo-dark hover:border-slate-300 font-bold shadow-2xs",
                 )}
               >
-                Draft ({draftCount})
+                <span>Draft ({draftCount})</span>
               </button>
             </div>
 
@@ -400,7 +414,7 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Cari kuis saya..."
-                className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-full font-bold text-xs sm:text-sm text-duo-dark placeholder:text-slate-400 focus:outline-none focus:border-duo-green focus:ring-2 focus:ring-duo-green/20 shadow-2xs transition-all"
+                className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-[13px] font-bold text-xs sm:text-sm text-duo-dark placeholder:text-slate-400 focus:outline-none focus:border-duo-green focus:ring-2 focus:ring-duo-green/20 shadow-2xs transition-all"
               />
             </div>
           </div>
@@ -440,7 +454,7 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
                     className={cn(
                       "p-1.5 rounded-full transition-all cursor-pointer",
                       viewMode === "list"
-                        ? "bg-white text-duo-green-border shadow-xs border border-slate-200/60"
+                        ? "bg-white text-duo-green-border shadow-xs border-0"
                         : "text-slate-400 hover:text-slate-600",
                     )}
                   >
@@ -453,7 +467,7 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
                     className={cn(
                       "p-1.5 rounded-full transition-all cursor-pointer",
                       viewMode === "grid"
-                        ? "bg-white text-duo-green-border shadow-xs border border-slate-200/60"
+                        ? "bg-white text-duo-green-border shadow-xs border-0"
                         : "text-slate-400 hover:text-slate-600",
                     )}
                   >
@@ -496,29 +510,69 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
       {/* TAB 2: KATALOG KOMUNITAS */}
       {mainTab === "community" && (
         <>
-          {/* Community Info Banner & Search */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
-              <Globe className="w-4 h-4 text-duo-blue" />
-              <span>
-                Kuis publik yang dibagikan oleh guru-guru di komunitas. Anda
-                bisa langsung memainkannya atau menyalinnya ke daftar kuis Anda.
-              </span>
+          {/* Community Info Banner, Filter Chips & Search */}
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-2 text-s font-semibold text-slate-500">
+                <span>
+                  Kuis publik yang dibagikan oleh guru-guru di komunitas
+                  EduPlay.
+                </span>
+              </div>
+
+              {/* Search Community Bar */}
+              <div className="relative max-w-xs w-full">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <Search className="w-4 h-4" />
+                </div>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Cari kuis komunitas / guru..."
+                  className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-[13px] font-bold text-xs sm:text-sm text-duo-dark placeholder:text-slate-400 focus:outline-none focus:border-duo-blue focus:ring-2 focus:ring-duo-blue/20 shadow-2xs transition-all"
+                />
+              </div>
             </div>
 
-            {/* Search Community Bar */}
-            <div className="relative max-w-xs w-full">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                <Search className="w-4 h-4" />
+            {/* Community Category Filter Standalone Chips */}
+            {communityCategories.length > 0 && (
+              <div className="flex items-center gap-2 flex-wrap pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    playPop();
+                    setCommunityCategory("all");
+                  }}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-[10px] text-xs sm:text-sm transition-all cursor-pointer select-none active:scale-[0.98] bg-white border",
+                    communityCategory === "all"
+                      ? "border-2 border-duo-dark text-duo-dark font-extrabold shadow-xs"
+                      : "border-slate-200 text-slate-500 hover:text-duo-dark hover:border-slate-300 font-bold shadow-2xs",
+                  )}
+                >
+                  <span>Semua ({communityQuizzes.length})</span>
+                </button>
+                {communityCategories.map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => {
+                      playPop();
+                      setCommunityCategory(cat);
+                    }}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-[10px] text-xs sm:text-sm transition-all cursor-pointer select-none active:scale-[0.98] bg-white border",
+                      communityCategory === cat
+                        ? "border-2 border-duo-dark text-duo-dark font-extrabold shadow-xs"
+                        : "border-slate-200 text-slate-500 hover:text-duo-dark hover:border-slate-300 font-bold shadow-2xs",
+                    )}
+                  >
+                    <span>{cat}</span>
+                  </button>
+                ))}
               </div>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Cari kuis komunitas / guru..."
-                className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-full font-bold text-xs sm:text-sm text-duo-dark placeholder:text-slate-400 focus:outline-none focus:border-duo-blue focus:ring-2 focus:ring-duo-blue/20 shadow-2xs transition-all"
-              />
-            </div>
+            )}
           </div>
 
           {/* Community Cards Grid or Empty State */}
@@ -560,7 +614,7 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
                     className={cn(
                       "p-1.5 rounded-full transition-all cursor-pointer",
                       viewMode === "list"
-                        ? "bg-white text-duo-blue-border shadow-xs border border-slate-200/60"
+                        ? "bg-white text-duo-blue-border shadow-xs border-0"
                         : "text-slate-400 hover:text-slate-600",
                     )}
                   >
@@ -573,7 +627,7 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
                     className={cn(
                       "p-1.5 rounded-full transition-all cursor-pointer",
                       viewMode === "grid"
-                        ? "bg-white text-duo-blue-border shadow-xs border border-slate-200/60"
+                        ? "bg-white text-duo-blue-border shadow-xs border-0"
                         : "text-slate-400 hover:text-slate-600",
                     )}
                   >
