@@ -363,7 +363,7 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
                 className={cn(
                   "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-[10px] text-xs sm:text-sm transition-all cursor-pointer select-none active:scale-[0.98] bg-white border",
                   activeTab === "all"
-                    ? "border-2 border-duo-dark text-duo-dark font-extrabold shadow-xs"
+                    ? "border-slate-200 text-duo-dark font-extrabold shadow-xs"
                     : "border-slate-200 text-slate-500 hover:text-duo-dark hover:border-slate-300 font-bold shadow-2xs",
                 )}
               >
@@ -379,7 +379,7 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
                 className={cn(
                   "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-[10px] text-xs sm:text-sm transition-all cursor-pointer select-none active:scale-[0.98] bg-white border",
                   activeTab === "published"
-                    ? "border-2 border-duo-dark text-duo-dark font-extrabold shadow-xs"
+                    ? "border-slate-200 text-duo-dark font-extrabold shadow-xs"
                     : "border-slate-200 text-slate-500 hover:text-duo-dark hover:border-slate-300 font-bold shadow-2xs",
                 )}
               >
@@ -395,7 +395,7 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
                 className={cn(
                   "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-[10px] text-xs sm:text-sm transition-all cursor-pointer select-none active:scale-[0.98] bg-white border",
                   activeTab === "draft"
-                    ? "border-2 border-duo-dark text-duo-dark font-extrabold shadow-xs"
+                    ? "border-slate-200 text-duo-dark font-extrabold shadow-xs"
                     : "border-slate-200 text-slate-500 hover:text-duo-dark hover:border-slate-300 font-bold shadow-2xs",
                 )}
               >
@@ -546,7 +546,7 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
                   className={cn(
                     "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-[10px] text-xs sm:text-sm transition-all cursor-pointer select-none active:scale-[0.98] bg-white border",
                     communityCategory === "all"
-                      ? "border-2 border-duo-dark text-duo-dark font-extrabold shadow-xs"
+                      ? "border-slate-200 text-duo-dark font-extrabold shadow-xs"
                       : "border-slate-200 text-slate-500 hover:text-duo-dark hover:border-slate-300 font-bold shadow-2xs",
                   )}
                 >
@@ -563,7 +563,7 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
                     className={cn(
                       "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-[10px] text-xs sm:text-sm transition-all cursor-pointer select-none active:scale-[0.98] bg-white border",
                       communityCategory === cat
-                        ? "border-2 border-duo-dark text-duo-dark font-extrabold shadow-xs"
+                        ? "border-slate-200 text-duo-dark font-extrabold shadow-xs"
                         : "border-slate-200 text-slate-500 hover:text-duo-dark hover:border-slate-300 font-bold shadow-2xs",
                     )}
                   >
