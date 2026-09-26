@@ -87,7 +87,7 @@ export const AnagramEditor: React.FC<EditorProps<AnagramContent>> = ({
       <div className="flex flex-col gap-2">
         <label className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-500">
           <HelpCircle className="w-4 h-4 text-duo-green" />
-          <span>Petunjuk Konteks Makna Kata</span>
+          <span>Petunjuk Soal (Opsional)</span>
         </label>
         <textarea
           rows={2}

@@ -71,7 +71,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({
   const renderDropdownMenu = (positionClass: string = "bottom-full mb-2") =>
     isMenuOpen && (
       <div
-        className={`absolute right-0 ${positionClass} w-48 bg-white rounded-2xl border-2 border-slate-200 border-b-4 border-b-slate-300 shadow-xl z-50 py-1.5 flex flex-col animate-in fade-in zoom-in-95 duration-100`}
+        className={`absolute right-0 ${positionClass} w-48 bg-white rounded-[13px] border-2 border-slate-200 shadow-xl z-50 py-1.5 flex flex-col animate-in fade-in zoom-in-95 duration-100`}
       >
         <button
           type="button"
@@ -150,7 +150,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({
       <DuoCard
         elevated
         className={cn(
-          "flex flex-col sm:flex-row items-stretch sm:items-center justify-between p-3.5 sm:p-4 bg-white transition-all duration-200 hover:-translate-y-0.5 group gap-4 relative",
+          "flex flex-col sm:flex-row items-stretch sm:items-center justify-between p-3.5 sm:p-4 bg-white transition-all duration-200 hover:-translate-y-0.5 group gap-4 relative rounded-[16px] border-2 border-slate-200",
           isMenuOpen ? "z-40" : "z-10",
         )}
       >
@@ -158,7 +158,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({
         <div className="flex items-center gap-3.5 sm:gap-4 flex-1 min-w-0">
           {/* Compact Cover Thumbnail */}
           <div
-            className="relative w-20 h-20 sm:w-28 sm:h-20 rounded-2xl overflow-hidden border-2 border-duo-gray shrink-0 group-hover:scale-102 transition-transform duration-200"
+            className="relative w-20 h-20 sm:w-28 sm:h-20 rounded-[13px] overflow-hidden border border-slate-200 shrink-0 group-hover:scale-102 transition-transform duration-200"
             style={
               !quiz.coverImageUrl ? getMeshGradientStyle(quiz.id) : undefined
             }
@@ -183,7 +183,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({
           {/* Details */}
           <div className="flex-1 min-w-0">
             {/* Meta Row: Status & Question count */}
-            <div className="flex items-center gap-2 text-xs font-bold text-[#777777] mb-1 flex-wrap">
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-500 mb-1 flex-wrap">
               {quiz.isPublished ? (
                 <span className="inline-flex items-center gap-1 text-[11px] font-bold text-duo-green">
                   <CheckCircle2 className="w-3 h-3 text-duo-green" />
@@ -219,7 +219,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({
             </h3>
 
             {/* Description */}
-            <p className="text-xs font-semibold text-[#777777] line-clamp-1 mt-0.5">
+            <p className="text-xs font-semibold text-slate-500 line-clamp-1 mt-0.5">
               {quiz.description ||
                 "Kuis interaktif pembelajaran kelas tatap muka."}
             </p>
@@ -237,7 +237,6 @@ export const QuizCard: React.FC<QuizCardProps> = ({
                 playTap();
                 onHost(quiz);
               }}
-              className="py-2 px-3 sm:px-4 text-xs tracking-wide font-black"
             >
               Mainkan di Kelas
             </TactileButton>
@@ -251,7 +250,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({
                   playPop();
                   onClone(quiz as StoredQuiz);
                 }}
-                className="py-2 px-3 text-xs tracking-wide font-black shrink-0"
+                className="shrink-0"
               >
                 Salin Kuis
               </TactileButton>
@@ -267,7 +266,6 @@ export const QuizCard: React.FC<QuizCardProps> = ({
                 playTap();
                 onHost(quiz);
               }}
-              className="py-2 px-3 sm:px-4 text-xs tracking-wide font-black"
             >
               Host / Mainkan
             </TactileButton>
@@ -281,7 +279,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({
                   playTap();
                   onEdit(quiz);
                 }}
-                className="py-2 px-2.5"
+                className="px-2.5"
               >
                 <Edit3 className="w-3.5 h-3.5" />
               </TactileButton>
@@ -294,7 +292,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({
                 size="sm"
                 aria-label="Menu Opsi Kuis"
                 onClick={toggleMenu}
-                className="py-2 px-2.5"
+                className="px-2.5"
               >
                 <MoreVertical className="w-3.5 h-3.5" />
               </TactileButton>
@@ -312,14 +310,14 @@ export const QuizCard: React.FC<QuizCardProps> = ({
     <DuoCard
       elevated
       className={cn(
-        "flex flex-col justify-between p-5 bg-white transition-all duration-200 hover:-translate-y-1 group relative",
+        "flex flex-col justify-between p-5 bg-white transition-all duration-200 hover:-translate-y-1 group relative rounded-[16px] border-2 border-slate-200",
         isMenuOpen ? "z-40" : "z-10",
       )}
     >
       <div>
         {/* Top Cover Thumbnail */}
         <div
-          className="relative w-full h-40 rounded-2xl overflow-hidden border-2 border-duo-gray mb-4 transition-transform duration-300 group-hover:scale-[1.01]"
+          className="relative w-full h-40 rounded-[13px] overflow-hidden border border-slate-200 mb-4 transition-transform duration-300 group-hover:scale-[1.01]"
           style={
             !quiz.coverImageUrl ? getMeshGradientStyle(quiz.id) : undefined
           }
@@ -355,7 +353,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({
         </div>
 
         {/* Content Details */}
-        <div className="flex items-center gap-2 text-xs font-bold text-[#777777] mb-1.5 flex-wrap">
+        <div className="flex items-center gap-2 text-xs font-bold text-slate-500 mb-1.5 flex-wrap">
           <span className="flex items-center gap-1">
             <HelpCircle className="w-3.5 h-3.5 text-duo-blue" />
             {quiz.questionsCount ?? 0} Butir Soal
@@ -378,7 +376,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({
           {quiz.title}
         </h3>
 
-        <p className="text-xs font-semibold text-[#777777] line-clamp-2 mt-1 mb-5 min-h-[32px]">
+        <p className="text-xs font-semibold text-slate-500 line-clamp-2 mt-1 mb-5 min-h-[32px]">
           {quiz.description || "Kuis interaktif pembelajaran kelas tatap muka."}
         </p>
       </div>
@@ -395,7 +393,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({
               playTap();
               onHost(quiz);
             }}
-            className="flex-1 py-3 text-sm tracking-wider shadow-sm font-black"
+            className="flex-1 shadow-xs"
           >
             Mainkan di Kelas
           </TactileButton>
@@ -410,7 +408,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({
                 playPop();
                 onClone(quiz as StoredQuiz);
               }}
-              className="px-3.5 py-3 text-xs tracking-wide font-black shrink-0"
+              className="shrink-0"
             >
               Salin ke Kuis Saya
             </TactileButton>
@@ -427,7 +425,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({
               playTap();
               onHost(quiz);
             }}
-            className="flex-1 py-3 text-sm tracking-wider shadow-sm font-black"
+            className="flex-1 shadow-xs"
           >
             Host / Mainkan
           </TactileButton>
@@ -436,13 +434,12 @@ export const QuizCard: React.FC<QuizCardProps> = ({
           {onEdit && (
             <TactileButton
               variant="outline"
-              size="md"
+              size="icon"
               aria-label="Edit Kuis"
               onClick={() => {
                 playTap();
                 onEdit(quiz);
               }}
-              className="px-3.5 py-3"
             >
               <Edit3 className="w-4 h-4" />
             </TactileButton>
@@ -452,10 +449,9 @@ export const QuizCard: React.FC<QuizCardProps> = ({
           <div className="relative" ref={menuRef}>
             <TactileButton
               variant="outline"
-              size="md"
+              size="icon"
               aria-label="Menu Opsi Kuis"
               onClick={toggleMenu}
-              className="px-3.5 py-3"
             >
               <MoreVertical className="w-4 h-4" />
             </TactileButton>

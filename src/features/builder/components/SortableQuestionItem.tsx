@@ -57,7 +57,7 @@ export const SortableQuestionItem = React.memo<SortableQuestionItemProps>(
         style={style}
         onClick={onSelect}
         className={cn(
-          "group relative flex items-start gap-2 p-2.5 rounded-xl border-2 transition-all cursor-pointer select-none bg-white",
+          "group relative flex items-start gap-2 p-2.5 rounded-[13px] border-2 transition-all cursor-pointer select-none bg-white",
           // Default State
           "border-slate-200 hover:border-slate-300 hover:shadow-sm",
           // Active State
@@ -81,9 +81,9 @@ export const SortableQuestionItem = React.memo<SortableQuestionItemProps>(
         {/* Left Column: Number Badge */}
         <span
           className={cn(
-            "w-6 h-6 rounded-lg text-xs font-black flex items-center justify-center shrink-0 mt-0.5",
+            "w-6 h-6 rounded-[10px] text-xs font-black flex items-center justify-center shrink-0 mt-0.5 border-0",
             isActive
-              ? "bg-duo-blue text-white"
+              ? "bg-duo-blue text-white shadow-2xs"
               : "bg-slate-100 text-duo-dark group-hover:bg-slate-200",
           )}
         >

@@ -142,10 +142,10 @@ export const BottomSheetFeedback: React.FC<BottomSheetFeedbackProps> = ({
                     ease: "easeOut",
                     times: [0, 0.25, 0.5, 0.75, 1],
                   }}
-                  className="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl sm:rounded-3xl bg-white border-2 border-[#58A700]/30 shadow-md flex items-center justify-center shrink-0"
+                  className="w-13 h-13 sm:w-15 sm:h-15 rounded-[13px] bg-white border-2 border-[#58A700]/30 shadow-xs flex items-center justify-center shrink-0"
                 >
-                  <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-[#58CC02] flex items-center justify-center text-white shadow-xs">
-                    <Check className="w-6 h-6 sm:w-7 sm:h-7 stroke-[3.5]" />
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-[10px] bg-[#58CC02] flex items-center justify-center text-white shadow-xs">
+                    <Check className="w-5 h-5 sm:w-6 sm:h-6 stroke-[3.5]" />
                   </div>
                 </motion.div>
               )}
@@ -162,10 +162,10 @@ export const BottomSheetFeedback: React.FC<BottomSheetFeedbackProps> = ({
                     duration: 0.55,
                     ease: "easeInOut",
                   }}
-                  className="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl sm:rounded-3xl bg-white border-2 border-[#EA2B2B]/30 shadow-md flex items-center justify-center shrink-0"
+                  className="w-13 h-13 sm:w-15 sm:h-15 rounded-[13px] bg-white border-2 border-[#EA2B2B]/30 shadow-xs flex items-center justify-center shrink-0"
                 >
-                  <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-[#FF4B4B] flex items-center justify-center text-white shadow-xs">
-                    <X className="w-6 h-6 sm:w-7 sm:h-7 stroke-[3.5]" />
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-[10px] bg-[#FF4B4B] flex items-center justify-center text-white shadow-xs">
+                    <X className="w-5 h-5 sm:w-6 sm:h-6 stroke-[3.5]" />
                   </div>
                 </motion.div>
               )}
@@ -197,7 +197,7 @@ export const BottomSheetFeedback: React.FC<BottomSheetFeedbackProps> = ({
                 {solutionExplanation && (
                   <div
                     className={cn(
-                      "mt-2.5 flex items-start gap-2.5 text-xs sm:text-sm font-extrabold rounded-2xl p-3 sm:p-3.5 shadow-xs transition-all max-h-48 overflow-y-auto",
+                      "mt-2.5 flex items-start gap-2.5 text-xs sm:text-sm font-extrabold rounded-[13px] p-3 sm:p-3.5 shadow-xs transition-all max-h-48 overflow-y-auto",
                       isCorrect
                         ? "text-[#20540C] bg-white/95 border-2 border-[#58CC02]/40"
                         : "text-[#7F1D1D] bg-white/95 border-2 border-[#EA2B2B]/30",

@@ -92,21 +92,21 @@ const PlacedSortableTile: React.FC<PlacedSortableTileProps> = ({
   // Determine styling based on evaluation state
   const getStyleState = () => {
     if (!isAnswered) {
-      return "bg-white text-duo-dark border-slate-200 hover:border-duo-blue hover:bg-slate-50";
+      return "bg-white text-duo-dark border-2 border-slate-200 hover:border-duo-blue hover:bg-slate-50";
     }
     if (isCorrect === true) {
-      return "bg-duo-green-light text-duo-green-border border-duo-green ring-2 ring-duo-green/30";
+      return "bg-duo-green text-white border-0 shadow-xs";
     }
     if (isCorrect === false) {
       const isWordInTargetPos =
         targetToken &&
         item.text.trim().toLowerCase() === targetToken.trim().toLowerCase();
       if (isWordInTargetPos) {
-        return "bg-duo-green-light text-duo-green-border border-duo-green ring-2 ring-duo-green/30";
+        return "bg-duo-green text-white border-0 shadow-xs";
       }
-      return "bg-duo-red-light text-duo-red-border border-duo-red ring-2 ring-duo-red/30";
+      return "bg-duo-red text-white border-0 shadow-xs";
     }
-    return "bg-white text-duo-dark border-slate-200";
+    return "bg-white text-duo-dark border-2 border-slate-200";
   };
 
   return (
@@ -118,7 +118,7 @@ const PlacedSortableTile: React.FC<PlacedSortableTileProps> = ({
       onClick={!disabled ? onTap : undefined}
       className={cn(
         "relative inline-flex items-center justify-center font-black select-none transition-all duration-150",
-        "px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl border-2 border-solid text-base sm:text-lg",
+        "px-4 py-2.5 sm:px-5 sm:py-3 rounded-[13px] text-base sm:text-lg",
         !disabled
           ? "cursor-grab active:cursor-grabbing hover:-translate-y-0.5 active:translate-y-0.5"
           : "cursor-default",
@@ -157,7 +157,7 @@ const BankTile: React.FC<BankTileProps> = ({
   if (isPlaced) {
     return (
       <div
-        className="inline-flex items-center justify-center font-black select-none px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-200/40 text-transparent text-base sm:text-lg pointer-events-none"
+        className="inline-flex items-center justify-center font-black select-none px-4 py-2.5 sm:px-5 sm:py-3 rounded-[13px] border-2 border-dashed border-slate-200 bg-slate-200/40 text-transparent text-base sm:text-lg pointer-events-none"
         aria-hidden="true"
       >
         <span className="opacity-0">{item.text}</span>
@@ -173,8 +173,8 @@ const BankTile: React.FC<BankTileProps> = ({
       onClick={!disabled ? onTap : undefined}
       className={cn(
         "relative inline-flex items-center justify-center font-black select-none transition-all duration-150",
-        "px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl border-2 border-solid text-base sm:text-lg",
-        "bg-white text-duo-dark border-slate-200",
+        "px-4 py-2.5 sm:px-5 sm:py-3 rounded-[13px] text-base sm:text-lg",
+        "bg-white text-duo-dark border-2 border-slate-200",
         !disabled
           ? "cursor-pointer hover:border-duo-blue hover:-translate-y-0.5 hover:scale-105 active:translate-y-0.5"
           : "cursor-default opacity-60",

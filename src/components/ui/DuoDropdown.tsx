@@ -184,8 +184,8 @@ export function DuoDropdown<T extends string | number = string | number>({
         className={cn(
           "w-full flex items-center justify-between bg-white text-slate-700 font-semibold transition-all cursor-pointer shadow-xs active:translate-y-0.5 outline-none border-2",
           size === "sm"
-            ? "px-3 py-2 text-xs sm:text-sm rounded-xl"
-            : "px-4 py-3 text-sm sm:text-base rounded-2xl",
+            ? "px-3 py-2 text-xs sm:text-sm rounded-[10px]"
+            : "px-4 py-3 text-sm sm:text-base rounded-[13px]",
           isOpen
             ? "border-duo-dark ring-4 ring-duo-dark/15"
             : "border-slate-200 hover:border-slate-400 focus:border-duo-dark focus:ring-4 focus:ring-duo-dark/15",
@@ -197,7 +197,7 @@ export function DuoDropdown<T extends string | number = string | number>({
           {CurrentIcon && (
             <div
               className={cn(
-                "rounded-lg flex items-center justify-center shrink-0",
+                "rounded-[10px] flex items-center justify-center shrink-0",
                 size === "sm" ? "w-6 h-6" : "w-7 h-7",
                 selectedOption?.iconBgClassName || getTriggerIconBg(),
               )}
@@ -229,7 +229,7 @@ export function DuoDropdown<T extends string | number = string | number>({
           role="listbox"
           aria-labelledby={dropdownId}
           className={cn(
-            "absolute left-0 w-full bg-white rounded-2xl border-2 border-slate-200 border-b-4 border-b-slate-300 shadow-xl z-50 py-1.5 flex flex-col max-h-60 sm:max-h-72 overflow-y-auto animate-in fade-in zoom-in-95 duration-100",
+            "absolute left-0 w-full bg-white rounded-[13px] border-2 border-slate-200 border-b-4 border-b-slate-300 shadow-xl z-50 py-1.5 flex flex-col max-h-60 sm:max-h-72 overflow-y-auto animate-in fade-in zoom-in-95 duration-100",
             computedPlacement === "top"
               ? "bottom-full mb-1.5"
               : "top-full mt-1.5",

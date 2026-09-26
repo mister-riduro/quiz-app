@@ -90,7 +90,7 @@ export const CreateQuizModal: React.FC<CreateQuizModalProps> = ({
               playTap();
               onClose();
             }}
-            className="absolute top-4 right-4 w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-duo-dark flex items-center justify-center transition-all cursor-pointer"
+            className="absolute top-4 right-4 w-9 h-9 rounded-[10px] bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-duo-dark flex items-center justify-center transition-all cursor-pointer"
             aria-label="Tutup Dialog"
           >
             <X className="w-5 h-5" />
@@ -98,14 +98,14 @@ export const CreateQuizModal: React.FC<CreateQuizModalProps> = ({
 
           {/* Modal Header */}
           <div className="flex items-center gap-3.5 pr-8">
-            <div className="w-12 h-12 rounded-2xl bg-duo-green-light border-2 border-duo-green text-duo-green-border flex items-center justify-center shrink-0 shadow-xs">
+            <div className="w-12 h-12 rounded-[10px] bg-duo-green-light border-0 text-duo-green-border flex items-center justify-center shrink-0 shadow-xs">
               <Sparkles className="w-6 h-6" />
             </div>
             <div>
               <h2 className="text-xl sm:text-2xl font-black text-duo-dark tracking-tight">
                 Buat Kuis Baru
               </h2>
-              <p className="text-xs sm:text-sm font-semibold text-[#777777] mt-0.5">
+              <p className="text-xs sm:text-sm font-semibold text-slate-500 mt-0.5">
                 Kuis baru otomatis tersimpan sebagai <strong>Draf</strong> di
                 studio Anda.
               </p>
@@ -126,7 +126,7 @@ export const CreateQuizModal: React.FC<CreateQuizModalProps> = ({
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="misal: Tata Surya & Nama Planet Kelas 4"
-                className="w-full px-4 py-3 bg-slate-50 border-2 border-duo-gray rounded-2xl font-bold text-sm sm:text-base text-duo-dark placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-duo-blue focus:ring-4 focus:ring-duo-blue/15 transition-all"
+                className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-[13px] font-bold text-sm sm:text-base text-duo-dark placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-duo-blue focus:ring-4 focus:ring-duo-blue/15 transition-all"
               />
             </div>
 
@@ -160,7 +160,7 @@ export const CreateQuizModal: React.FC<CreateQuizModalProps> = ({
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Keterangan singkat mengenai topik atau petunjuk kuis..."
-                className="w-full px-4 py-2.5 bg-slate-50 border-2 border-duo-gray rounded-2xl font-bold text-sm text-duo-dark placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-duo-blue transition-all"
+                className="w-full px-4 py-2.5 bg-slate-50 border-2 border-slate-200 rounded-[13px] font-bold text-sm text-duo-dark placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-duo-blue transition-all"
               />
             </div>
 
@@ -173,9 +173,9 @@ export const CreateQuizModal: React.FC<CreateQuizModalProps> = ({
                 disabled={!title.trim()}
                 icon={<ArrowRight className="w-5 h-5" />}
                 iconPosition="right"
-                className="flex-1 py-3.5 text-sm font-black tracking-wide shadow-md"
+                className="flex-1 shadow-xs"
               >
-                Mulai Rancang Soal
+                Buat Soal
               </TactileButton>
 
               <TactileButton
@@ -186,7 +186,6 @@ export const CreateQuizModal: React.FC<CreateQuizModalProps> = ({
                 icon={<Save className="w-4 h-4" />}
                 iconPosition="left"
                 onClick={handleSaveDraftOnly}
-                className="py-3.5 text-sm font-black border-2 border-duo-gray text-slate-700"
               >
                 Simpan ke Draft
               </TactileButton>

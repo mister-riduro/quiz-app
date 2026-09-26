@@ -1,5 +1,5 @@
-import React from 'react';
-import { cn } from '@/lib/utils';
+import React from "react";
+import { cn } from "@/lib/utils";
 
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   elevated?: boolean;
@@ -16,10 +16,11 @@ export const Card: React.FC<CardProps> = ({
   return (
     <div
       className={cn(
-        'bg-white rounded-2xl border-2 border-[#E5E5E5] p-5 transition-all',
-        elevated && 'border-b-4 border-b-[#CECECE]',
-        interactive && 'hover:border-[#1CB0F6] cursor-pointer hover:shadow-md',
-        className
+        "bg-white rounded-[16px] border-2 border-slate-200 p-5 transition-all",
+        elevated && "shadow-xs",
+        interactive &&
+          "hover:border-duo-green cursor-pointer hover:shadow-sm transition-all hover:-translate-y-0.5",
+        className,
       )}
       {...props}
     >
@@ -27,4 +28,3 @@ export const Card: React.FC<CardProps> = ({
     </div>
   );
 };
-

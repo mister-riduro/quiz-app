@@ -6,3 +6,7 @@ export * from "./Button";
 export * from "./Card";
 export * from "./Badge";
 export * from "./DuoDropdown";
+export * from "./OptionTile";
+export * from "./BottomActionBar";
+export * from "./SectionDivider";
+export * from "./StatsCapsule";

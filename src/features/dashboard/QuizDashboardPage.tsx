@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { DuoCard } from "@/components/ui/DuoCard";
+import { StatsCapsule } from "@/components/ui/StatsCapsule";
 import { QuizCard } from "./components/QuizCard";
 import { EmptyState } from "./components/EmptyState";
 import { CreateQuizModal } from "./components/CreateQuizModal";
@@ -8,6 +9,7 @@ import { StoredQuiz } from "@/stores/quizStore";
 import { useAuthStore } from "@/stores/authStore";
 import { useQuizStore } from "@/stores/quizStore";
 import { useSoundEffect } from "@/hooks/useSoundEffect";
+import { cn } from "@/utils/cn";
 import {
   Search,
   BookOpen,
@@ -18,6 +20,7 @@ import {
   CheckCircle2,
   LayoutGrid,
   List,
+  Sparkles,
 } from "lucide-react";
 import { generateUUID } from "@/utils/uuid";
 
@@ -184,6 +187,10 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
   const totalCount = quizzes.length;
   const publishedCount = quizzes.filter((q) => q.isPublished).length;
   const draftCount = quizzes.filter((q) => !q.isPublished).length;
+  const totalQuestionsCount = quizzes.reduce(
+    (acc, q) => acc + (q.questionsCount || 0),
+    0,
+  );
 
   const filteredQuizzes = quizzes.filter((q) => {
     // 1. Tab filter
@@ -219,123 +226,138 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
 
   return (
     <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 md:p-8 flex flex-col gap-6">
-      {/* 1. Header Sambutan Guru */}
+      {/* 1. Header Sambutan Guru (Airlearn Hero Card) */}
       <DuoCard
         elevated
-        className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-6 sm:p-8 bg-white"
+        className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-6 sm:p-7 bg-white rounded-[16px] border-2 border-slate-200"
       >
-        <div className="flex items-center gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-black text-duo-dark tracking-tight">
-              Selamat Datang, {teacherName}! 👋
-            </h1>
-            <p className="text-xs sm:text-sm font-semibold text-[#777777] mt-1">
-              Ayo buat sesuatu yang bagus!
-            </p>
+        <div className="flex flex-col gap-2">
+          <h1 className="text-2xl sm:text-3xl font-black text-duo-dark tracking-tight flex items-center gap-2">
+            <span>Selamat Datang, {teacherName}!</span>
+            <Sparkles className="w-5 h-5 text-amber-500 fill-amber-400" />
+          </h1>
+          <p className="text-xs sm:text-sm font-semibold text-slate-500">
+            Kelola dan buat kuis interaktif kelas tatap muka dengan cepat.
+          </p>
 
-            {/* Supabase Cloud Connection Status */}
-            <div className="flex flex-wrap items-center gap-2 mt-2">
-              {syncStatus === "synced" && (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-300">
-                  <Cloud className="w-3.5 h-3.5" /> Supabase Cloud Aktif
-                </span>
-              )}
-              {syncStatus === "syncing" && (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-sky-100 text-sky-700 border border-sky-300 animate-pulse">
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />{" "}
-                  Menyinkronkan Supabase...
-                </span>
-              )}
-              {syncStatus === "offline" && (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">
-                  <CloudOff className="w-3.5 h-3.5" />{" "}
-                  {user ? "Mode Offline" : "Penyimpanan Lokal (Guest)"}
-                </span>
-              )}
-              {syncStatus === "error" && (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300">
-                  <CloudOff className="w-3.5 h-3.5" /> Kendala Sinkronisasi
-                  Supabase
-                </span>
-              )}
-              <button
-                type="button"
-                onClick={() => {
-                  playTap();
-                  fetchQuizzes();
-                }}
-                title="Sinkronkan dengan Supabase"
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold text-slate-600 hover:text-duo-dark hover:bg-slate-100 transition-colors cursor-pointer border border-slate-200"
-              >
-                <RefreshCw className="w-3 h-3" /> Sinkronkan Ulang
-              </button>
-            </div>
+          {/* Airlearn Signature Stats Capsules Row */}
+          <div className="flex flex-wrap items-center gap-2.5 mt-2">
+            {/* Supabase Cloud Connection Status Capsule */}
+            {syncStatus === "synced" && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
+                <Cloud className="w-3.5 h-3.5" /> Tersinkron
+              </span>
+            )}
+            {syncStatus === "syncing" && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-sky-50 text-sky-700 border border-sky-200 animate-pulse shadow-2xs">
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" />{" "}
+                Menyinkronkan...
+              </span>
+            )}
+            {syncStatus === "offline" && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs">
+                <CloudOff className="w-3.5 h-3.5" />{" "}
+                {user ? "Mode Offline" : "Penyimpanan Lokal"}
+              </span>
+            )}
+            {syncStatus === "error" && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-800 border border-rose-200 shadow-2xs">
+                <CloudOff className="w-3.5 h-3.5" /> Kendala Sinkronisasi
+              </span>
+            )}
+
+            <button
+              type="button"
+              onClick={() => {
+                playTap();
+                fetchQuizzes();
+              }}
+              title="Sinkronkan dengan Supabase"
+              className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold text-slate-600 hover:text-duo-dark hover:bg-slate-100 transition-colors cursor-pointer border border-slate-200 shadow-2xs"
+            >
+              <RefreshCw className="w-3 h-3" /> Sinkronkan Ulang
+            </button>
           </div>
         </div>
       </DuoCard>
 
       {/* Toast Feedback Notification */}
       {toastMessage && (
-        <div className="p-4 bg-emerald-500 text-white rounded-2xl font-black text-sm flex items-center gap-2 shadow-lg animate-in slide-in-from-top-2 duration-200">
+        <div className="p-4 bg-emerald-500 text-white rounded-[13px] font-black text-sm flex items-center gap-2 shadow-lg animate-in slide-in-from-top-2 duration-200">
           <CheckCircle2 className="w-5 h-5 shrink-0" />
           <span>{toastMessage}</span>
         </div>
       )}
 
-      {/* Main Mode Navigation: Kuis Saya vs Katalog Komunitas */}
-      <div className="flex items-center gap-3 border-b-2 border-slate-200 pb-2">
-        <button
-          type="button"
-          onClick={() => {
-            playPop();
-            setMainTab("my-quizzes");
-          }}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl font-black text-sm transition-all cursor-pointer ${
-            mainTab === "my-quizzes"
-              ? "bg-duo-green text-white border-2 border-duo-green-border active:translate-y-0.5"
-              : "bg-white text-[#777777] hover:text-duo-dark border-2 border-slate-200 hover:bg-slate-50"
-          }`}
-        >
-          <BookOpen className="w-4 h-4" />
-          Kuis Saya ({totalCount})
-        </button>
+      {/* Main Mode Navigation: Kuis Saya vs Katalog Komunitas (Segmented Capsule Bar) */}
+      <div className="flex items-center gap-2">
+        <div className="inline-flex p-1.5 rounded-[16px] bg-[#E8EDF2] gap-1 border border-slate-200/40">
+          <button
+            type="button"
+            onClick={() => {
+              playPop();
+              setMainTab("my-quizzes");
+            }}
+            className={cn(
+              "flex items-center gap-2 px-5 py-2.5 rounded-[13px] font-black text-xs sm:text-sm transition-all cursor-pointer",
+              mainTab === "my-quizzes"
+                ? "bg-white text-duo-dark shadow-xs"
+                : "text-slate-500 hover:text-duo-dark hover:bg-white/40",
+            )}
+          >
+            <BookOpen
+              className={cn(
+                "w-4 h-4",
+                mainTab === "my-quizzes" ? "text-duo-green" : "text-slate-400",
+              )}
+            />
+            <span>Kuis Saya ({totalCount})</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => {
-            playPop();
-            setMainTab("community");
-            fetchCommunityQuizzes();
-          }}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl font-black text-sm transition-all cursor-pointer ${
-            mainTab === "community"
-              ? "bg-duo-blue text-white border-2 border-duo-blue-border active:translate-y-0.5"
-              : "bg-white text-[#777777] hover:text-duo-dark border-2 border-slate-200 hover:bg-slate-50"
-          }`}
-        >
-          <Globe className="w-4 h-4" />
-          Katalog Komunitas ({communityQuizzes.length})
-        </button>
+          <button
+            type="button"
+            onClick={() => {
+              playPop();
+              setMainTab("community");
+              fetchCommunityQuizzes();
+            }}
+            className={cn(
+              "flex items-center gap-2 px-5 py-2.5 rounded-[13px] font-black text-xs sm:text-sm transition-all cursor-pointer",
+              mainTab === "community"
+                ? "bg-white text-duo-dark shadow-xs"
+                : "text-slate-500 hover:text-duo-dark hover:bg-white/40",
+            )}
+          >
+            <Globe
+              className={cn(
+                "w-4 h-4",
+                mainTab === "community" ? "text-duo-blue" : "text-slate-400",
+              )}
+            />
+            <span>Katalog Komunitas ({communityQuizzes.length})</span>
+          </button>
+        </div>
       </div>
 
       {/* TAB 1: KUIS SAYA */}
       {mainTab === "my-quizzes" && (
         <>
-          {/* Filter Tabs & Search Bar Row */}
+          {/* Filter Bar & Search Bar Row */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-            {/* Tabs: Semua, Dipublikasikan, Draft */}
-            <div className="flex items-center p-1.5 bg-slate-200/80 rounded-2xl gap-1 border border-slate-300/50 self-start sm:self-auto">
+            {/* Airlearn Filter Segmented Capsule: Semua, Dipublikasikan, Draft */}
+            <div className="inline-flex p-1.5 rounded-[16px] bg-[#E8EDF2] gap-1">
               <button
                 type="button"
                 onClick={() => {
                   playPop();
                   setActiveTab("all");
                 }}
-                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
+                className={cn(
+                  "px-4 py-1.5 rounded-[13px] text-xs font-black transition-all cursor-pointer border-0",
                   activeTab === "all"
-                    ? "bg-white text-duo-dark shadow-sm border-b-2 border-b-slate-300"
-                    : "text-[#777777] hover:text-duo-dark"
-                }`}
+                    ? "bg-white text-duo-dark shadow-xs"
+                    : "text-slate-500 hover:text-duo-dark hover:bg-white/40",
+                )}
               >
                 Semua ({totalCount})
               </button>
@@ -346,11 +368,12 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
                   playPop();
                   setActiveTab("published");
                 }}
-                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
+                className={cn(
+                  "px-4 py-1.5 rounded-[13px] text-xs font-black transition-all cursor-pointer border-0",
                   activeTab === "published"
-                    ? "bg-white text-duo-dark shadow-sm border-b-2 border-b-slate-300"
-                    : "text-[#777777] hover:text-duo-dark"
-                }`}
+                    ? "bg-white text-duo-dark shadow-xs"
+                    : "text-slate-500 hover:text-duo-dark hover:bg-white/40",
+                )}
               >
                 Dipublikasikan ({publishedCount})
               </button>
@@ -361,17 +384,18 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
                   playPop();
                   setActiveTab("draft");
                 }}
-                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
+                className={cn(
+                  "px-4 py-1.5 rounded-[13px] text-xs font-black transition-all cursor-pointer border-0",
                   activeTab === "draft"
-                    ? "bg-white text-duo-dark shadow-sm border-b-2 border-b-slate-300"
-                    : "text-[#777777] hover:text-duo-dark"
-                }`}
+                    ? "bg-white text-duo-dark shadow-xs"
+                    : "text-slate-500 hover:text-duo-dark hover:bg-white/40",
+                )}
               >
                 Draft ({draftCount})
               </button>
             </div>
 
-            {/* Search Bar */}
+            {/* Pill Search Bar */}
             <div className="relative max-w-xs w-full">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                 <Search className="w-4 h-4" />
@@ -381,14 +405,14 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Cari kuis saya..."
-                className="w-full pl-10 pr-4 py-2.5 bg-white border-2 border-duo-gray rounded-2xl font-bold text-xs sm:text-sm text-duo-dark placeholder:text-slate-400 focus:outline-none focus:border-duo-blue"
+                className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-full font-bold text-xs sm:text-sm text-duo-dark placeholder:text-slate-400 focus:outline-none focus:border-duo-green focus:ring-2 focus:ring-duo-green/20 shadow-2xs transition-all"
               />
             </div>
           </div>
 
           {/* Quiz Cards Grid or Empty State */}
           {isLoading && quizzes.length === 0 ? (
-            <div className="flex flex-col items-center justify-center p-12 bg-white rounded-3xl border-2 border-dashed border-slate-200">
+            <div className="flex flex-col items-center justify-center p-12 bg-white rounded-[16px] border-2 border-dashed border-slate-200">
               <RefreshCw className="w-8 h-8 text-duo-green animate-spin mb-3" />
               <p className="font-bold text-sm text-slate-600">
                 Mengambil data kuis dari Supabase...
@@ -407,22 +431,23 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
           ) : (
             <div>
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-black text-sm uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
-                  <BookOpen className="w-4 h-4 text-duo-blue" />
+                <h2 className="font-black text-xs uppercase text-slate-400 tracking-wider flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-duo-green" />
                   Daftar Kuis Kelas ({filteredQuizzes.length})
                 </h2>
 
-                {/* View Mode Switcher (Grid vs List) */}
-                <div className="flex items-center p-1 bg-slate-200/80 rounded-xl gap-1 border border-slate-300/50">
+                {/* Airlearn View Mode Switcher (Grid vs List) */}
+                <div className="flex items-center p-1 bg-slate-100 rounded-full gap-1 border border-slate-200">
                   <button
                     type="button"
                     onClick={() => handleSetViewMode("list")}
                     title="Tampilan List (Baris)"
-                    className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                    className={cn(
+                      "p-1.5 rounded-full transition-all cursor-pointer",
                       viewMode === "list"
-                        ? "bg-white text-duo-dark shadow-xs border-b-2 border-b-slate-300"
-                        : "text-[#777777] hover:text-duo-dark"
-                    }`}
+                        ? "bg-white text-duo-green-border shadow-xs border border-slate-200/60"
+                        : "text-slate-400 hover:text-slate-600",
+                    )}
                   >
                     <List className="w-4 h-4" />
                   </button>
@@ -430,11 +455,12 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
                     type="button"
                     onClick={() => handleSetViewMode("grid")}
                     title="Tampilan Grid (Kartu)"
-                    className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                    className={cn(
+                      "p-1.5 rounded-full transition-all cursor-pointer",
                       viewMode === "grid"
-                        ? "bg-white text-duo-dark shadow-xs border-b-2 border-b-slate-300"
-                        : "text-[#777777] hover:text-duo-dark"
-                    }`}
+                        ? "bg-white text-duo-green-border shadow-xs border border-slate-200/60"
+                        : "text-slate-400 hover:text-slate-600",
+                    )}
                   >
                     <LayoutGrid className="w-4 h-4" />
                   </button>
@@ -495,28 +521,28 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Cari kuis komunitas / guru..."
-                className="w-full pl-10 pr-4 py-2.5 bg-white border-2 border-duo-gray rounded-2xl font-bold text-xs sm:text-sm text-duo-dark placeholder:text-slate-400 focus:outline-none focus:border-duo-blue"
+                className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-full font-bold text-xs sm:text-sm text-duo-dark placeholder:text-slate-400 focus:outline-none focus:border-duo-blue focus:ring-2 focus:ring-duo-blue/20 shadow-2xs transition-all"
               />
             </div>
           </div>
 
           {/* Community Cards Grid or Empty State */}
           {isLoadingCommunity && communityQuizzes.length === 0 ? (
-            <div className="flex flex-col items-center justify-center p-12 bg-white rounded-3xl border-2 border-dashed border-slate-200">
+            <div className="flex flex-col items-center justify-center p-12 bg-white rounded-[16px] border-2 border-dashed border-slate-200">
               <RefreshCw className="w-8 h-8 text-duo-blue animate-spin mb-3" />
               <p className="font-bold text-sm text-slate-600">
                 Memuat kuis dari komunitas EduPlay...
               </p>
             </div>
           ) : filteredCommunityQuizzes.length === 0 ? (
-            <div className="flex flex-col items-center justify-center p-12 bg-white rounded-3xl border-2 border-dashed border-slate-200 text-center">
+            <div className="flex flex-col items-center justify-center p-12 bg-white rounded-[16px] border-2 border-dashed border-slate-200 text-center">
               <Globe className="w-12 h-12 text-slate-300 mb-3" />
               <h3 className="font-black text-base text-duo-dark">
                 {searchQuery
                   ? "Kuis Komunitas Tidak Ditemukan"
                   : "Belum Ada Kuis di Komunitas"}
               </h3>
-              <p className="text-xs font-semibold text-[#777777] mt-1 max-w-md">
+              <p className="text-xs font-semibold text-slate-500 mt-1 max-w-md">
                 {searchQuery
                   ? `Tidak ada kuis komunitas yang cocok dengan pencarian "${searchQuery}".`
                   : "Jadilah pengajar pertama yang membagikan materi kuis ke komunitas dengan menekan tombol 'Publikasikan Kuis' di kuis Anda!"}
@@ -525,22 +551,23 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
           ) : (
             <div>
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-black text-sm uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
+                <h2 className="font-black text-xs uppercase text-slate-400 tracking-wider flex items-center gap-2">
                   <Globe className="w-4 h-4 text-duo-blue" />
                   Kuis Publik Komunitas ({filteredCommunityQuizzes.length})
                 </h2>
 
-                {/* View Mode Switcher (Grid vs List) */}
-                <div className="flex items-center p-1 bg-slate-200/80 rounded-xl gap-1 border border-slate-300/50">
+                {/* Airlearn View Mode Switcher (Grid vs List) */}
+                <div className="flex items-center p-1 bg-slate-100 rounded-full gap-1 border border-slate-200">
                   <button
                     type="button"
                     onClick={() => handleSetViewMode("list")}
                     title="Tampilan List (Baris)"
-                    className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                    className={cn(
+                      "p-1.5 rounded-full transition-all cursor-pointer",
                       viewMode === "list"
-                        ? "bg-white text-duo-dark shadow-xs border-b-2 border-b-slate-300"
-                        : "text-[#777777] hover:text-duo-dark"
-                    }`}
+                        ? "bg-white text-duo-blue-border shadow-xs border border-slate-200/60"
+                        : "text-slate-400 hover:text-slate-600",
+                    )}
                   >
                     <List className="w-4 h-4" />
                   </button>
@@ -548,11 +575,12 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
                     type="button"
                     onClick={() => handleSetViewMode("grid")}
                     title="Tampilan Grid (Kartu)"
-                    className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                    className={cn(
+                      "p-1.5 rounded-full transition-all cursor-pointer",
                       viewMode === "grid"
-                        ? "bg-white text-duo-dark shadow-xs border-b-2 border-b-slate-300"
-                        : "text-[#777777] hover:text-duo-dark"
-                    }`}
+                        ? "bg-white text-duo-blue-border shadow-xs border border-slate-200/60"
+                        : "text-slate-400 hover:text-slate-600",
+                    )}
                   >
                     <LayoutGrid className="w-4 h-4" />
                   </button>

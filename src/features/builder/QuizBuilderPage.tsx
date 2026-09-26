@@ -163,7 +163,7 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
         <button
           type="button"
           onClick={() => setIsMobileLeftOpen(false)}
-          className="lg:hidden w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-duo-dark flex items-center justify-center transition-colors cursor-pointer shrink-0"
+          className="lg:hidden w-8 h-8 rounded-[10px] bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-duo-dark flex items-center justify-center transition-colors cursor-pointer shrink-0"
           aria-label="Tutup Menu"
         >
           <X className="w-4 h-4" />
@@ -172,7 +172,7 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
 
       <div className="p-4 sm:p-5 flex flex-col gap-4 flex-1">
         {/* SECTION 1: Pengaturan Waktu Kuis (Global vs Per Soal) */}
-        <div className="p-3.5 bg-slate-50 rounded-2xl border-2 border-slate-200 flex flex-col gap-3">
+        <div className="p-3.5 bg-slate-50 rounded-[16px] border-2 border-slate-200 flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-black uppercase text-slate-500 tracking-wider flex items-center gap-1.5">
               <Clock className="w-4 h-4 text-duo-blue" />
@@ -181,7 +181,7 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
           </div>
 
           {/* Mode Switcher Buttons */}
-          <div className="w-full grid grid-cols-2 p-1 bg-slate-200/70 rounded-xl border border-slate-300/40 text-[11px] font-black text-center">
+          <div className="w-full grid grid-cols-2 p-1 bg-slate-200/70 rounded-[13px] border border-slate-300/40 text-[11px] font-black text-center">
             <button
               type="button"
               onClick={() => {
@@ -189,7 +189,7 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
                 setTimerMode("global");
               }}
               className={cn(
-                "px-2.5 py-1.5 rounded-lg transition-all cursor-pointer",
+                "px-2.5 py-1.5 rounded-[10px] transition-all cursor-pointer",
                 (currentQuiz.timerMode || "global") === "global"
                   ? "bg-white text-duo-dark shadow-xs font-black"
                   : "text-slate-500 hover:text-duo-dark font-bold",
@@ -381,7 +381,7 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
                   playTap();
                   onBack();
                 }}
-                className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-slate-50 border-2 border-duo-gray hover:bg-slate-100 flex items-center justify-center text-duo-dark shrink-0 transition-colors cursor-pointer"
+                className="w-9 h-9 sm:w-10 sm:h-10 rounded-[13px] bg-slate-50 border-2 border-slate-200 hover:bg-slate-100 flex items-center justify-center text-duo-dark shrink-0 transition-colors cursor-pointer"
                 title="Kembali ke Dashboard"
               >
                 <ArrowLeft className="w-5 h-5" />
@@ -394,7 +394,7 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
                 value={currentQuiz.title || ""}
                 onChange={(e) => setQuizTitle(e.target.value)}
                 placeholder="Judul Kuis Kelas..."
-                className="w-full bg-transparent font-black text-base sm:text-xl text-duo-dark px-2 py-1 rounded-xl border border-transparent hover:border-duo-gray focus:border-duo-blue focus:bg-white focus:outline-none transition-all truncate"
+                className="w-full bg-transparent font-black text-base sm:text-xl text-duo-dark px-2 py-1 rounded-[13px] border border-transparent hover:border-slate-300 focus:border-duo-blue focus:bg-white focus:outline-none transition-all truncate"
               />
             </div>
           </div>
@@ -408,7 +408,7 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
                 playTap();
                 setIsMobileLeftOpen(true);
               }}
-              className="lg:hidden px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 border-2 border-slate-200 text-xs font-black flex items-center gap-1.5 cursor-pointer text-duo-dark"
+              className="lg:hidden px-2.5 py-1.5 rounded-[13px] bg-slate-100 hover:bg-slate-200 border-2 border-slate-200 text-xs font-black flex items-center gap-1.5 cursor-pointer text-duo-dark"
               title="Buka Daftar Soal"
             >
               <Menu className="w-4 h-4 text-duo-blue" />
@@ -422,7 +422,7 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
                 playTap();
                 setIsMobileRightOpen(true);
               }}
-              className="lg:hidden px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 border-2 border-slate-200 text-xs font-black flex items-center gap-1.5 cursor-pointer text-duo-dark"
+              className="lg:hidden px-2.5 py-1.5 rounded-[13px] bg-slate-100 hover:bg-slate-200 border-2 border-slate-200 text-xs font-black flex items-center gap-1.5 cursor-pointer text-duo-dark"
               title="Buka Pengaturan Soal"
             >
               <SlidersHorizontal className="w-4 h-4 text-duo-yellow-border" />
@@ -432,7 +432,7 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
             {/* Preview Button */}
             <TactileButton
               variant="outline"
-              size="sm"
+              size="md"
               icon={<Play className="w-3.5 h-3.5 fill-current" />}
               onClick={() => {
                 playTap();
@@ -442,7 +442,6 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
                   setPreviewMode(!previewMode);
                 }
               }}
-              className="border-2 border-duo-gray text-[#4B4B4B] py-1.5 px-3 text-xs"
             >
               {previewMode ? "Tutup Pratinjau" : "Pratinjau"}
             </TactileButton>
@@ -450,7 +449,7 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
             {/* Save Button */}
             <TactileButton
               variant="green"
-              size="sm"
+              size="md"
               isLoading={isSaving}
               icon={
                 isDirty ? (
@@ -460,7 +459,6 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
                 )
               }
               onClick={handleSave}
-              className="font-black px-3.5 py-1.5 text-xs"
             >
               {isSaving ? "Menyimpan..." : isDirty ? "Simpan" : "Tersimpan"}
             </TactileButton>
@@ -469,7 +467,7 @@ export const QuizBuilderPage: React.FC<QuizBuilderPageProps> = ({
 
         {/* Save Toast Notification */}
         {saveToast && (
-          <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 bg-duo-green text-white text-xs font-black px-4 py-2 rounded-2xl shadow-lg flex items-center gap-2 animate-in fade-in slide-in-from-top-2 z-50">
+          <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 bg-duo-green text-white text-xs font-black px-4 py-2 rounded-[13px] shadow-lg flex items-center gap-2 animate-in fade-in slide-in-from-top-2 z-50">
             <Sparkles className="w-4 h-4" />
             {currentQuiz.isPublished
               ? "Kuis berhasil disimpan & dipublikasikan!"

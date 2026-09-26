@@ -22,6 +22,7 @@ import {
   ArrowLeft,
   Clock,
   Lightbulb,
+  ClipboardList,
 } from "lucide-react";
 import { Quiz } from "@/types/quiz";
 import { QuestionTypeEnum } from "@/types/database";
@@ -715,7 +716,7 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
     setFeedbackState({
       isOpen: true,
       isCorrect: true,
-      title: "Kunci Jawaban Dibuka 🔑",
+      title: "Kunci Jawaban Dibuka",
       message:
         "Guru telah membuka kunci jawaban untuk dibahas bersama di kelas.",
       solutionExplanation: solutionText,
@@ -872,8 +873,8 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
           elevated
           className="max-w-md w-full p-8 flex flex-col items-center gap-4 bg-white"
         >
-          <div className="w-20 h-20 rounded-3xl bg-amber-100 border-2 border-amber-300 text-amber-600 flex items-center justify-center text-3xl font-black">
-            📋
+          <div className="w-18 h-18 rounded-[13px] bg-amber-100 border-2 border-amber-300 text-amber-600 flex items-center justify-center shadow-xs">
+            <ClipboardList className="w-9 h-9 stroke-[2.5]" />
           </div>
           <h2 className="text-xl font-black text-duo-dark">
             Tidak Ada Soal untuk Ditampilkan
@@ -936,10 +937,10 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
                 isMuted ? "Nyalakan Suara (Unmute)" : "Matikan Suara (Mute)"
               }
               className={cn(
-                "w-10 h-10 rounded-2xl border-2 flex items-center justify-center transition-all active:scale-95 cursor-pointer shadow-xs",
+                "w-10 h-10 rounded-[10px] flex items-center justify-center transition-all active:scale-95 cursor-pointer shadow-xs",
                 isMuted
-                  ? "bg-red-50 border-red-200 text-duo-red"
-                  : "bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700",
+                  ? "bg-red-100 text-duo-red border-0"
+                  : "bg-slate-100 hover:bg-slate-200 border-2 border-slate-200 text-slate-700",
               )}
             >
               {isMuted ? (
@@ -1000,16 +1001,16 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
               {/* Live Question / Global Timer Badge */}
               <span
                 className={cn(
-                  "text-xs sm:text-sm font-black uppercase px-3 py-1 rounded-xl flex items-center gap-1.5 border transition-all shrink-0",
+                  "text-xs sm:text-sm font-black uppercase px-3 py-1 rounded-[10px] flex items-center gap-1.5 transition-all shrink-0 border-0 shadow-2xs",
                   effectiveTimeLimit <= 0
-                    ? "bg-slate-100 text-slate-600 border-slate-200"
+                    ? "bg-slate-100 text-slate-600"
                     : timeLeft <= 0
-                      ? "bg-red-100 text-duo-red border-red-300 font-black shadow-xs animate-pulse"
+                      ? "bg-red-100 text-duo-red font-black shadow-xs animate-pulse"
                       : timeLeft <= 10
-                        ? "bg-red-100 text-duo-red border-red-300 animate-pulse font-black shadow-xs"
+                        ? "bg-red-100 text-duo-red animate-pulse font-black shadow-xs"
                         : isGlobalTimer
-                          ? "bg-blue-50 text-duo-blue border-blue-200"
-                          : "bg-emerald-50 text-duo-green border-emerald-200",
+                          ? "bg-blue-50 text-duo-blue"
+                          : "bg-emerald-50 text-duo-green",
                 )}
               >
                 <Clock className="w-4 h-4 shrink-0" />
@@ -1058,9 +1059,9 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
               <motion.div
                 initial={{ opacity: 0, y: 8, scale: 0.98 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                className="p-4 sm:p-5 bg-gradient-to-br from-emerald-50 to-green-50/80 border-2 border-[#58CC02]/50 rounded-3xl flex items-start gap-3.5 shadow-sm"
+                className="p-4 sm:p-5 bg-gradient-to-br from-emerald-50 to-green-50/80 border-2 border-[#58CC02]/50 rounded-[16px] flex items-start gap-3.5 shadow-xs"
               >
-                <div className="w-10 h-10 rounded-2xl bg-[#58CC02] text-white flex items-center justify-center font-black shrink-0 shadow-xs mt-0.5">
+                <div className="w-10 h-10 rounded-[10px] bg-[#58CC02] text-white flex items-center justify-center font-black shrink-0 shadow-xs mt-0.5">
                   <KeyRound className="w-5 h-5 stroke-[2.5]" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -1081,11 +1082,11 @@ export const PresenterKioskPage: React.FC<PresenterKioskPageProps> = ({
 
             {/* Large Supporting Image / Diagram (Responsive for Classroom Layout) */}
             {hasMedia && (
-              <div className="w-full rounded-3xl overflow-hidden border-4 border-slate-200 shadow-md bg-white p-2 sm:p-2.5 flex items-center justify-center transition-all max-w-xl mx-auto">
+              <div className="w-full rounded-[16px] overflow-hidden border-2 border-slate-200 shadow-xs bg-white p-2 sm:p-2.5 flex items-center justify-center transition-all max-w-xl mx-auto">
                 <img
                   src={effectiveMediaUrl}
                   alt="Media Soal"
-                  className="w-full max-h-[220px] sm:max-h-[260px] md:max-h-[300px] object-contain rounded-2xl"
+                  className="w-full max-h-[220px] sm:max-h-[260px] md:max-h-[300px] object-contain rounded-[13px]"
                 />
               </div>
             )}

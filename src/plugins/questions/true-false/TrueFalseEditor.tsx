@@ -44,17 +44,17 @@ export const TrueFalseEditor: React.FC<EditorProps<TrueFalseContent>> = ({
             whileHover={!disabled ? { scale: 1.01 } : undefined}
             whileTap={!disabled ? { scale: 0.98 } : undefined}
             className={cn(
-              "flex items-center justify-between p-4 sm:p-5 rounded-2xl border-2 transition-all cursor-pointer text-left",
+              "flex items-center justify-between p-4 sm:p-5 rounded-[13px] transition-all cursor-pointer text-left",
               correctAnswer === true
-                ? "bg-duo-green text-white border-duo-green-border"
-                : "bg-slate-50 hover:bg-slate-100/80 text-slate-700 border-slate-200",
+                ? "bg-duo-green text-white border-0 shadow-xs"
+                : "bg-slate-50 hover:bg-slate-100/80 text-slate-700 border-2 border-slate-200",
               disabled && "opacity-70 cursor-not-allowed",
             )}
           >
             <div className="flex items-center gap-3.5">
               <div
                 className={cn(
-                  "w-10 h-10 rounded-xl flex items-center justify-center font-black transition-colors",
+                  "w-10 h-10 rounded-[10px] flex items-center justify-center font-black transition-colors",
                   correctAnswer === true
                     ? "bg-white/20 text-white"
                     : "bg-emerald-100 text-emerald-600",
@@ -71,10 +71,10 @@ export const TrueFalseEditor: React.FC<EditorProps<TrueFalseContent>> = ({
 
             <div
               className={cn(
-                "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors",
+                "w-6 h-6 rounded-full flex items-center justify-center transition-colors",
                 correctAnswer === true
-                  ? "border-white bg-white text-duo-green"
-                  : "border-slate-300 bg-white",
+                  ? "border-0 bg-white text-duo-green shadow-xs"
+                  : "border-2 border-slate-300 bg-white",
               )}
             >
               {correctAnswer === true && (
@@ -93,17 +93,17 @@ export const TrueFalseEditor: React.FC<EditorProps<TrueFalseContent>> = ({
             whileHover={!disabled ? { scale: 1.01 } : undefined}
             whileTap={!disabled ? { scale: 0.98 } : undefined}
             className={cn(
-              "flex items-center justify-between p-4 sm:p-5 rounded-2xl border-2 transition-all cursor-pointer text-left",
+              "flex items-center justify-between p-4 sm:p-5 rounded-[13px] transition-all cursor-pointer text-left",
               correctAnswer === false
-                ? "bg-duo-red text-white border-duo-red-border"
-                : "bg-slate-50 hover:bg-slate-100/80 text-slate-700 border-slate-200",
+                ? "bg-duo-red text-white border-0 shadow-xs"
+                : "bg-slate-50 hover:bg-slate-100/80 text-slate-700 border-2 border-slate-200",
               disabled && "opacity-70 cursor-not-allowed",
             )}
           >
             <div className="flex items-center gap-3.5">
               <div
                 className={cn(
-                  "w-10 h-10 rounded-xl flex items-center justify-center font-black transition-colors",
+                  "w-10 h-10 rounded-[10px] flex items-center justify-center font-black transition-colors",
                   correctAnswer === false
                     ? "bg-white/20 text-white"
                     : "bg-rose-100 text-rose-600",
@@ -120,10 +120,10 @@ export const TrueFalseEditor: React.FC<EditorProps<TrueFalseContent>> = ({
 
             <div
               className={cn(
-                "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors",
+                "w-6 h-6 rounded-full flex items-center justify-center transition-colors",
                 correctAnswer === false
-                  ? "border-white bg-white text-duo-red"
-                  : "border-slate-300 bg-white",
+                  ? "border-0 bg-white text-duo-red shadow-xs"
+                  : "border-2 border-slate-300 bg-white",
               )}
             >
               {correctAnswer === false && (

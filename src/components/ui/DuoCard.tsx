@@ -1,5 +1,5 @@
-import React from 'react';
-import { cn } from '@/utils/cn';
+import React from "react";
+import { cn } from "@/utils/cn";
 
 export interface DuoCardProps extends React.HTMLAttributes<HTMLDivElement> {
   elevated?: boolean;
@@ -16,14 +16,13 @@ export const DuoCard: React.FC<DuoCardProps> = ({
   return (
     <div
       className={cn(
-        // Rounded-3xl with solid 2px border as per specification
-        'bg-white rounded-3xl border-2 border-slate-200 p-6 transition-all',
-        // Optional 3D tactile bottom bevel
-        elevated && 'border-b-4 border-b-slate-300 shadow-sm',
-        // Interactive hover state
+        // Rounded 16px with clean flat 2px border
+        "bg-white rounded-[16px] border-2 border-slate-200 p-6 transition-all",
+        elevated && "shadow-xs",
+        // Interactive hover state: clean crisp green border
         interactive &&
-          'hover:border-duo-blue hover:border-b-duo-blue-border cursor-pointer transition-transform hover:-translate-y-0.5',
-        className
+          "hover:border-duo-green cursor-pointer transition-all hover:shadow-sm hover:-translate-y-0.5",
+        className,
       )}
       {...props}
     >
@@ -31,4 +30,3 @@ export const DuoCard: React.FC<DuoCardProps> = ({
     </div>
   );
 };
-

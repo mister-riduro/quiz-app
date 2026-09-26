@@ -805,10 +805,10 @@ export const CrosswordPlayer: React.FC<
                   >
                     <span
                       className={cn(
-                        "w-6 h-6 rounded-lg border font-black text-xs flex items-center justify-center shrink-0 mt-0.5",
+                        "w-6 h-6 rounded-[10px] font-black text-xs flex items-center justify-center shrink-0 mt-0.5",
                         isWordCorrect
-                          ? "bg-duo-green text-white border-duo-green"
-                          : "bg-white border-slate-200 text-duo-dark",
+                          ? "bg-duo-green text-white border-0 shadow-xs"
+                          : "bg-white border border-slate-200 text-duo-dark",
                       )}
                     >
                       {word.number}
@@ -869,10 +869,10 @@ export const CrosswordPlayer: React.FC<
                   >
                     <span
                       className={cn(
-                        "w-6 h-6 rounded-lg border font-black text-xs flex items-center justify-center shrink-0 mt-0.5",
+                        "w-6 h-6 rounded-[10px] font-black text-xs flex items-center justify-center shrink-0 mt-0.5",
                         isWordCorrect
-                          ? "bg-duo-green text-white border-duo-green"
-                          : "bg-white border-slate-200 text-duo-dark",
+                          ? "bg-duo-green text-white border-0 shadow-xs"
+                          : "bg-white border border-slate-200 text-duo-dark",
                       )}
                     >
                       {word.number}

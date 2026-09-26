@@ -42,7 +42,7 @@ export const AddQuestionModal: React.FC<AddQuestionModalProps> = ({
         {/* Modal Header */}
         <div className="flex items-center justify-between pb-3 sm:pb-4 border-b-2 border-slate-100 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-duo-blue-light border-2 border-duo-blue text-duo-blue flex items-center justify-center shrink-0 shadow-xs">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-[10px] bg-duo-blue-light border-2 border-duo-blue text-duo-blue flex items-center justify-center shrink-0 shadow-xs">
               <Sparkles className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div>
@@ -62,7 +62,7 @@ export const AddQuestionModal: React.FC<AddQuestionModalProps> = ({
               playTap();
               onClose();
             }}
-            className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-duo-dark flex items-center justify-center transition-all cursor-pointer shrink-0"
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-[10px] bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-duo-dark flex items-center justify-center transition-all cursor-pointer shrink-0"
             aria-label="Tutup Dialog"
           >
             <X className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -82,9 +82,9 @@ export const AddQuestionModal: React.FC<AddQuestionModalProps> = ({
                   onSelectType(plugin.type);
                   onClose();
                 }}
-                className="group p-3.5 sm:p-4 rounded-2xl border-2 border-slate-200 hover:border-duo-blue bg-white hover:bg-duo-blue-light/15 text-left transition-all duration-150 cursor-pointer shadow-xs hover:shadow-md active:translate-y-0.5 flex items-start gap-3.5"
+                className="group p-3.5 sm:p-4 rounded-[13px] border-2 border-slate-200 hover:border-duo-blue bg-white hover:bg-duo-blue-light/15 text-left transition-all duration-150 cursor-pointer shadow-xs hover:shadow-md active:translate-y-0.5 flex items-start gap-3.5"
               >
-                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-duo-blue/10 group-hover:bg-duo-blue text-duo-blue group-hover:text-white flex items-center justify-center shrink-0 transition-colors shadow-2xs mt-0.5">
+                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-[10px] bg-duo-blue/10 group-hover:bg-duo-blue text-duo-blue group-hover:text-white flex items-center justify-center shrink-0 transition-colors shadow-2xs mt-0.5">
                   <Icon className="w-5 h-5 stroke-[2.2]" />
                 </div>
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, Tag } from "lucide-react";
+import { Heart, Tag, Sparkles } from "lucide-react";
 import { PlayerProps } from "@/plugins/core/types";
 import { HangmanContent, HangmanAnswer } from "./types";
 import { useSoundEffect } from "@/hooks/useSoundEffect";
@@ -267,9 +267,10 @@ export const HangmanPlayer: React.FC<
                       initial={{ scale: 0.6, opacity: 1 }}
                       animate={{ scale: 1.4, opacity: 0 }}
                       transition={{ duration: 0.45 }}
-                      className="absolute inset-0 flex items-center justify-center text-xs font-black text-duo-red pointer-events-none"
+                      className="absolute inset-0 flex items-center justify-center gap-1 text-xs font-black text-duo-red pointer-events-none"
                     >
-                      💥 POP!
+                      <Sparkles className="w-3.5 h-3.5 fill-current" />
+                      <span>POP!</span>
                     </motion.div>
                   ) : null}
                 </AnimatePresence>
@@ -497,14 +498,14 @@ export const HangmanPlayer: React.FC<
                   onClick={() => handleGuess(letter)}
                   className={cn(
                     // Accessibility touch target minimum 44x44px
-                    "min-w-[32px] sm:min-w-[44px] min-h-[44px] sm:min-h-[48px] flex-1 max-w-[48px] rounded-xl font-black text-sm sm:text-base select-none transition-all flex items-center justify-center",
+                    "min-w-[32px] sm:min-w-[44px] min-h-[44px] sm:min-h-[48px] flex-1 max-w-[48px] rounded-[10px] font-black text-sm sm:text-base select-none transition-all flex items-center justify-center",
                     // Key States
                     !isGuessed &&
                       "bg-white text-duo-dark border-2 border-slate-200 hover:bg-slate-50 active:translate-y-0.5 active:scale-[0.98] cursor-pointer",
                     isCorrectLetter &&
-                      "bg-duo-green text-white border-2 border-duo-green-border cursor-default opacity-95",
+                      "bg-duo-green text-white border-0 shadow-xs cursor-default opacity-95",
                     isWrongLetter &&
-                      "bg-slate-200 text-slate-400 border-2 border-slate-300 cursor-default opacity-50",
+                      "bg-slate-200 text-slate-400 border-0 cursor-default opacity-50",
                   )}
                 >
                   {letter}

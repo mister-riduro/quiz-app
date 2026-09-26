@@ -199,13 +199,11 @@ const TargetPin: React.FC<TargetPinProps> = ({
                   : "cursor-default",
                 // Pre-submit appearance
                 !isAnswered &&
-                  "bg-white text-duo-dark border-duo-blue hover:bg-duo-blue-light/30",
+                  "bg-white text-duo-dark border-2 border-duo-blue hover:bg-duo-blue-light/30",
                 // Correct evaluation appearance
-                isLabelCorrect &&
-                  "bg-duo-green-light text-duo-green-border border-duo-green shadow-[0_0_12px_rgba(88,204,2,0.4)]",
+                isLabelCorrect && "bg-duo-green text-white border-0 shadow-xs",
                 // Wrong evaluation appearance
-                isLabelWrong &&
-                  "bg-duo-red-light text-duo-red-border border-duo-red shadow-[0_0_12px_rgba(255,75,75,0.4)]",
+                isLabelWrong && "bg-duo-red text-white border-0 shadow-xs",
               )}
             >
               <span>{attachedLabel.text}</span>
@@ -272,13 +270,13 @@ const TrayLabelBadge: React.FC<TrayLabelBadgeProps> = ({
       onClick={!disabled ? onTap : undefined}
       className={cn(
         "relative inline-flex items-center justify-center font-black select-none transition-all duration-150",
-        "px-4 py-2.5 rounded-2xl border-2 border-solid text-sm sm:text-base",
+        "px-4 py-2.5 rounded-[13px] text-sm sm:text-base",
         !disabled
-          ? "cursor-pointer hover:border-duo-blue hover:-translate-y-0.5 active:translate-y-0.5"
+          ? "cursor-pointer hover:-translate-y-0.5 active:translate-y-0.5"
           : "cursor-default opacity-60",
         isSelected
-          ? "bg-duo-blue-light text-duo-blue-border border-duo-blue ring-4 ring-duo-blue/20 scale-105"
-          : "bg-white text-duo-dark border-slate-200",
+          ? "bg-duo-blue text-white border-0 shadow-xs ring-0 scale-105"
+          : "bg-white text-duo-dark border-2 border-slate-200",
         isDragging && "opacity-25",
       )}
     >

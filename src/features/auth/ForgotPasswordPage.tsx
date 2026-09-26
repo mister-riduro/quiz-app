@@ -13,6 +13,7 @@ import {
   ArrowLeft,
   KeyRound,
   Sparkles,
+  Lightbulb,
 } from "lucide-react";
 import { isSupabaseConfigured } from "@/lib/supabaseClient";
 
@@ -146,11 +147,14 @@ export const ForgotPasswordPage: React.FC<ForgotPasswordPageProps> = ({
                     periksa kotak masuk atau folder spam email Anda.
                   </span>
                   {!isSupabaseConfigured && (
-                    <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs font-semibold text-amber-800 text-left">
-                      💡 <strong>Mode Simulasi Lokal:</strong> Proyek belum
-                      terhubung ke Supabase riil di berkas <code>.env</code>.
-                      Anda dapat langsung menguji penetapan kata sandi baru
-                      melalui tombol di bawah.
+                    <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs font-semibold text-amber-800 text-left flex items-start gap-2">
+                      <Lightbulb className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                      <div>
+                        <strong>Mode Simulasi Lokal:</strong> Proyek belum
+                        terhubung ke Supabase riil di berkas <code>.env</code>.
+                        Anda dapat langsung menguji penetapan kata sandi baru
+                        melalui tombol di bawah.
+                      </div>
                     </div>
                   )}
                 </div>

@@ -189,7 +189,7 @@ export const QuestionSettingsDrawer: React.FC<QuestionSettingsDrawerProps> = ({
 
           {timerMode === "global" ? (
             /* Locked Global Mode State */
-            <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 flex flex-col gap-1.5">
+            <div className="p-2.5 bg-slate-50 rounded-[13px] border border-slate-200 flex flex-col gap-1.5">
               <div className="flex items-center gap-1.5 text-slate-600">
                 <Lock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                 <span className="text-xs font-black">
@@ -210,7 +210,7 @@ export const QuestionSettingsDrawer: React.FC<QuestionSettingsDrawerProps> = ({
                     playTap();
                     onSwitchToPerQuestionTimer();
                   }}
-                  className="mt-0.5 w-full py-1.5 px-2 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg text-[11px] font-black text-duo-blue flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                  className="mt-0.5 w-full py-1.5 px-2 bg-white hover:bg-slate-100 border border-slate-200 rounded-[10px] text-[11px] font-black text-duo-blue flex items-center justify-center gap-1 transition-colors cursor-pointer"
                 >
                   <Zap className="w-3 h-3 text-duo-blue" />
                   Beralih ke Waktu Per Soal
@@ -243,7 +243,7 @@ export const QuestionSettingsDrawer: React.FC<QuestionSettingsDrawerProps> = ({
                 playPop();
                 onDuplicateQuestion();
               }}
-              className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-600 hover:text-duo-dark text-xs font-bold transition-all cursor-pointer active:translate-y-0.5"
+              className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-[13px] border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-600 hover:text-duo-dark text-xs font-bold transition-all cursor-pointer active:translate-y-0.5"
             >
               <Copy className="w-3.5 h-3.5 text-slate-400" />
               <span>Duplikasi Soal</span>
@@ -258,7 +258,7 @@ export const QuestionSettingsDrawer: React.FC<QuestionSettingsDrawerProps> = ({
                 onRemoveQuestion();
               }}
               className={cn(
-                "w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-bold transition-all",
+                "w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-[13px] border text-xs font-bold transition-all",
                 totalQuestions <= 1
                   ? "border-slate-100 bg-slate-50 text-slate-300 cursor-not-allowed"
                   : "border-slate-200 hover:border-rose-200 bg-white hover:bg-rose-50/50 text-slate-500 hover:text-duo-red cursor-pointer active:translate-y-0.5",

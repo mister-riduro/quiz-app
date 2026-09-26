@@ -21,23 +21,21 @@ export interface TactileButtonProps extends React.ButtonHTMLAttributes<HTMLButto
 }
 
 const variantStyles: Record<ButtonVariant, string> = {
-  green: "bg-duo-green border-duo-green-border text-white hover:brightness-105",
-  blue: "bg-duo-blue border-duo-blue-border text-white hover:brightness-105",
-  orange:
-    "bg-duo-orange border-duo-orange-border text-white hover:brightness-105",
-  red: "bg-duo-red border-duo-red-border text-white hover:brightness-105",
-  yellow:
-    "bg-duo-yellow border-duo-yellow-border text-duo-dark hover:brightness-105",
-  gray: "bg-duo-gray border-duo-gray-border text-duo-dark/50 hover:brightness-100",
+  green: "bg-duo-green text-white hover:brightness-105 shadow-xs border-0",
+  blue: "bg-duo-blue text-white hover:brightness-105 shadow-xs border-0",
+  orange: "bg-duo-orange text-white hover:brightness-105 shadow-xs border-0",
+  red: "bg-duo-red text-white hover:brightness-105 shadow-xs border-0",
+  yellow: "bg-duo-yellow text-duo-dark hover:brightness-105 shadow-xs border-0",
+  gray: "bg-duo-gray text-duo-dark/50 hover:brightness-100 border-0",
   outline:
-    "bg-white border-slate-200 hover:border-slate-400 text-duo-dark hover:bg-slate-50",
+    "bg-white border-2 border-slate-200 hover:border-slate-300 text-duo-dark hover:bg-slate-50 shadow-2xs",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
-  sm: "px-3 py-1.5 text-xs rounded-xl font-bold gap-1.5",
-  md: "px-5 py-2.5 text-sm rounded-2xl font-extrabold gap-2",
-  lg: "px-7 py-3.5 text-base tracking-wide rounded-2xl font-black gap-2.5",
-  icon: "p-3 text-sm rounded-2xl aspect-square justify-center",
+  sm: "px-4 py-2 text-xs rounded-[10px] font-black gap-1.5",
+  md: "px-5 py-2.5 text-sm rounded-[13px] font-black gap-2",
+  lg: "px-6 py-3.5 text-sm sm:text-base rounded-[13px] font-black gap-2.5",
+  icon: "p-2.5 text-sm rounded-[13px] aspect-square justify-center",
 };
 
 export const TactileButton = React.forwardRef<
@@ -66,19 +64,17 @@ export const TactileButton = React.forwardRef<
         ref={ref}
         disabled={isDisabled}
         className={cn(
-          // Base & Typography
-          "relative inline-flex items-center justify-center select-none uppercase tracking-wider transition-all duration-75",
-          // Uniform 2px Outline
-          "border-2 border-solid",
+          // Base & Typography (All Uppercase, clean flat button)
+          "relative inline-flex items-center justify-center select-none uppercase tracking-wider font-black transition-all duration-75",
           // Active Physical Interaction
           "active:translate-y-0.5 active:scale-[0.99]",
           // Size & Variant
           variantStyles[variant],
           sizeStyles[size],
           fullWidth && "w-full",
-          // Disabled State: Abu-abu redup, tanpa efek active press
+          // Disabled State
           isDisabled &&
-            "bg-duo-gray border-duo-gray-border text-duo-dark/40 cursor-not-allowed transform-none active:translate-y-0 hover:brightness-100 opacity-80",
+            "bg-duo-gray text-duo-dark/40 border-0 cursor-not-allowed transform-none active:translate-y-0 hover:brightness-100 opacity-80",
           className,
         )}
         {...props}

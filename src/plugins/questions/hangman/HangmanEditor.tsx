@@ -87,7 +87,7 @@ export const HangmanEditor: React.FC<EditorProps<HangmanContent>> = ({
       <div className="flex flex-col gap-2">
         <label className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-500">
           <Tag className="w-4 h-4 text-duo-orange" />
-          <span>Kategori / Petunjuk Soal</span>
+          <span>Petunjuk Soal (Opsional)</span>
         </label>
         <input
           type="text"
@@ -134,20 +134,35 @@ export const HangmanEditor: React.FC<EditorProps<HangmanContent>> = ({
                 disabled={disabled}
                 onClick={() => handleLivesSelect(num)}
                 className={cn(
-                  "flex flex-col items-center justify-center p-3.5 rounded-2xl border-2 transition-all text-center",
+                  "flex flex-col items-center justify-center p-3.5 rounded-[13px] transition-all text-center",
                   isSelected
-                    ? "bg-duo-red-light/50 border-duo-red text-duo-red-border"
-                    : "bg-slate-50 hover:bg-slate-100/80 border-slate-200 text-slate-600",
+                    ? "bg-duo-red text-white border-0 shadow-xs"
+                    : "bg-slate-50 hover:bg-slate-100/80 border-2 border-slate-200 text-slate-600",
                   disabled && "opacity-60 cursor-not-allowed",
                 )}
               >
                 <div className="flex items-center gap-1 mb-1">
-                  <div className="w-3 h-3 rounded-full bg-duo-red" />
-                  <span className="font-black text-lg text-duo-dark">
+                  <div
+                    className={cn(
+                      "w-3 h-3 rounded-full",
+                      isSelected ? "bg-white" : "bg-duo-red",
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      "font-black text-lg",
+                      isSelected ? "text-white" : "text-duo-dark",
+                    )}
+                  >
                     {num}
                   </span>
                 </div>
-                <span className="text-[11px] font-bold text-slate-500">
+                <span
+                  className={cn(
+                    "text-[11px] font-bold",
+                    isSelected ? "text-white/90" : "text-slate-500",
+                  )}
+                >
                   {difficultyLabel}
                 </span>
               </button>
@@ -179,13 +194,13 @@ export const HangmanEditor: React.FC<EditorProps<HangmanContent>> = ({
               {Array.from({ length: maxLives }).map((_, idx) => (
                 <div
                   key={`balloon-preview-${idx}`}
-                  className="w-7 h-9 rounded-full shadow-xs border border-black/10 flex items-center justify-center text-[10px] font-black text-white"
+                  className="w-7 h-9 rounded-full shadow-2xs border border-white/40 flex items-center justify-center"
                   style={{
                     backgroundColor:
                       BALLOON_COLORS[idx % BALLOON_COLORS.length],
                   }}
                 >
-                  🎈
+                  <span className="w-1.5 h-2 rounded-full bg-white/40 -mt-2 -ml-2" />
                 </div>
               ))}
             </div>

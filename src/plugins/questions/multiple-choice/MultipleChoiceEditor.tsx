@@ -199,7 +199,7 @@ export const MultipleChoiceEditor: React.FC<
                   <div className="flex items-center gap-2.5 shrink-0">
                     <div
                       className={cn(
-                        "w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm border-b-2 shadow-2xs",
+                        "w-9 h-9 rounded-[10px] flex items-center justify-center font-black text-sm border-0 shadow-2xs",
                         badgeColor,
                       )}
                     >
@@ -214,10 +214,10 @@ export const MultipleChoiceEditor: React.FC<
                       disabled={disabled}
                       onClick={() => handleToggleCorrectOption(opt.id)}
                       className={cn(
-                        "w-9 h-9 rounded-xl border-2 flex items-center justify-center select-none transition-all cursor-pointer shrink-0",
+                        "w-9 h-9 rounded-[10px] flex items-center justify-center select-none transition-all cursor-pointer shrink-0",
                         isCorrect
-                          ? "bg-duo-green text-white border-duo-green-border active:translate-y-0.5"
-                          : "bg-white text-transparent border-slate-300 hover:border-slate-400 hover:bg-slate-50 active:translate-y-0.5",
+                          ? "bg-duo-green text-white border-0 shadow-xs active:translate-y-0.5"
+                          : "bg-white text-transparent border-2 border-slate-300 hover:border-slate-400 hover:bg-slate-50 active:translate-y-0.5",
                         disabled && "cursor-not-allowed opacity-60",
                       )}
                       title={

@@ -21,15 +21,12 @@ export interface TileTokenProps {
 }
 
 const stateStyles: Record<TileTokenState, string> = {
-  idle: "bg-white text-duo-dark border-duo-gray hover:bg-slate-50",
-  selected:
-    "bg-duo-blue-light text-duo-blue-border border-duo-blue ring-2 ring-duo-blue/30",
-  correct:
-    "bg-duo-green-light text-duo-green-border border-duo-green ring-2 ring-duo-green/30",
-  wrong:
-    "bg-duo-red-light text-duo-red-border border-duo-red ring-2 ring-duo-red/30",
+  idle: "bg-white text-duo-dark border-2 border-slate-200 hover:bg-slate-50",
+  selected: "bg-duo-blue text-white border-0 shadow-xs",
+  correct: "bg-duo-green text-white border-0 shadow-xs",
+  wrong: "bg-duo-red text-white border-0 shadow-xs",
   disabled:
-    "bg-duo-gray text-duo-dark/30 border-duo-gray-border cursor-not-allowed opacity-60 select-none shadow-none",
+    "bg-duo-gray text-duo-dark/30 border-0 cursor-not-allowed opacity-60 select-none shadow-none",
 };
 
 const sizeStyles: Record<
@@ -37,17 +34,17 @@ const sizeStyles: Record<
   { container: string; text: string; sub: string }
 > = {
   sm: {
-    container: "min-w-[42px] h-[48px] px-2 rounded-xl",
+    container: "min-w-[42px] h-[48px] px-2 rounded-[10px]",
     text: "text-lg font-black",
     sub: "text-[10px]",
   },
   md: {
-    container: "min-w-[56px] h-[64px] px-3 rounded-2xl",
+    container: "min-w-[56px] h-[64px] px-3 rounded-[13px]",
     text: "text-2xl font-black",
     sub: "text-xs",
   },
   lg: {
-    container: "min-w-[72px] h-[80px] px-4 rounded-2xl",
+    container: "min-w-[72px] h-[80px] px-4 rounded-[13px]",
     text: "text-3xl font-black",
     sub: "text-xs",
   },
@@ -106,9 +103,8 @@ export const TileToken: React.FC<TileTokenProps> = ({
       whileTap={!isDisabled ? { scale: 0.94, translateY: 2 } : undefined}
       transition={{ type: "spring", stiffness: 500, damping: 25 }}
       className={cn(
-        // Base styling with uniform 2px outline
+        // Base styling
         "relative inline-flex flex-col items-center justify-center font-black select-none transition-colors duration-150",
-        "border-2 border-solid",
         sizeStyles[size].container,
         stateStyles[state],
         className,

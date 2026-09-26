@@ -6,6 +6,7 @@ import { TrueFalseContent, TrueFalseAnswer } from "./types";
 import { useSoundEffect } from "@/hooks/useSoundEffect";
 import { cn } from "@/utils/cn";
 import { DuoMathRenderer } from "@/components/common/DuoMathRenderer";
+import { SectionDivider } from "@/components/ui";
 
 export const TrueFalsePlayer: React.FC<
   PlayerProps<TrueFalseContent, TrueFalseAnswer>
@@ -45,7 +46,13 @@ export const TrueFalsePlayer: React.FC<
           </h2>
         )}
 
-      {/* 3. Two Massive 3D Choice Cards (Enlarged for Kids & Classrooms) */}
+      {/* Signature Airlearn Section Divider */}
+      <SectionDivider
+        label="TENTUKAN PERNYATAAN INI"
+        className="max-w-xl my-4"
+      />
+
+      {/* 3. Two Choice Cards (Clean Flat Airlearn Style) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6 w-full">
         {/* Kiri: Kartu Hijau masif dengan ikon centang tebal ("BENAR") */}
         <motion.button
@@ -53,10 +60,10 @@ export const TrueFalsePlayer: React.FC<
           disabled={isEvaluating || isAnswered}
           onClick={() => handleChoice(true)}
           whileHover={
-            !isAnswered && !isEvaluating ? { scale: 1.04, y: -4 } : undefined
+            !isAnswered && !isEvaluating ? { scale: 1.02, y: -2 } : undefined
           }
           whileTap={
-            !isAnswered && !isEvaluating ? { scale: 0.93, y: 6 } : undefined
+            !isAnswered && !isEvaluating ? { scale: 0.96, y: 3 } : undefined
           }
           transition={{
             type: "spring",
@@ -65,9 +72,9 @@ export const TrueFalsePlayer: React.FC<
             mass: 0.8,
           }}
           className={cn(
-            "group relative flex flex-col items-center justify-center gap-4 sm:gap-6 py-10 sm:py-14 md:py-16 px-6 rounded-3xl",
-            "border-2 border-duo-green-border",
-            "bg-duo-green text-white select-none cursor-pointer",
+            "group relative flex flex-col items-center justify-center gap-4 sm:gap-6 py-10 sm:py-14 md:py-16 px-6 rounded-[16px]",
+            "border-0",
+            "bg-duo-green text-white select-none cursor-pointer shadow-xs",
             "transition-colors duration-150",
             // Active ring when selected
             isSelectedTrue &&
@@ -81,9 +88,9 @@ export const TrueFalsePlayer: React.FC<
           )}
         >
           {/* Thick Checkmark Icon */}
-          <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl sm:rounded-3xl bg-white/20 flex items-center justify-center group-hover:scale-105 transition-transform">
+          <div className="w-18 h-18 sm:w-24 sm:h-24 rounded-[13px] bg-white/20 flex items-center justify-center group-hover:scale-105 transition-transform">
             <Check
-              className="w-12 h-12 sm:w-18 sm:h-18 text-white"
+              className="w-10 h-10 sm:w-16 sm:h-16 text-white"
               strokeWidth={4}
             />
           </div>
@@ -99,9 +106,11 @@ export const TrueFalsePlayer: React.FC<
           disabled={isEvaluating || isAnswered}
           onClick={() => handleChoice(false)}
           whileHover={
-            !isAnswered && !isEvaluating ? { scale: 1.02 } : undefined
+            !isAnswered && !isEvaluating ? { scale: 1.02, y: -2 } : undefined
           }
-          whileTap={!isAnswered && !isEvaluating ? { scale: 0.97 } : undefined}
+          whileTap={
+            !isAnswered && !isEvaluating ? { scale: 0.96, y: 3 } : undefined
+          }
           transition={{
             type: "spring",
             stiffness: 450,
@@ -109,9 +118,9 @@ export const TrueFalsePlayer: React.FC<
             mass: 0.8,
           }}
           className={cn(
-            "group relative flex flex-col items-center justify-center gap-4 sm:gap-6 py-10 sm:py-14 md:py-16 px-6 rounded-3xl",
-            "border-2 border-duo-red-border",
-            "bg-duo-red text-white select-none cursor-pointer",
+            "group relative flex flex-col items-center justify-center gap-4 sm:gap-6 py-10 sm:py-14 md:py-16 px-6 rounded-[16px]",
+            "border-0",
+            "bg-duo-red text-white select-none cursor-pointer shadow-xs",
             "transition-colors duration-150",
             // Active ring when selected
             isSelectedFalse &&
@@ -125,9 +134,9 @@ export const TrueFalsePlayer: React.FC<
           )}
         >
           {/* Thick Cross Icon */}
-          <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl sm:rounded-3xl bg-white/20 flex items-center justify-center group-hover:scale-105 transition-transform">
+          <div className="w-18 h-18 sm:w-24 sm:h-24 rounded-[13px] bg-white/20 flex items-center justify-center group-hover:scale-105 transition-transform">
             <X
-              className="w-12 h-12 sm:w-18 sm:h-18 text-white"
+              className="w-10 h-10 sm:w-16 sm:h-16 text-white"
               strokeWidth={4}
             />
           </div>

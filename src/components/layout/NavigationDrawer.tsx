@@ -68,8 +68,8 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
       <div className="flex flex-col gap-6">
         {/* Brand Logo Header */}
         <div className="flex items-center gap-3 px-2 pt-1">
-          <div className="w-11 h-11 rounded-2xl bg-duo-green border-b-4 border-duo-green-border flex items-center justify-center text-white shadow-sm shrink-0">
-            <Gamepad2 className="w-6 h-6" />
+          <div className="w-10 h-10 rounded-[10px] bg-duo-green border-0 flex items-center justify-center text-white shadow-2xs shrink-0">
+            <Gamepad2 className="w-5 h-5" />
           </div>
           <div>
             <h1 className="text-xl font-black tracking-tight text-duo-dark flex items-center gap-1.5 leading-none">
@@ -91,7 +91,7 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
                 setIsMobileOpen(false);
                 onCreateQuiz();
               }}
-              className="py-3 text-sm font-black tracking-wide shadow-sm"
+              className="shadow-xs"
             >
               Buat Kuis Baru
             </TactileButton>
@@ -109,17 +109,17 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
             type="button"
             onClick={() => handleNavClick("dashboard")}
             className={cn(
-              "w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl font-black text-sm transition-all cursor-pointer text-left",
+              "w-full flex items-center gap-3 px-3.5 py-2.5 rounded-[13px] font-black text-sm transition-all cursor-pointer text-left",
               currentMode === "dashboard"
-                ? "bg-[#E5FAD2] text-[#2E6B00] border-2 border-[#A2E865] active:translate-y-0.5"
-                : "bg-transparent text-slate-600 hover:text-duo-dark hover:bg-slate-100 border-2 border-transparent active:bg-slate-200",
+                ? "bg-emerald-50 text-duo-green-border border-0 shadow-2xs"
+                : "bg-transparent text-slate-600 hover:text-duo-dark hover:bg-slate-100 border-0",
             )}
           >
             <div
               className={cn(
-                "w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors",
+                "w-8 h-8 rounded-[10px] flex items-center justify-center shrink-0 transition-colors",
                 currentMode === "dashboard"
-                  ? "bg-white text-duo-green border border-[#A2E865]/60 shadow-2xs"
+                  ? "bg-white text-duo-green border-0 shadow-2xs"
                   : "bg-slate-100 text-slate-500",
               )}
             >
@@ -133,17 +133,17 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
             type="button"
             onClick={() => handleNavClick("showcase")}
             className={cn(
-              "w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl font-black text-sm transition-all cursor-pointer text-left",
+              "w-full flex items-center gap-3 px-3.5 py-2.5 rounded-[13px] font-black text-sm transition-all cursor-pointer text-left",
               currentMode === "showcase"
-                ? "bg-[#E5F5FF] text-[#096996] border-2 border-[#8ED4FF] active:translate-y-0.5"
-                : "bg-transparent text-slate-600 hover:text-duo-dark hover:bg-slate-100 border-2 border-transparent active:bg-slate-200",
+                ? "bg-sky-50 text-duo-blue-border border-0 shadow-2xs"
+                : "bg-transparent text-slate-600 hover:text-duo-dark hover:bg-slate-100 border-0",
             )}
           >
             <div
               className={cn(
-                "w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors",
+                "w-8 h-8 rounded-[10px] flex items-center justify-center shrink-0 transition-colors",
                 currentMode === "showcase"
-                  ? "bg-white text-duo-blue border border-[#8ED4FF]/60 shadow-2xs"
+                  ? "bg-white text-duo-blue border-0 shadow-2xs"
                   : "bg-slate-100 text-slate-500",
               )}
             >
@@ -160,7 +160,7 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
         <button
           type="button"
           onClick={handleToggleSound}
-          className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-slate-50 hover:bg-slate-100 border-2 border-slate-200 text-xs font-black text-slate-600 hover:text-duo-dark transition-all cursor-pointer active:translate-y-[1px]"
+          className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-[13px] bg-slate-50 hover:bg-slate-100 border-2 border-slate-200 text-xs font-black text-slate-600 hover:text-duo-dark transition-all cursor-pointer active:translate-y-[1px]"
         >
           <div className="flex items-center gap-2">
             {isMuted ? (
@@ -172,7 +172,7 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
           </div>
           <span
             className={cn(
-              "px-2 py-0.5 rounded-lg text-[10px] font-black uppercase",
+              "px-2 py-0.5 rounded-[6px] text-[10px] font-black uppercase",
               isMuted
                 ? "bg-rose-100 text-rose-700"
                 : "bg-emerald-100 text-emerald-700",
@@ -184,14 +184,14 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
 
         {/* User Profile Card */}
         {user ? (
-          <div className="p-3 bg-slate-50 rounded-2xl border-2 border-slate-200 flex items-center justify-between gap-3">
+          <div className="p-3 bg-slate-50 rounded-[13px] border-2 border-slate-200 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2.5 min-w-0 flex-1">
-              <div className="w-9 h-9 rounded-xl bg-duo-green text-white font-black text-sm flex items-center justify-center border-b-2 border-duo-green-border shrink-0">
+              <div className="w-9 h-9 rounded-[10px] bg-duo-green text-white font-black text-sm flex items-center justify-center border border-duo-green-border shrink-0">
                 {profile?.avatar_url ? (
                   <img
                     src={profile.avatar_url}
                     alt={teacherName}
-                    className="w-full h-full rounded-xl object-cover"
+                    className="w-full h-full rounded-[10px] object-cover"
                   />
                 ) : (
                   teacherInitial
@@ -213,13 +213,13 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
               onClick={onSignOut}
               title="Keluar dari akun"
               aria-label="Keluar"
-              className="w-8 h-8 rounded-xl bg-white hover:bg-rose-50 text-slate-400 hover:text-duo-red border border-slate-200 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+              className="w-8 h-8 rounded-[10px] bg-white hover:bg-rose-50 text-slate-400 hover:text-duo-red border border-slate-200 flex items-center justify-center transition-colors cursor-pointer shrink-0"
             >
               <LogOut className="w-4 h-4" />
             </button>
           </div>
         ) : (
-          <div className="p-3 bg-slate-50 rounded-2xl border-2 border-slate-200 flex items-center justify-between gap-2">
+          <div className="p-3 bg-slate-50 rounded-[13px] border-2 border-slate-200 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <User className="w-4 h-4 text-slate-400" />
               <span className="text-xs font-black text-slate-500">
@@ -261,13 +261,13 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
               setIsMobileOpen(true);
             }}
             aria-label="Buka Menu Navigasi"
-            className="w-10 h-10 rounded-2xl bg-duo-bg border-2 border-slate-200 hover:border-slate-300 flex items-center justify-center text-duo-dark hover:bg-duo-gray transition-all active:translate-y-0.5 active:scale-[0.98] cursor-pointer"
+            className="w-10 h-10 rounded-[10px] bg-duo-bg border-2 border-slate-200 hover:border-slate-300 flex items-center justify-center text-duo-dark hover:bg-duo-gray transition-all active:translate-y-0.5 active:scale-[0.98] cursor-pointer"
           >
             <Menu className="w-5 h-5" />
           </button>
 
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-duo-green border-b-2 border-duo-green-border flex items-center justify-center text-white shadow-xs">
+            <div className="w-8 h-8 rounded-[10px] bg-duo-green border-0 flex items-center justify-center text-white shadow-2xs">
               <Gamepad2 className="w-4 h-4" />
             </div>
             <span className="font-black text-base text-duo-dark">EduPlay</span>
@@ -313,7 +313,7 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
                   setIsMobileOpen(false);
                 }}
                 aria-label="Tutup Menu"
-                className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-duo-dark flex items-center justify-center transition-colors cursor-pointer"
+                className="absolute top-4 right-4 w-8 h-8 rounded-[10px] bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-duo-dark flex items-center justify-center transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>

@@ -49,7 +49,7 @@ export default {
             border: "#CECECE",
             light: "#F7F7F7",
           },
-          dark: "#4B4B4B",
+          dark: "#0F172A",
           bg: "#F7F9FA",
         },
       },
@@ -58,8 +58,12 @@ export default {
         "duo-md": "0 4px 0 0 rgba(0, 0, 0, 0.1)",
       },
       borderRadius: {
-        "2xl": "1rem",
-        "3xl": "1.5rem",
+        "air-sm": "8px",
+        "air-md": "12px",
+        "air-lg": "14px",
+        "air-xl": "16px",
+        "2xl": "1rem", // 16px
+        "3xl": "1rem", // 16px - capped from 24px for proportional elegance
       },
     },
   },

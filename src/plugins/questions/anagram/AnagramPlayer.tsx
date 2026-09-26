@@ -209,22 +209,22 @@ export const AnagramPlayer: React.FC<
     isSelected?: boolean,
   ) => {
     if (isSelected) {
-      return "bg-duo-blue-light text-duo-blue-border border-duo-blue ring-4 ring-duo-blue/40 scale-105 z-20";
+      return "bg-duo-blue text-white border-0 shadow-xs scale-105 z-20";
     }
     if (!isAnswered) {
-      return "bg-white text-duo-dark border-duo-gray hover:bg-slate-50";
+      return "bg-white text-duo-dark border-2 border-slate-200 hover:bg-slate-50";
     }
     if (isCorrect === true) {
-      return "bg-duo-green-light text-duo-green-border border-duo-green ring-2 ring-duo-green/30";
+      return "bg-duo-green text-white border-0 shadow-xs";
     }
     if (isCorrect === false) {
       const isCharMatchingTarget = letter === targetWord[index];
       if (isCharMatchingTarget) {
-        return "bg-duo-green-light text-duo-green-border border-duo-green ring-2 ring-duo-green/30";
+        return "bg-duo-green text-white border-0 shadow-xs";
       }
-      return "bg-duo-red-light text-duo-red-border border-duo-red ring-2 ring-duo-red/30";
+      return "bg-duo-red text-white border-0 shadow-xs";
     }
-    return "bg-duo-blue-light text-duo-blue-border border-duo-blue";
+    return "bg-duo-blue text-white border-0 shadow-xs";
   };
 
   return (
@@ -328,7 +328,6 @@ export const AnagramPlayer: React.FC<
                 }}
                 className={cn(
                   "relative flex flex-col items-center justify-between font-black select-none shrink-0 transition-colors duration-150",
-                  "border-2 border-solid",
                   tileConfig.tileClass,
                   !isInteractionDisabled
                     ? "cursor-grab active:cursor-grabbing touch-none"
