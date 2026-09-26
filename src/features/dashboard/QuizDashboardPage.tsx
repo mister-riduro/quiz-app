@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { DuoCard } from "@/components/ui/DuoCard";
-import { StatsCapsule } from "@/components/ui/StatsCapsule";
 import { QuizCard } from "./components/QuizCard";
 import { EmptyState } from "./components/EmptyState";
 import { CreateQuizModal } from "./components/CreateQuizModal";
@@ -187,10 +186,6 @@ export const QuizDashboardPage: React.FC<QuizDashboardPageProps> = ({
   const totalCount = quizzes.length;
   const publishedCount = quizzes.filter((q) => q.isPublished).length;
   const draftCount = quizzes.filter((q) => !q.isPublished).length;
-  const totalQuestionsCount = quizzes.reduce(
-    (acc, q) => acc + (q.questionsCount || 0),
-    0,
-  );
 
   const filteredQuizzes = quizzes.filter((q) => {
     // 1. Tab filter
