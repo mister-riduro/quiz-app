@@ -20,7 +20,6 @@ import {
   LayoutGrid,
   List,
   Sparkles,
-  Star,
 } from "lucide-react";
 import { generateUUID } from "@/utils/uuid";
 
